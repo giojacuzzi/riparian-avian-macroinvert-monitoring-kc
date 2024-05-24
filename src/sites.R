@@ -3,7 +3,9 @@ packages = c(
   'dplyr',
   'mapview',
   'sf',
-  'tigris'
+  'tigris',
+  'gdalUtils',
+  'raster'
 )
 install.packages(packages[!(packages %in% rownames(installed.packages()))])
 
@@ -12,6 +14,11 @@ library(dplyr)
 library(mapview)
 library(sf)
 library(tigris)
+
+library(gdalUtils)
+library(raster)
+
+# Load, clean, and process data ############################################################
 
 # Load Puget Sound Stream Benthos data
 data_path = "data/Puget Sound Stream Benthos - ScoresByYear.txt"
@@ -51,6 +58,8 @@ calculate_slope = function(row) { # function to calculate the slope for each row
 }
 data$trend_BIBI = apply(data[, years], 1, calculate_slope)
 
+# Convert to sf points #####################################################################
+
 # Convert to shapefile points
 data_sf = st_as_sf(data, coords=c('Longitude', 'Latitude'), crs='NAD83', agr='constant')
 data_sf$long = st_coordinates(data_sf$geometry)[,'X']
@@ -71,3 +80,36 @@ mapview(sites, zcol='tercile_BIBI')
 
 # Plot other variables as separate map layers
 mapview(sites, zcol='mean_BIBI') + mapview(sites, zcol='trend_BIBI')
+
+# Calculate impervious surface percentage ###################################################
+
+# Create virtual raster VRTs pointing to IMGs without any modification
+imp_raster_imgfile = '/Volumes/gioj_t7_1/NLCD/NLCD_impervious_2021_release_all_files_20230630/nlcd_2021_impervious_l48_20230630.img'
+imp_raster_file    = '_output/nlcd_2021_impervious_l48_20230630.vrt'
+
+# Create virtual raster VRT pointing to IMG without any modification
+gdalbuildvrt(
+  gdalfile = imp_raster_imgfile,
+  output.vrt = imp_raster_file
+)
+
+# Albers equal-area projection
+# aea = '+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+
+# Use gdalwarp to extract the county area from the NLCD impervious percentage raster (already in Albers projection)
+polygon_file = '_output/king_county.gpkg'
+if (file.exists(polygon_file)) file.remove(polygon_file)
+raster_file = '_output/impervious_surface_raster.tif'
+if (file.exists(raster_file)) file.remove(raster_file)
+
+st_write(st_union(king_county), dsn = polygon_file, driver = 'GPKG', append = F)
+gdalwarp(
+  srcfile = imp_raster_file, dstfile = raster_file,
+  cutline = polygon_file, crop_to_cutline = T,
+  tr = c(30, 30), dstnodata = 'None'
+)
+
+impervious_surface = raster(raster_file)
+mapview(impervious_surface)
+
+# TODO: intersect with sites
