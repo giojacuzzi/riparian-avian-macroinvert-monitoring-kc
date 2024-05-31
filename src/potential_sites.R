@@ -114,7 +114,7 @@ king_county_mask   = rasterize(king_county_trs, impervious_surface)
 impervious_surface = mask(impervious_surface, king_county_mask)
 mapview(impervious_surface)
 
-# Calculate local 100 meter buffer impervious coverage % ########################################
+# Calculate local 100 and 200 meter buffer impervious coverage % ########################################
 sites = st_transform(sites, crs = st_crs(impervious_surface))
 raster_with_zeros <- reclassify(impervious_surface, cbind(NA, 0))
 
@@ -129,17 +129,29 @@ local_imp_coverage <- sapply(1:nrow(sites), function(i) {
   return(mean_value)
 })
 
-sites$local_imp_coverage = local_imp_coverage
+sites$local100_imp_coverage = local_imp_coverage
+
+local_imp_coverage <- sapply(1:nrow(sites), function(i) {
+  print(paste('Calculating local impervious coverage for site', i))
+  site <- sites[i, ]
+  buffer <- st_buffer(site, 200) # 200 meter recording range radius
+  local_mask <- rasterize(buffer, raster_with_zeros)
+  masked_raster <- mask(raster_with_zeros, local_mask)
+  mean_value <- mean(masked_raster[], na.rm = TRUE) * 0.01
+  return(mean_value)
+})
+
+sites$local200_imp_coverage = local_imp_coverage
 
 # Plot mean_BIBI against local_imp_coverage
-plot(sites$local_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
-regression <- lm(mean_BIBI ~ local_imp_coverage, data = sites)
+plot(sites$local100_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
+regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
 abline(regression, col = "red")
 summary(regression)$r.squared
 
-hist(sites$local_imp_coverage)
+hist(sites$local100_imp_coverage)
 
-mapview(sites, zcol='local_imp_coverage')
+mapview(sites, zcol='local100_imp_coverage')
 
 # Calculate regional drainage impervious coverage % ####################################
 
@@ -199,22 +211,27 @@ mapview(WBDHU12, zcol='drainage_imp_coverage') + mapview(sites, zcol='tercile_BI
 
 # Plot and save results to file #############################################
 
-par(mfrow = c(2, 2))
+par(mfrow = c(2, 3))
 
-plot(sites$local_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
-regression <- lm(mean_BIBI ~ local_imp_coverage, data = sites)
+plot(sites$local100_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
+regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
+abline(regression, col = "red")
+
+plot(sites$local200_imp_coverage, sites$mean_BIBI, main = 'local % impervious (200m buffer) x mean B-IBI')
+regression <- lm(mean_BIBI ~ local200_imp_coverage, data = sites)
 abline(regression, col = "red")
 
 plot(sites$drainage_imp_coverage, sites$mean_BIBI, main = 'regional % impervious (drainage) x mean B-IBI')
 regression <- lm(mean_BIBI ~ drainage_imp_coverage, data = sites)
 abline(regression, col = "red")
 
-hist(sites$local_imp_coverage)
+hist(sites$local100_imp_coverage)
+
+hist(sites$local200_imp_coverage)
 
 hist(sites$drainage_imp_coverage)
 
 par(mfrow = c(1, 1))
-plot(sites$drainage_imp_coverage, sites$local_imp_coverage, main = 'regional % impervious (drainage) x local % impervious (100m buffer)')
 
 results = sites %>% st_drop_geometry()
 write.csv(results, "_output/potential_sites.csv", row.names = FALSE)
