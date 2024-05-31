@@ -14,7 +14,6 @@ library(dplyr)
 library(mapview)
 library(sf)
 library(tigris)
-
 library(gdalUtils)
 library(raster)
 
@@ -110,6 +109,64 @@ gdalwarp(
 )
 
 impervious_surface = raster(raster_file)
+king_county_trs = st_transform(king_county, st_crs(impervious_surface))
+king_county_mask   = rasterize(king_county_trs, impervious_surface)
+impervious_surface = mask(impervious_surface, king_county_mask)
 mapview(impervious_surface)
 
-# TODO: intersect with sites
+# Calculate impervious surface coverage percentage at the regional drainage level
+
+# Load washershed boundaries (https://ecology.wa.gov/water-shorelines/water-supply/water-availability/watershed-look-up)
+# WBDHU8 = st_read('/Volumes/gioj_t7_1/WBDHU/WBDHU8/WBDHU8.shp')
+# WBDHU10 = st_read('/Volumes/gioj_t7_1/WBDHU/WBDHU10/WBDHU10.shp')
+
+WBDHU12 = st_read('/Volumes/gioj_t7_1/WBDHU/WBDHU12/WBDHU12.shp')
+WBDHU12 = st_transform(WBDHU12, crs=st_crs(king_county))
+WBDHU12 = st_intersection(WBDHU12, king_county)
+WBDHU12 = st_transform(WBDHU12, crs=st_crs(impervious_surface))
+
+# Calculate the ratio of impervious surface area to total area for each watershed
+# Initialize a vector to store the ratio for each watershed
+total_area <- numeric(nrow(WBDHU12))
+total_imp_area <- numeric(nrow(WBDHU12))
+impervious_ratio <- numeric(nrow(WBDHU12))
+
+# Iterate over each watershed
+for (i in 1:nrow(WBDHU12)) {
+
+  # Extract the raster values within the current watershed polygon
+  watershed_mask <- rasterize(WBDHU12[i, ], impervious_surface)
+  masked_raster <- mask(impervious_surface, watershed_mask)
+  imp_sum = sum(masked_raster[], na.rm = TRUE) * 0.01
+  # extracted_values <- exact_extract(masked_raster, WBDHU12[i, ], 'sum') * 0.01
+  
+  # Calculate the total impervious surface area in the watershed
+  total_impervious_area <- imp_sum * 900 # 30m x 30m = 900 square meters
+  print(paste('total_impervious_area', total_impervious_area))
+  
+  # Calculate the total area of the watershed in square meters
+  watershed_area <- length(na.omit(masked_raster[])) * 900 #st_area(WBDHU12[i, ])
+  print(paste('watershed_area       ', watershed_area))
+  
+  # Calculate the ratio of impervious surface area to total area
+  ratio = total_impervious_area / watershed_area
+  print(paste('ratio                ', ratio))
+  impervious_ratio[i] <- ratio
+  total_area[i] <- watershed_area
+  total_imp_area[i] <- total_impervious_area
+}
+
+# Add the calculated ratios as a new column in the WBDHU12 data frame
+WBDHU12$drainage_imp_coverage <- impervious_ratio
+
+mapview(WBDHU12, zcol='drainage_imp_coverage') + mapview(sites, zcol='tercile_BIBI')
+
+# Intersect sites with watershed impervious coverage
+WBDHU12 = st_transform(WBDHU12, crs = st_crs(sites))
+sites = st_intersection(sites, WBDHU12)
+
+# Plot mean_BIBI against drainage_imp_coverage
+plot(sites$drainage_imp_coverage, sites$mean_BIBI)
+regression <- lm(mean_BIBI ~ drainage_imp_coverage, data = sites)
+abline(regression, col = "red")
+summary(regression)$r.squared
