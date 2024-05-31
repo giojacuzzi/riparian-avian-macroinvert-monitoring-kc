@@ -217,4 +217,4 @@ par(mfrow = c(1, 1))
 plot(sites$drainage_imp_coverage, sites$local_imp_coverage, main = 'regional % impervious (drainage) x local % impervious (100m buffer)')
 
 results = sites %>% st_drop_geometry()
-write.csv(results, "potential_sites.csv", row.names = FALSE)
+write.csv(results, "_output/potential_sites.csv", row.names = FALSE)
