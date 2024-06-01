@@ -125,8 +125,14 @@ local_imp_coverage <- sapply(1:nrow(sites), function(i) {
   buffer <- st_buffer(site, 100) # 100 meter recording range radius
   local_mask <- rasterize(buffer, raster_with_zeros)
   masked_raster <- mask(raster_with_zeros, local_mask)
-  mean_value <- mean(masked_raster[], na.rm = TRUE) * 0.01
-  return(mean_value)
+
+  sum_value <- sum(masked_raster[], na.rm = TRUE) * 0.01
+  
+  
+  local_imp_area <- sum_value * 900 # 30m x 30m = 900 square meters
+  buffer_area <- length(na.omit(masked_raster[])) * 900
+  ratio = local_imp_area / buffer_area
+  return(ratio)
 })
 
 sites$local100_imp_coverage = local_imp_coverage
@@ -134,11 +140,17 @@ sites$local100_imp_coverage = local_imp_coverage
 local_imp_coverage <- sapply(1:nrow(sites), function(i) {
   print(paste('Calculating local impervious coverage for site', i))
   site <- sites[i, ]
-  buffer <- st_buffer(site, 200) # 200 meter recording range radius
+  buffer <- st_buffer(site, 200) # 200 meter radius
   local_mask <- rasterize(buffer, raster_with_zeros)
   masked_raster <- mask(raster_with_zeros, local_mask)
-  mean_value <- mean(masked_raster[], na.rm = TRUE) * 0.01
-  return(mean_value)
+  
+  sum_value <- sum(masked_raster[], na.rm = TRUE) * 0.01
+  
+  
+  local_imp_area <- sum_value * 900 # 30m x 30m = 900 square meters
+  buffer_area <- length(na.omit(masked_raster[])) * 900
+  ratio = local_imp_area / buffer_area
+  return(ratio)
 })
 
 sites$local200_imp_coverage = local_imp_coverage
