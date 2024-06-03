@@ -68,6 +68,8 @@ rank_breaks_imp_lmh = c(0.0,0.2,0.4,1.0)
 rank_labels_imp_lmh = c("Low", "Mid", "High")
 sites$rank_imp_lmh = cut(sites$local100_imp_coverage, breaks = rank_breaks_imp_lmh, labels = rank_labels_imp_lmh, right = FALSE, include.lowest = TRUE)
 summary(sites$rank_imp_lmh)
+sites$rank_impDrainage_lmh = cut(sites$drainage_imp_coverage, breaks = rank_breaks_imp_lmh, labels = rank_labels_imp_lmh, right = FALSE, include.lowest = TRUE)
+summary(sites$rank_impDrainage_lmh)
 
 plot(sites$local100_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
 regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
@@ -97,3 +99,41 @@ sites_sf$long = st_coordinates(sites_sf$geometry)[,'X']
 sites_sf$lat  = st_coordinates(sites_sf$geometry)[,'Y']
 
 mapview(sites_sf, zcol='rank_imp_lmh') + mapview(sites_sf, zcol='rank_bibi_lmh')
+
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Low' & sites_sf$rank_bibi_lmh == 'Low', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Low' & sites_sf$rank_bibi_lmh == 'Mid', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Low' & sites_sf$rank_bibi_lmh == 'High', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Mid' & sites_sf$rank_bibi_lmh == 'Low', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Mid' & sites_sf$rank_bibi_lmh == 'Mid', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'Mid' & sites_sf$rank_bibi_lmh == 'High', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'High' & sites_sf$rank_bibi_lmh == 'Low', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'High' & sites_sf$rank_bibi_lmh == 'Mid', ])
+mapview(sites_sf[sites_sf$rank_imp_lmh == 'High' & sites_sf$rank_bibi_lmh == 'High', ])
+
+sites %>% count(rank_imp_lmh, rank_bibi_lmh)
+
+# AVOID SITES THAT HAVE ERRATIC TRENDS and try to get ~6 sites per rank_bibi_category
+
+# imp, BIBI
+selected_site_ids = c(
+  122, 190, 210, # LL (pass: 211, 1628)
+  121, 136, 193, # LM (pass: multiple)
+  125, 155, 158, 160, 2217, # LH (pass: multiple)
+  209, 213, 189, # ML (pass: 162, 208, 214, 1635)
+  159, 167, 251, 252, 264, # MM (pass: 2366)
+  150, 153, 262,      # MH
+  161, 188, 191, 216, # HL
+  171, 174, 270,      # HM
+  152                 # HH
+)
+selected_sites = sites %>% filter(Site.ID %in% selected_site_ids)
+selected_sites %>% count(rank_imp_lmh, rank_bibi_lmh)
+selected_sites %>% count(rank_imp_lmh)
+selected_sites %>% count(rank_bibi_lmh)
+selected_sites %>% count(rank_bibi_category)
+
+# MAP SELECTED SITES
+selected_sites_sf = st_as_sf(selected_sites, coords=c('long', 'lat'), crs='NAD83', agr='constant')
+selected_sites_sf$long = st_coordinates(selected_sites_sf$geometry)[,'X']
+selected_sites_sf$lat  = st_coordinates(selected_sites_sf$geometry)[,'Y']
+mapview(selected_sites_sf)
