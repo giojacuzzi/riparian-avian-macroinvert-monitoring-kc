@@ -1,11 +1,21 @@
+# Path to .csv output of potential_sites.R
 data_path = "_output/potential_sites.csv"
 
+# Install dependencies
+packages = c(
+  'dplyr',
+  'mapview',
+  'sf'
+)
+install.packages(packages[!(packages %in% rownames(installed.packages()))])
+
+# Load dependencies
 library(sf)
 library(mapview)
 library(dplyr)
 
+# Read potential sites from file
 sites = read.csv(data_path)
-
 columns = c(
   "Site.ID",
   "long",
@@ -26,14 +36,12 @@ columns = c(
   "local200_imp_coverage",
   "drainage_imp_coverage"
 )
-
 sites = sites[, columns]
 
-# Filter for DNRP sites
+# Filter for King County DNRP sites only
 sites = sites[sites$Agency == 'King County - DNRP',]
 
 ## DISTRIBUTION OF MEAN B-IBI ############################################
-
 # https://pugetsoundstreambenthos.org/About-BIBI.aspx
 #
 # CATEGORY RANKING - Modified from Karr et al. (1986) by Morley (2000).
@@ -58,8 +66,6 @@ hist(sites$mean_BIBI, breaks = breaks_bibi_lmh, freq = TRUE)
 sites$bibi_lmh = cut(sites$mean_BIBI, breaks = breaks_bibi_lmh, labels = labels_bibi_lmh, right = FALSE, include.lowest = TRUE)
 summary(sites$bibi_lmh)
 
-# TODO: Select sites such that there are 10 per LOW-MID-HIGH ranking and 6 per CATEGORY ranking
-
 ## DISTRIBUTION OF LOCAL % IMPERVIOUS ############################################
 
 hist(sites$local100_imp_coverage)
@@ -76,16 +82,14 @@ regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
 abline(regression, col = "red")
 
 # COUNTS #####################################################################
+
+# Number of potential sites per IMP/BIBI LMH combination
 sites %>% count(imp_lmh, bibi_lmh)
 
+# Print each row corresponding to the combinations
 counted_df <- sites %>%
   group_by(imp_lmh, bibi_lmh) %>%
   summarize(n = n(), .groups = "drop")
-
-# View the result
-print(counted_df)
-
-# Print each row corresponding to the combinations
 for (i in 1:nrow(counted_df)) {
   combination <- counted_df[i, c("imp_lmh", "bibi_lmh")]
   subset_df <- sites[sites$imp_lmh == combination$imp_lmh & sites$bibi_lmh == combination$bibi_lmh, ]
@@ -94,10 +98,10 @@ for (i in 1:nrow(counted_df)) {
 
 # MAPPING ####################################################################
 
+# Map all potential sites
 sites_sf = st_as_sf(sites, coords=c('long', 'lat'), crs='NAD83', agr='constant')
 sites_sf$long = st_coordinates(sites_sf$geometry)[,'X']
 sites_sf$lat  = st_coordinates(sites_sf$geometry)[,'Y']
-
 mapview(sites_sf, zcol='imp_lmh') + mapview(sites_sf, zcol='bibi_lmh')
 
 # mapview(sites_sf[sites_sf$imp_lmh == 'Low' & sites_sf$bibi_lmh == 'Low', ])
@@ -110,11 +114,9 @@ mapview(sites_sf, zcol='imp_lmh') + mapview(sites_sf, zcol='bibi_lmh')
 # mapview(sites_sf[sites_sf$imp_lmh == 'High' & sites_sf$bibi_lmh == 'Mid', ])
 # mapview(sites_sf[sites_sf$imp_lmh == 'High' & sites_sf$bibi_lmh == 'High', ])
 
-sites %>% count(imp_lmh, bibi_lmh)
-
-# AVOID SITES THAT HAVE ERRATIC TRENDS and try to get ~6 sites per bibi_category
-
-# imp, BIBI
+# Selected sites
+# NOTE: Aim for 3 sites per IMP/BIBI combination, 10 per LMH gradient each.
+# Avoid sites with erratic BIBI trends, and try to get ~6 sites per bibi_category as well.
 selected_site_ids = c(
   122, 210, 211, # LL (pass: 190, 1628)
   121, 136, 193, # LM (pass: multiple)
@@ -127,6 +129,8 @@ selected_site_ids = c(
   152                 # HH
 )
 selected_sites = sites %>% filter(Site.ID %in% selected_site_ids)
+
+# Selected sites count per gradient category
 selected_sites %>% count(imp_lmh, bibi_lmh)
 selected_sites %>% count(imp_lmh)
 selected_sites %>% count(bibi_lmh)
@@ -136,9 +140,8 @@ selected_sites %>% count(bibi_category)
 selected_sites_sf = st_as_sf(selected_sites, coords=c('long', 'lat'), crs='NAD83', agr='constant')
 selected_sites_sf$long = st_coordinates(selected_sites_sf$geometry)[,'X']
 selected_sites_sf$lat  = st_coordinates(selected_sites_sf$geometry)[,'Y']
-mapview(selected_sites_sf, zcol='imp_lmh')
+mapview(selected_sites_sf, zcol='imp_lmh') + mapview(selected_sites_sf, zcol='bibi_lmh')
 
 # Save selected sites to file with specific columns
 final_sites = selected_sites[, c('Site.ID', 'lat', 'long', 'Stream', 'Basin', 'mean_BIBI', 'local100_imp_coverage', 'bibi_category', 'bibi_lmh', 'imp_lmh')] %>% arrange(Basin, Site.ID)
-
 write.csv(final_sites, '/Users/giojacuzzi/Downloads/final_sites.csv', row.names = FALSE)
