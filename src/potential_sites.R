@@ -4,9 +4,11 @@ packages = c(
   'mapview',
   'sf',
   'tigris',
-  'gdalUtils',
-  'raster'
+  'raster',
+  'terra'
 )
+install.packages("devtools")
+devtools:::install_github("gearslaboratory/gdalUtils", dependencies = TRUE)
 install.packages(packages[!(packages %in% rownames(installed.packages()))])
 
 # Load dependencies
@@ -16,11 +18,11 @@ library(sf)
 library(tigris)
 library(gdalUtils)
 library(raster)
-
+library(terra)
 # Load, clean, and process data ############################################################
 
 # Load Puget Sound Stream Benthos data
-data_path = "data/Puget Sound Stream Benthos - ScoresByYear.txt"
+data_path = "/Users/Steve/Desktop/Capstone/Puget Sound Stream Benthos - ScoresByYear.txt"
 data_raw = read.table(data_path, header = TRUE, sep = "\t", fill = TRUE)
 # View(data) # Run this line to inspect the data directly
 
