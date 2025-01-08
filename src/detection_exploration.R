@@ -78,6 +78,6 @@ p = ggplot(site_data, aes(x = local100_imp_coverage, y = mean_BIBI)) +
   stat_smooth(method = "lm",formula = y ~ x, geom = "smooth") + # linear regression
   labs(title='Impervious coverage x mean B-IBI'); print(p)
 
-# TODO: Explore relationship between species richness and impervious coverage
+# TODO: Explore relationship between impervious coverage and species richness (functional riparian insectivore guild)
 
-# TODO: Explore relationship between species richness and B-IBI
+# TODO: Explore relationship between B-IBI and species richness (functional riparian insectivore guild)
