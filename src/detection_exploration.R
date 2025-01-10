@@ -2,8 +2,8 @@
 
 # INPUT
 path_input_dir = "data/processed/predicted_detection_histories"
-path_site_data = "data/site_data.csv"
 
+path_site_data = "/Users/Steve/Documents/site_data.csv"
 ############################################################################################################
 
 library(tidyverse)
@@ -50,34 +50,39 @@ p = ggplot(site_richness, aes(x = alpha)) +
 readline('Proceed with site data analysis? [enter]')
 
 # Load data per site
-site_data = read_csv(path_site_data, show_col_types = FALSE)
+site_data = na.omit(read_csv(path_site_data, show_col_types = FALSE))
 
-# Visualize B-IBI across sites
-p = ggplot(site_data, aes(x = bibi_lmh)) +
-  geom_bar() +
-  labs(title='B-IBI across sites'); print(p)
+# Join with species richness data
+site_data = left_join(site_richness, site_data, by = 'site')
+
 
 # Visualize impervious coverage across sites
-p = ggplot(site_data, aes(x = imp_lmh)) +
-  geom_bar() +
+p = ggplot(site_data, aes(x = Impervious)) +
+  geom_histogram() +
   labs(title='Impervious coverage across sites'); print(p)
 
 message('Analyzing impervious coverage x mean B-IBI...')
 
 # Calculate Pearson's correlation coefficient for impervious coverage x mean B-IBI
-correlation_pearson = cor(site_data$local100_imp_coverage, site_data$mean_BIBI, method = "pearson")
+correlation_pearson = cor(site_data$Impervious, site_data$mean_BIBI, method = "pearson")
 message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 
 # Fit a linear regression model
-model = lm(site_data$mean_BIBI ~ site_data$local100_imp_coverage)
+model = lm(site_data$mean_BIBI ~ site_data$Impervious)
 summary(model)
 
 # Visualize impervious coverage x mean B-IBI
-p = ggplot(site_data, aes(x = local100_imp_coverage, y = mean_BIBI)) +
+p = ggplot(site_data, aes(x = Impervious, y = mean_BIBI)) +
   geom_point() +
   geom_line(aes(y = model$fitted.values)) + # linear regression
   labs(title='Impervious coverage x mean B-IBI'); print(p)
 
 # TODO: Explore relationship between impervious coverage and species richness (functional riparian insectivore guild)
+ggplot(site_data, aes(x = Impervious, y = alpha)) +
+  geom_smooth(method='lm') +
+  geom_point()
+
+correlation_pearson = cor(site_data$Impervious, site_data$alpha, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 
 # TODO: Explore relationship between B-IBI and species richness (functional riparian insectivore guild)

@@ -20,7 +20,7 @@
 # `site` is a subdirectory that indicates the unique site identifier, and `visit` is a subdirectory of `site`
 # that indicates the unique visit identifier (i.e. date) and contains one or more recording .csv files with
 # the raw confidence scores for that visit.
-path_input_dir = "/Users/giojacuzzi/Desktop/detection_history_demo"
+path_input_dir = "/Volumes/gioj_spekic/predictions/All_Predictions"
 path_species_list = "data/Full_Species_List.txt"
 threshold = 0.9
 
