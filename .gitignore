@@ -1,5 +1,5 @@
 # Data files
-/data/processed
+/data/processed/predicted_detection_histories
 
 # Apple files
 .DS_Store
