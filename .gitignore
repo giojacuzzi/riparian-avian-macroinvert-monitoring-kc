@@ -1,3 +1,6 @@
+# Data files
+/data/processed
+
 # Apple files
 .DS_Store
 
