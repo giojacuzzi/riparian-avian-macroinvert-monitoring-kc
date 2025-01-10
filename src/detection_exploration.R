@@ -69,13 +69,13 @@ correlation_pearson = cor(site_data$local100_imp_coverage, site_data$mean_BIBI, 
 message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 
 # Fit a linear regression model
-model <- lm(site_data$mean_BIBI ~ site_data$local100_imp_coverage)
+model = lm(site_data$mean_BIBI ~ site_data$local100_imp_coverage)
 summary(model)
 
 # Visualize impervious coverage x mean B-IBI
 p = ggplot(site_data, aes(x = local100_imp_coverage, y = mean_BIBI)) +
   geom_point() +
-  stat_smooth(method = "lm",formula = y ~ x, geom = "smooth") + # linear regression
+  geom_line(aes(y = model$fitted.values)) + # linear regression
   labs(title='Impervious coverage x mean B-IBI'); print(p)
 
 # TODO: Explore relationship between impervious coverage and species richness (functional riparian insectivore guild)
