@@ -4,8 +4,8 @@ path_land_cover = "data/processed/land_cover/land_cover.csv" # processed land co
 path_benthos_raw = "data/raw/benthos/ScoresByYear.txt" # raw PSSB benthos data
 
 data_land_cover = read.csv(path_land_cover)
-data_benthos = read.table(path_benthos_raw, sep = "\t", header=TRUE, fill = TRUE)
-  
+data_benthos <- read.delim(path_benthos_raw, header = TRUE, na.strings = c("", "NA"), stringsAsFactors = FALSE)
+
 metadata_site = read.csv('data/site_metadata.csv')
   
 data_habitat = full_join(data_land_cover, metadata_site, by = c("site" = "aru_site"))

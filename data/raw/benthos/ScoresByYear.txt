@@ -1,0 +1,877 @@
+Row	Site ID	WRIA	Basin	Subbasin	Stream	Agency	Project	Site Code	Latitude	Longitude	2021	2022	2023	2024
+1	2534	WRIA 1 - Nooksack	N Fork Nooksack River Basin	Racehorse Creek Subbasin	Racehorse Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-RACE77	48.867800	-122.044000		85.1		
+2	971	WRIA 1 - Nooksack	Whatcom-Chuckanut Basin	Bellingham Bay Subbasin	Chuckanut Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-CHUC02	48.701850	-122.488270			68.5	
+3	970	WRIA 1 - Nooksack	Whatcom-Chuckanut Basin	Lake Whatcom Subbasin	Austin Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-AUST02	48.706500	-122.342570	94.1			
+4	3227	WRIA 3 - Lower Skagit / Samish	Fidalgo Basin	Fidalgo Island Subbasin	Fornsby Creek	Swinomish Indian Tribal Community	Swinomish Indian Tribal Community Stream Bioassessment Monitoring	FOR	48.431830	-122.516582		46.8	25.7	
+5	3226	WRIA 3 - Lower Skagit / Samish	Fidalgo Basin	Fidalgo Island Subbasin	Munks Creek	Swinomish Indian Tribal Community	Swinomish Indian Tribal Community Stream Bioassessment Monitoring	MUN	48.420065	-122.502420		38.4	27.1	
+6	3228	WRIA 3 - Lower Skagit / Samish	Fidalgo Basin	Fidalgo Island Subbasin	SneeOosh Creek	Swinomish Indian Tribal Community	Swinomish Indian Tribal Community Stream Bioassessment Monitoring	SNE	48.395991	-122.535501		26.3	42.4	
+7	520	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Cherry Creek Subbasin	Cherry Creek	King County - DNRP	Regulatory Effectiveness	05B	47.740049	-121.941377	65.9	79.6		
+8	2369	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Cherry Creek Subbasin	Cherry Creek	King County - DNRP	Ambient Monitoring	07CHR045515	47.746050	-121.898520	64.9	74.9	80.3	
+9	2377	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Cherry Creek Subbasin	Cherry Creek	King County - DNRP	Ambient Monitoring	07CHR234411	47.741700	-121.939820	57	43.3	82.5	
+10	2371	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Cherry Creek Subbasin	Margaret Creek	King County - DNRP	Ambient Monitoring	07CHR070059	47.753810	-121.894100	87.2	69.7	95.7	
+11	2592	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Griffin Creek Subbasin	Griffin Creek	King County - DNRP	Ambient Monitoring	07GRN022903	47.610886	-121.864122	72.8	70.5	69.5	
+12	2376	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Griffin Creek Subbasin	Griffin Creek	King County - DNRP	Ambient Monitoring	07GRN077319	47.615841	-121.900707	59.7	61.2	75.1	
+13	1235	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Griffin Creek Subbasin	Griffin Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-GRIF09	47.604630	-121.885050	83.9	77.8	88.4	
+14	2225	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Griffin Creek Subbasin	Mud Creek	King County - DNRP	Ambient Monitoring	07PAT001415	47.564750	-121.853444	33.7	58.1	79.4	
+15	2599	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Griffin Creek Subbasin	Snoqualmie River tributary (0430)	King County - DNRP	Ambient Monitoring	07PAT231079	47.549260	-121.888840	92.9	75.5	91.3	
+16	2368	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Harris Creek Subbasin	Ames Creek	King County - DNRP	Ambient Monitoring	07HAR070087	47.652920	-121.960870	60.3			
+17	2366	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Harris Creek Subbasin	Snoqualmie River tributary (Harris Creek subbasin)	King County - DNRP	Ambient Monitoring	07HAR025863	47.682790	-121.920490	70.1	57.7		
+18	519	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Harris Creek Subbasin	Weiss Creek	King County - DNRP	Regulatory Effectiveness	53E	47.692470	-121.945410	68.4	68.6		
+19	2603	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Coal Creek (Snoqualmie River)	King County - DNRP	Ambient Monitoring	07PAT228627	47.523697	-121.844634	67.2	91	82.2	
+20	1817	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Coal Creek (Snoqualmie River)	Snoqualmie Tribe	Kimball Creek Water Quality Improvement Project	CC	47.526353	-121.840187	58.7			
+21	1823	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Fisher Creek (Snoqualmie)	Snoqualmie Tribe	Kimball Creek Water Quality Improvement Project	FC	47.531567	-121.845975	63.4			
+22	1824	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Kimball Creek	Snoqualmie Tribe	Kimball Creek Water Quality Improvement Project	KC5	47.535453	-121.830083	9			
+23	1825	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Kimball Creek	Snoqualmie Tribe	Kimball Creek Water Quality Improvement Project	KCCC	47.527146	-121.834243	52			
+24	1827	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Kimball Creek Subbasin	Kimball Creek	Snoqualmie Tribe	Kimball Creek Water Quality Improvement Project	KCX	47.529480	-121.832746	40.1			
+25	2601	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Patterson Creek Subbasin	Canyon Creek (Snoqualmie River)	King County - DNRP	Ambient Monitoring	07PAT166087	47.583426	-121.951276	72.7	69	77.4	
+26	2602	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Patterson Creek Subbasin	Patterson Creek	King County - DNRP	Ambient Monitoring	07PAT187623	47.582202	-121.929938	27.1	33.7	57.8	
+27	2217	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Raging River Subbasin	Raging River tributary	King County - DNRP	Ambient Monitoring	07RAG018227	47.479150	-121.892999	91.4	81.8		
+28	2224	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Raging River Subbasin	Snoqualmie River tributary (Raging River subbasin)	King County - DNRP	Ambient Monitoring	07RAG002867	47.498716	-121.919170	90.2	98.5	98.9	
+29	2216	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Raging River Subbasin	Snoqualmie River tributary (Raging River subbasin)	King County - DNRP	Ambient Monitoring	07RAG022147	47.457368	-121.836318	88.2	94.2	93.6	
+30	2595	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Tokul Creek Subbasin	Tokul Creek	King County - DNRP	Ambient Monitoring	07TKL047047	47.580200	-121.781830	92.8	93.7	91.5	
+31	2594	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Tokul Creek Subbasin	Tokul Creek	King County - DNRP	Ambient Monitoring	07TKL072439	47.621687	-121.784871	94.8	98.5	98.7	
+32	2815	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Tolt River Subbasin	Lower S Fork Tolt River tributary (0303)	King County - DNRP	Ambient Monitoring	07LNT163403	47.744299	-121.820777	88.4	91.3	81	
+33	3241	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Tolt River Subbasin	Unnamed Tolt River tributary (0294)	Snoqualmie Tribe	Unnamed Tributary to Lower Tolt River 2022	Tolt_trib_lower	47.659630	-121.874710		23.1		
+34	3240	WRIA 7 - Snohomish	Lower Snoqualmie Basin	Tolt River Subbasin	Unnamed Tolt River tributary (0294)	Snoqualmie Tribe	Unnamed Tributary to Lower Tolt River 2022	Tolt_trib_upper	47.660780	-121.872560		59.4		
+35	508	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Edgewater Creek	City of Everett	Ambient Monitoring	Edg	47.951900	-122.287420	10.3	6.1	12	10.9
+36	505	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Glenwood Creek	City of Everett	Ambient Monitoring	Gle	47.958390	-122.249950	39.4	10.2	40.5	18.9
+37	510	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Japanese Creek	City of Everett	Ambient Monitoring	Jap	47.950030	-122.293270	22.1	4.7	9.6	18.3
+38	506	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Merrill and Ring Creek	City of Everett	Ambient Monitoring	Mer	47.957990	-122.258860	27.6	11.8	26.4	24.4
+39	503	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Pigeon Creek	City of Everett	Ambient Monitoring	Pig1	47.969680	-122.230020	7.6	2.7	8.9	5.7
+40	504	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Pigeon Creek	City of Everett	Ambient Monitoring	Pig2	47.963380	-122.239390	16.2	19.4	31.6	25.3
+41	507	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Powder Mill Creek	City of Everett	Ambient Monitoring	Pow	47.951610	-122.271310	29.1	10.7	33.8	24.8
+42	509	WRIA 7 - Snohomish	Snohomish Basin	Everett Subbasin	Woods Creek (Everett)	City of Everett	Ambient Monitoring	Woo	47.924980	-122.185520	24	7.3	26	28
+43	3243	WRIA 7 - Snohomish	Snohomish Basin	Quilceda Creek Subbasin	Quilceda Creek	The Tulalip Tribes	Tulalip Tribes Watershed Health Stream Monitoring	TTW044HS-WFQC02	48.103692	-122.187208		40.9	23.6	
+44	3244	WRIA 7 - Snohomish	Snohomish Basin	Tulalip Creek Subbasin	Tulalip Creek	The Tulalip Tribes	Tulalip Tribes Watershed Health Stream Monitoring	TTW044HS-TULA01	48.073874	-122.285486		63.7	56.2	
+45	2374	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS026663	47.544336	-121.543278	83.6	72.5	75.3	
+46	2362	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS033235	47.516840	-121.611660	94.8	89.8	84.9	
+47	2363	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS055075	47.488376	-121.719565	83.9	81.5	95.3	
+48	2365	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS093027	47.486270	-121.757711	67.8	68.6	63	
+49	2591	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS103591	47.543240	-121.541460	92	95.9	92.9	
+50	2604	WRIA 7 - Snohomish	Snoqualmie Forks Basin	Lower Middle Fork Snoqualmie Subbasin	Snoqualmie River - Middle Fork tributary (Lower)	King County - DNRP	Ambient Monitoring	07LMS213875	47.495175	-121.640286	73.4	69.6	86.2	
+51	2383	WRIA 7 - Snohomish	Snoqualmie Forks Basin	S Fork Snoqualmie Subbasin	Snoqualmie River - S Fork tributary	King County - DNRP	Ambient Monitoring	07SFS009443	47.467888	-121.752865	82.5	54.6	86.7	
+52	2222	WRIA 7 - Snohomish	Snoqualmie Forks Basin	S Fork Snoqualmie Subbasin	Snoqualmie River - S Fork tributary	King County - DNRP	Ambient Monitoring	07SFS011059	47.488057	-121.785286	76.9	70.7	74.9	
+53	2221	WRIA 7 - Snohomish	Snoqualmie Forks Basin	S Fork Snoqualmie Subbasin	Snoqualmie River - S Fork tributary	King County - DNRP	Ambient Monitoring	07SFS011475	47.440617	-121.666430	77.1	79.8	61	
+54	2384	WRIA 7 - Snohomish	Snoqualmie Forks Basin	S Fork Snoqualmie Subbasin	Snoqualmie River - S Fork tributary	King County - DNRP	Ambient Monitoring	07SFS041891	47.470956	-121.772703	62.8	63.8	77.7	
+55	2389	WRIA 7 - Snohomish	Snoqualmie Forks Basin	S Fork Snoqualmie Subbasin	Snoqualmie River - S Fork tributary	King County - DNRP	Ambient Monitoring	07SFS066611	47.440732	-121.649546	78.1	61.4	69.2	
+56	136	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	King County - DNRP	Ambient Monitoring	08EAS2446	47.552530	-122.165120	62.3	28.2	60.1	
+57	1939	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	City of Bellevue	Macroinvertebrates	CoalBelRM1.3	47.562500	-122.171400	33.6	7.3	30.2	
+58	571	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	City of Bellevue	Macroinvertebrates	CoalBelRM4.0	47.541777	-122.141785	53.8	52.6	61.1	
+59	3097	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	City of Bellevue	Macroinvertebrates	CoalLow_21	47.566100	-122.178700	16.6	17.7	28.5	
+60	3101	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	City of Bellevue	Macroinvertebrates	CoalRedtown_21	47.537180	-122.132080	34.6	56.6	36	
+61	3091	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.)	City of Bellevue	Macroinvertebrates	CoalSkagit_21	47.572800	-122.188900	13.9	19.6	21.4	
+62	137	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.) tributary (0273)	King County - DNRP	Ambient Monitoring	08EAS2540	47.550172	-122.156867	28.5	29.3	37.1	
+63	3102	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Coal Creek (Lake Wash.) tributary (0275)	City of Bellevue	Macroinvertebrates	NewcastleTrib_21	47.553200	-122.166500	35.8	29.7	24.8	
+64	2608	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Coal Creek (Cedar) Subbasin	Newport Creek	City of Bellevue	Macroinvertebrates	NewpBelRM0.0	47.566200	-122.180100	13.2	2	16.4	
+65	1856	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Bellevue N Subbasin	Cochran Springs Creek	City of Kirkland	B-IBI	CochranKirk1	47.645496	-122.202811	18.9		9.5	
+66	3099	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Bellevue N Subbasin	Yarrow Creek Subbasin	City of Bellevue	Macroinvertebrates	YarrowMain_21	47.639670	-122.185770	37.4	40.1	52.4	
+67	1940	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Bellevue N Subbasin	Yarrow Creek Subbasin	City of Bellevue	Macroinvertebrates	YarrowWestTribBelRM0.2	47.642250	-122.204170	19.2	12.3	8.6	
+68	1229	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Bellevue S Subbasin	Lakehurst Creek	City of Bellevue	Macroinvertebrates	Lkhrst405RM0.3	47.555370	-122.188856	1.2	3		
+69	204	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Kenmore N Subbasin	Lake Washington tributary (0056)	King County - DNRP	Ambient Monitoring	08WES1178	47.766499	-122.263888	8.1	4.1	16.8	
+70	131	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	E Lake Washington - Kenmore S Subbasin	Denny Creek	King County - DNRP	Ambient Monitoring	08EAS1536	47.709929	-122.248781	32.2	22.4	27.6	
+71	134	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Forbes Creek Subbasin	Forbes Creek (0242)	King County - DNRP	Ambient Monitoring	08EAS2191	47.695551	-122.197014	13.4	5.7	13.6	
+72	559	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Forbes Creek Subbasin	Forbes Creek (0242)	City of Kirkland	B-IBI	ForbesKirk1	47.696825	-122.183463	9.4		13.3	
+73	560	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Forbes Creek Subbasin	Forbes Creek (0242)	City of Kirkland	B-IBI	ForbesKirk2	47.696664	-122.188156	19	21		
+74	1602	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	BillyKirk1	47.713408	-122.215624	17.1		13.9	
+75	1604	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	E1186	47.725800	-122.192800	26.6	24.1		
+76	1862	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	HazenHills	47.719000	-122.179000	1.5		3	
+77	555	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	JuanitaKirk1	47.715982	-122.207378	17.8	25.5		
+78	557	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	JuanitaKirk3	47.711081	-122.210285	19		26.3	
+79	558	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	JuanitaKirk4	47.707183	-122.215498	18.6	30.6		
+80	1603	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Juanita Creek Subbasin	Juanita Creek	City of Kirkland	B-IBI	KingsgateKirk1	47.721479	-122.196523	4.8	8.8		
+81	138	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	East Creek	King County - DNRP	Ambient Monitoring	08EAS2546	47.582723	-122.157426	3.5	0	1.2	
+82	3095	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Goff Creek	City of Bellevue	Macroinvertebrates	Goff132nd_21	47.619900	-122.164000	11.5	11.3	10.7	
+83	563	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Goff Creek	City of Bellevue	Macroinvertebrates	GoffBelRM1.4	47.631000	-122.166000		23.9	11.7	
+84	3112	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Goff Creek	City of Bellevue	Macroinvertebrates	GoffUsBp_21	47.631735	-122.166220	7.2			
+85	135	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek	King County - DNRP	Ambient Monitoring	08EAS2272	47.623286	-122.156843	30.5	20.1	14.2	
+86	570	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek	City of Bellevue	Macroinvertebrates	KelBelRM0.2	47.603000	-122.181000	21.2	23.4	17.1	
+87	565	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek	City of Bellevue	Macroinvertebrates	KelBelRM2.3	47.614000	-122.164000		24.2		
+88	566	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek	City of Bellevue	Macroinvertebrates	KelBelRM2.4	47.616000	-122.164000	27.6		21	
+89	569	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek	City of Bellevue	Macroinvertebrates	KelBelRM3.9	47.620790	-122.144490		16.2	16	
+90	1228	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Kelsey Creek, West Tributary	City of Bellevue	Macroinvertebrates	WestTribFarmRM0.4	47.604893	-122.164781	10.2	10.8	25.8	
+91	3109	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Valley Creek (Bellevue)	City of Bellevue	Macroinvertebrates	ValleyAPTS_21	47.632640	-122.152150	21.1	25.5	26.6	
+92	3094	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Kelsey Creek Subbasin	Valley Creek (Bellevue)	City of Bellevue	Macroinvertebrates	ValleyBGC_21	47.653400	-122.151600	10.7	15.7	8.7	
+93	123	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Cedar River - Lower tributary (0311)	King County - DNRP	Ambient Monitoring	08CED2898	47.461466	-122.125545	54.3	58.6	52.3	
+94	127	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Hotel Creek (0342)	King County - DNRP	Ambient Monitoring	08CED4975	47.410569	-121.921792		72.2		
+95	122	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Madsen Creek	King County - DNRP	Ambient Monitoring	08CED2711	47.453235	-122.137979	31.6	28.3	32.8	
+96	120	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Maplewood Creek	King County - DNRP	Ambient Monitoring	08CED2433	47.474227	-122.163593	37.8	35.5	41.5	
+97	121	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Molasses Creek	King County - DNRP	Ambient Monitoring	08CED2518	47.466759	-122.159109	55.5	42.7	65.4	
+98	125	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Rock Creek (Lower Cedar)	King County - DNRP	Ambient Monitoring	08CED4192	47.374751	-122.017672	93.8	85.7	92.9	
+99	518	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Taylor Creek/Jem Creek (Lower Cedar)	King County - DNRP	Regulatory Effectiveness	31I	47.409127	-122.025259	82.5	89.3		
+100	129	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Webster Creek - Upper (0341)	King County - DNRP	Ambient Monitoring	08CED5046	47.427700	-121.915450	63.6	85	97.1	
+101	517	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lower Cedar River Subbasin	Webster Creek - Upper (0341)	King County - DNRP	Regulatory Effectiveness	31Q	47.416394	-121.919380	89.3	90.9		
+102	201	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lyon Creek Subbasin	Lyon Creek	King County - DNRP	Ambient Monitoring	08WES0905	47.759565	-122.286830	46.4	42.3	41.5	
+103	760	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lyon Creek Subbasin	Lyon Creek	City of Lake Forest Park	Benthic Invertebrates	LyonLFPS35th	47.768000	-122.293550	29.5	32.4	26.3	51.9
+104	761	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Lyon Creek Subbasin	Lyon Creek	City of Lake Forest Park	Benthic Invertebrates	LyonLFPSFiene	47.756917	-122.283400	40	39.7	37.2	45.4
+105	132	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	May Creek Subbasin	May Creek (Lake Washington)	King County - DNRP	Ambient Monitoring	08EAS1964	47.529663	-122.200605	41.9	49.4	50.9	
+106	133	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	May Creek Subbasin	May Creek (Lake Washington)	King County - DNRP	Ambient Monitoring	08EAS2058	47.519171	-122.194691	52.3	55.7	59.8	
+107	139	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	May Creek Subbasin	May Creek (Lake Washington)	King County - DNRP	Ambient Monitoring	08EAS2631	47.518948	-122.163144	59.6	49	75.2	
+108	200	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	McAleer Creek Subbasin	McAleer Creek	King County - DNRP	Ambient Monitoring	08WES0903	47.752199	-122.281877	27.2	37.7	33.1	
+109	3113	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	McAleer Creek Subbasin	McAleer Creek	City of Lake Forest Park	Benthic Invertebrates	2900PerkinsWay	47.759895	-122.297523	31.1	54.5		
+110	762	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	McAleer Creek Subbasin	McAleer Creek	City of Lake Forest Park	Benthic Invertebrates	McAlLFPS196th	47.770600	-122.311500			39.9	49.6
+111	763	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	McAleer Creek Subbasin	McAleer Creek	City of Lake Forest Park	Benthic Invertebrates	McAlLFPSAnmlAcres	47.755417	-122.287550	41.7	37.4	49.6	31.9
+112	3100	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Mercer Slough Subbasin	Sunset Creek	City of Bellevue	Macroinvertebrates	SunsetCC_21	47.569810	-122.144620	1.2	13.4	15.3	
+113	3111	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Mercer Slough Subbasin	Sunset Creek	City of Bellevue	Macroinvertebrates	SunsetRavine_21	47.579230	-122.161870		4.8		
+114	199	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Maple Leaf Creek	King County - DNRP	Ambient Monitoring	08WES0629	47.702708	-122.308342	3.6	5.5	22.1	
+115	469	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	95T	47.696700	-122.277700	13.4		12.3	
+116	475	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	KNKC	47.702320	-122.308610	3.8	4.3	14	
+117	2681	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	KNKT_D	47.701090	-122.307560	9.6	4.3	16.5	
+118	2682	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	KNKT_U	47.701401	-122.308410	9.4		11.6	
+119	2607	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	KNKT-U	47.701401	-122.308410		5.1		
+120	3028	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	LCPFP_1	47.719482	-122.303475	7.4	17.1	3.9	
+121	3029	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	LCPFP_2	47.720926	-122.304972	6.9	6.2	8.8	
+122	473	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	NFCC	47.710710	-122.289500	23.9	10.3	23	
+123	471	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	NFCT	47.706900	-122.289900	7.5	10.9	31.3	
+124	474	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	SFCC	47.706920	-122.291150	3.1	9	7.4	
+125	476	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Project Evaluation	SFCT	47.706912	-122.290087	10.4	16.4	7.3	
+126	3486	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	Sno-King Watershed Council	Sno-King Watershed Council benthic macroinvertebrate analysis of urban & suburban streams in King and Snohomish Counties	TCA001	47.703920	-122.310570				9.8
+127	467	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TMMA1199	47.706374	-122.290034	16.9		13.6	
+128	46	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TMMA3168	47.696096	-122.276095	11.2		14.3	
+129	47	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TMMA8751	47.705096	-122.287017	17.6		16.3	
+130	49	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TNMA0609	47.724785	-122.314558	14.1		6.2	
+131	51	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TNMA7673	47.723404	-122.318472	6.3		6.4	
+132	53	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TSMA6612	47.706561	-122.318321	3.8			
+133	54	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Thornton Creek Subbasin	Thornton Creek	City of Seattle	Status & Trends	TSMA7774	47.704987	-122.298361	8.6		20	
+134	128	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	Upper Cedar River Subbasin	Rock Creek (Upper Cedar)	King County - DNRP	Ambient Monitoring	08CED5032	47.415086	-121.887131	97.4	15.3	99.5	
+135	198	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle N Subbasin	Ravenna Creek	King County - DNRP	Ambient Monitoring	08WES0622	47.673452	-122.310727	18.1	16.7	12.5	
+136	207	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Lake Washington tributary	King County - DNRP	Ambient Monitoring	08WES1579	47.483496	-122.227268	5	1.8	7.2	
+137	206	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Lake Washington tributary (0464B)	King County - DNRP	Ambient Monitoring	08WES1490	47.503982	-122.227702	4.7	9.8	8.9	
+138	203	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Mapes Creek	King County - DNRP	Ambient Monitoring	08WES1037	47.518425	-122.268797	36.7	40.8		
+139	2358	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Mapes Creek	City of Seattle	Project Evaluation	MA01	47.523639	-122.263647	5.7	8.3	16.4	
+140	39	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Mapes Creek	City of Seattle	Status & Trends	MAMA6255	47.514485	-122.267667		15.7		
+141	205	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	King County - DNRP	Ambient Monitoring	08WES1340	47.507869	-122.247582	18	16.7	28.4	
+142	22	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Status & Trends	TA03	47.508725	-122.248071		32.5		
+143	516	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Status & Trends	TAEF6250	47.502649	-122.245946		31.9		
+144	2984	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Project Evaluation	TAMA_CONF	47.503428	-122.246800	31.6	23.1	37.1	
+145	2600	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Project Evaluation	TAMA_MOUTH	47.512192	-122.246307	28.6	26.9	26.7	
+146	43	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Status & Trends	TAMA7468	47.506984	-122.247134		14.7		
+147	44	WRIA 8 - Cedar-Sammamish	Cedar River / Lake Washington Basin	W Lake Washington - Seattle S Subbasin	Taylor Creek (W Lake Washington)	City of Seattle	Status & Trends	TAWF4847	47.503047	-122.246759		22.7		
+148	3219	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Boeing Creek Subbasin	Boeing Creek	University of Washington	Boeing Creek - Hidden Lake Dam Removal Biomonitoring	BC-DS1	47.750185	-122.371428		12.3		
+149	3220	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Boeing Creek Subbasin	Boeing Creek	University of Washington	Boeing Creek - Hidden Lake Dam Removal Biomonitoring	BC-DS2	47.749059	-122.373656		21.5		
+150	3217	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Boeing Creek Subbasin	Boeing Creek	University of Washington	Boeing Creek - Hidden Lake Dam Removal Biomonitoring	BC-US1	47.753380	-122.368150		25.8		
+151	3218	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Boeing Creek Subbasin	Boeing Creek	University of Washington	Boeing Creek - Hidden Lake Dam Removal Biomonitoring	BC-US2	47.754102	-122.365334		24.9		
+152	526	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Mohlendorph Creek	City of Seattle	Project Evaluation	MOHL	47.712560	-122.370743	20.6		7.8	
+153	55	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Pipers Creek	City of Seattle	Status & Trends	PI01	47.710954	-122.372315	17.2		20	
+154	56	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Pipers Creek	City of Seattle	Status & Trends	PI02	47.705213	-122.364284	23.5		11.8	
+155	40	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Pipers Creek	City of Seattle	Project Evaluation	PIMA6462	47.710676	-122.370107	6.3		11.1	
+156	41	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Pipers Creek	City of Seattle	Status & Trends	PIMA7729	47.707693	-122.365004	7.3		4.3	
+157	42	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Venema Creek	City of Seattle	Project Evaluation	PIVE1895	47.711465	-122.371743	23.8		23.6	
+158	527	WRIA 8 - Cedar-Sammamish	Puget Sound (Cedar-Sammamish) Basin	Pipers Creek Subbasin	Venema Creek	City of Seattle	Project Evaluation	VENE	47.712379	-122.369959	31		31.2	
+159	140	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Bear Creek (Sammamish River)	King County - DNRP	Ambient Monitoring	08BEA3474	47.677597	-122.098301	44.8		40	
+160	115	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Bear Creek (Sammamish River)	King County - DNRP	Ambient Monitoring	08BEA3650	47.717871	-122.076997	67.4	58.3	56.7	
+161	117	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Bear Creek (Sammamish River)	King County - DNRP	Ambient Monitoring	08BEA3747	47.758758	-122.057993	46.8	49	46.3	
+162	3031	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Bear Creek (Sammamish River)	Sno-King Watershed Council	Sno-King Watershed Council benthic macroinvertebrate analysis of urban & suburban streams in King and Snohomish Counties	5303335	47.697600	-122.091300				51.9
+163	111	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Cold Creek	King County - DNRP	Ambient Monitoring	08BEA3321	47.754916	-122.104024	61.6	69.7	58.7	
+164	119	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Colin Creek	King County - DNRP	Ambient Monitoring	08BEA3914	47.733020	-122.059980	79.9	72.5	40	
+165	2660	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Colin Creek	City of Redmond	RPWS	COLIN-1	47.714500	-122.040400		23.8	26.5	
+166	114	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Cottage Lake Creek	King County - DNRP	Ambient Monitoring	08BEA3571	47.744769	-122.088883	42.6	44.8	22.3	
+167	1608	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Mackey Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	MacRed212	47.694974	-122.056067	83.6	77.8	53.6	
+168	110	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	King County - DNRP	Ambient Monitoring	08BEA3312	47.703496	-122.092540	31.5	24	53.4	
+169	2664	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	City of Redmond	RPWS	MONT-1	47.703400	-122.092800	53.1	39.6	38.2	
+170	2665	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	City of Redmond	RPWS	MONT-2	47.705400	-122.100000	48.6	32.3	34.3	
+171	2666	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	City of Redmond	RPWS	MONT-3	47.704000	-122.102200	22.5	20.4	20.2	
+172	2667	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	City of Redmond	RPWS	MONT-4	47.703700	-122.102900	31.9	19.4	15.9	
+173	2668	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Monticello Creek	City of Redmond	RPWS	MONT-5	47.709100	-122.104000		9.4	21.7	
+174	644	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Perrigo Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	PerrRed182	47.688266	-122.104142	58.8	50.6	58.1	
+175	521	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	King County - DNRP	Regulatory Effectiveness	02O	47.711746	-122.052054	72.3	73		
+176	522	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	King County - DNRP	Regulatory Effectiveness	02P	47.706608	-122.054366	79.5	88.6		
+177	116	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	King County - DNRP	Ambient Monitoring	08BEA3737	47.718328	-122.073941	92	78.2	67.1	
+178	2669	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	City of Redmond	RPWS	SIDL-1	47.712800	-122.056100	40.8	26	21.4	
+179	2670	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	City of Redmond	RPWS	SIDL-2	47.711800	-122.052000	35.3	39.6	58.2	
+180	2671	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Seidel Creek	City of Redmond	RPWS	SIDL-3	47.706600	-122.054400	40	37.4	23	
+181	1783	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Stensland Creek	King County - Roads	CIP Support	Stensland Lower	47.685850	-122.081875	55.9	65.2	57.1	
+182	947	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Stensland Creek	King County - Roads	CIP Support	Stensland Middle	47.686306	-122.080869	65.7	55.7	67.9	
+183	1958	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Stensland Creek	King County - Roads	CIP Support	Stensland Ponds-Reach #1	47.684847	-122.086897	13.8	8.1	2.3	
+184	1959	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Stensland Creek	King County - Roads	CIP Support	Stensland Ponds-Reach #2	47.685453	-122.082442	51.3	62	44.4	
+185	946	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Stensland Creek	King County - Roads	CIP Support	Stensland Upper	47.687381	-122.076594	42.5			
+186	118	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Struve Creek	King County - DNRP	Ambient Monitoring	08BEA3826	47.733600	-122.058810	80.5	71.2	70.8	
+187	2676	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Tylers Creek	City of Redmond	RPWS	TYLR-1	47.696400	-122.093500	26.5	18.8	13.4	
+188	2677	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Bear Creek Subbasin	Tylers Creek	City of Redmond	RPWS	TYLR-2	47.698900	-122.098700	8.1	5.1	10.6	
+189	165	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Ebright Creek	King County - DNRP	Ambient Monitoring	08LAK3627	47.608584	-122.071866		48.9	64.1	
+190	3025	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Ebright Creek	City of Sammamish	WQ Expansion	EBR	47.601558	-122.063481		23.5		
+191	166	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Eden/George Davis Creek	King County - DNRP	Ambient Monitoring	08LAK3628	47.615284	-122.066971	61.1	63.5	20.8	
+192	168	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Laughing Jacobs Creek	King County - DNRP	Ambient Monitoring	08LAK3879	47.565113	-122.050183	67.1	50.4	42.8	
+193	3024	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Laughing Jacobs Creek	City of Sammamish	WQ Expansion	LJU	47.578403	-122.025125	6.1	1.9		
+194	169	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Many Springs Creek	King County - DNRP	Ambient Monitoring	08LAK3880	47.569898	-122.053288	68.5	53.9	58.6	
+195	163	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Pine Lake Creek	King County - DNRP	Ambient Monitoring	08LAK3540	47.600939	-122.080335	39	49.7	46.1	
+196	3026	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Pine Lake Creek	City of Sammamish	WQ Expansion	PINE	47.590876	-122.060496		7.2		
+197	3237	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Zackuse Creek	Snoqualmie Tribe	Zackuse Creek 2022	Zackuse_lower	47.610080	-122.069090		25.3		
+198	3238	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Zackuse Creek	Snoqualmie Tribe	Zackuse Creek 2022	Zackuse_upper	47.609950	-122.065740		26.8		
+199	3027	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	E Lake Sammamish Subbasin	Zackuse Creek	City of Sammamish	WQ Expansion	ZAK	47.610670	-122.069360	22.4	21.9	38.6	
+200	144	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0107)	King County - DNRP	Ambient Monitoring	08EVA3642	47.679720	-122.077850	59.9	53.6	62.3	
+201	143	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0108)	King County - DNRP	Ambient Monitoring	08EVA3640	47.674662	-122.072706	37.4	50.2	60	
+202	2659	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0108)	City of Redmond	RPWS	EVALSS	47.675000	-122.072700	61.9			
+203	2663	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0108)	City of Redmond	RPWS	EVAMS	47.673300	-122.063200	64.2			
+204	145	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0108A)	King County - DNRP	Ambient Monitoring	08EVA3813	47.673410	-122.063447	77.5	67	62.8	
+205	142	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Evans Creek Subbasin	Evans Creek tributary (0111E)	King County - DNRP	Ambient Monitoring	08EVA3637	47.652960	-122.068410	36.4	47	53.8	
+206	156	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Carey Creek	King County - DNRP	Ambient Monitoring	08ISS4724	47.427716	-121.978422	78.5	81.4	92	
+207	153	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Fifteenmile Creek	King County - DNRP	Ambient Monitoring	08ISS4294	47.484906	-122.028632	70	80		
+208	155	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	High Point Creek	King County - DNRP	Ambient Monitoring	08ISS4573	47.531946	-121.976205	82	90.7	72.6	
+209	157	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Holder Creek	King County - DNRP	Ambient Monitoring	08ISS4730	47.433941	-121.971913	61.7	67.4	89.9	
+210	158	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Holder Creek tributary	King County - DNRP	Ambient Monitoring	08ISS4735	47.470750	-121.964356	90.2	95.8	99.4	
+211	150	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Issaquah Creek	King County - DNRP	Ambient Monitoring	08ISS3877	47.551207	-122.046876	78.9	64.7	75.3	
+212	152	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Issaquah Creek	King County - DNRP	Ambient Monitoring	08ISS3962	47.538939	-122.042600	87.3	63.6	77.5	
+213	159	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Issaquah Creek - E Fork	King County - DNRP	Ambient Monitoring	08ISS4748	47.532008	-121.980821	95.9	53.4	58.1	
+214	160	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Issaquah Creek Subbasin	Issaquah Creek - E Fork	King County - DNRP	Ambient Monitoring	08ISS4884	47.525851	-121.941132	100	99.9	94.6	
+215	171	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2585	47.758429	-122.160347	51.9	43.5	40.8	
+216	172	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2602	47.839940	-122.162250	73	67.1	57.2	
+217	173	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2603	47.844461	-122.162851	49.1	55.7	60.6	
+218	174	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2682	47.763211	-122.156929	59.9	49.5	42.2	
+219	175	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2685	47.778471	-122.154549		68.5		
+220	176	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2692	47.811464	-122.158997	70.2	69.5	66.3	
+221	177	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Little Bear Creek Subbasin	Little Bear Creek	King County - DNRP	Ambient Monitoring	08LIT2781	47.790039	-122.144532	49.5	54.8	49.3	
+222	183	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek	King County - DNRP	Ambient Monitoring	08NOR1750	47.852841	-122.222496	70.3	53.4	49.2	
+223	187	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek	King County - DNRP	Ambient Monitoring	08NOR2306	47.778784	-122.187628	18.6	29.9	22.2	
+224	3224	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek	City of Bothell	Bothell Bioassesment	COB05519-013032	47.782380	-122.190419		14.6		
+225	186	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek tributary	King County - DNRP	Ambient Monitoring	08NOR2115	47.791242	-122.195243	34.1	36.4	24.2	
+226	3223	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek tributary	City of Bothell	Bothell Bioassesment	COB 5519-000744	47.795881	-122.188603		37.2		
+227	3222	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek tributary	City of Bothell	Bothell Bioassesment	COB05519-011576	47.797772	-122.226154		14.3		
+228	3367	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	North Creek tributary	City of Bothell	Bothell Bioassesment	QC-2	47.797772	-122.226150			9.8	
+229	2058	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	North Creek Subbasin	Palm Creek (Bothell)	City of Bothell	Bothell Bioassesment	PM-1	47.790892	-122.193664		42.8	48	
+230	1606	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Clise Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	CliseRed214	47.661469	-122.124825	53.3	40.4	36.2	
+231	2661	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Country Creek	City of Redmond	RPWS	CTRY-1	47.650400	-122.114900	7.8	10	12.6	
+232	2662	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Country Creek	City of Redmond	RPWS	CTRY-2	47.647400	-122.119700	34.8	23.3	29	
+233	193	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Gold Creek (Sammamish)	King County - DNRP	Ambient Monitoring	08SAM2865	47.742702	-122.141764	32.4	47.6	36.2	
+234	1605	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	High School Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	HSRed210	47.709755	-122.124835	41.7	37.2	19.8	
+235	188	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Peters Creek	King County - DNRP	Ambient Monitoring	08SAM0000	47.682628	-122.143714	11.7	7	4.7	
+236	619	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Peters Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	PeteRed174	47.679738	-122.142957	7	4.4	5.5	
+237	189	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0068)	King County - DNRP	Ambient Monitoring	08SAM1914	47.745483	-122.211857	27.6	27.2	26.2	
+238	192	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0090)	King County - DNRP	Ambient Monitoring	08SAM2862	47.733381	-122.137220	50.8	58.1	61.6	
+239	197	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0095D)	King County - DNRP	Ambient Monitoring	08SAM3047	47.720449	-122.124316	64.2	69.7	55.1	
+240	196	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0095F)	King County - DNRP	Ambient Monitoring	08SAM3045	47.712241	-122.120570	29.7	35.4	30.5	
+241	190	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0096D)	King County - DNRP	Ambient Monitoring	08SAM2674	47.729080	-122.152560	19.5	25.1	32.6	
+242	191	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Sammamish River tributary (0101)	King County - DNRP	Ambient Monitoring	08SAM2855	47.696997	-122.131529	15.2	11.1	9	
+243	2672	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Tosh Creek	City of Redmond	RPWS	TOSH-1	47.655000	-122.118000	26.3	25.4	22.4	
+244	2673	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Tosh Creek	City of Redmond	RPWS	TOSH-2	47.652700	-122.118700	27.2	25.1	26.4	
+245	2674	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Tosh Creek	City of Redmond	RPWS	TOSH-3	47.651500	-122.125400	8.3	13	9.5	
+246	2675	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Tosh Creek	City of Redmond	RPWS	TOSH-4	47.651300	-122.125700	11.3	14.8	4	
+247	1711	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Valley Estates Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	VECB229	47.696299	-122.137252	14.3	22.2	15.3	
+248	2061	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Waynita Creek	City of Bothell	Bothell Bioassesment	WC-1	47.745099	-122.211531		9.5		
+249	1709	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Sammamish River Subbasin	Willows Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	WLCRK1B231	47.688290	-122.141934	29.7	28.2	30.1	
+250	181	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Swamp Creek Subbasin	Swamp Creek	King County - DNRP	Ambient Monitoring	08NOR1362	47.779822	-122.250431	43.1	41.9	33.7	
+251	182	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Swamp Creek Subbasin	Swamp Creek	King County - DNRP	Ambient Monitoring	08NOR1370	47.770053	-122.244606	40.8	52.1	58.3	
+252	167	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	Tibbetts Creek Subbasin	Tibbetts Creek - Lower	King County - DNRP	Ambient Monitoring	08LAK3699	47.541782	-122.064195	51.4	54.7	26.2	
+253	162	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Idylwood Creek	King County - DNRP	Ambient Monitoring	08LAK3121	47.641052	-122.106516	8.7	5.7	6.7	
+254	613	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Idylwood Creek	City of Redmond	Annual Benthos Monitoring: 2016 - Ongoing	IdylRed168	47.643183	-122.102326	11.1	15	11.6	
+255	3107	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Idylwood Creek	City of Bellevue	Macroinvertebrates	IdylwoodArdmore_21	47.635220	-122.111150		12.2	15.6	
+256	3092	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Lewis Creek (Lake Sammamish)	City of Bellevue	Macroinvertebrates	LewisBelowLakemont_21	47.558020	-122.113070	57.1	41.4	28.4	
+257	576	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Lewis Creek (Lake Sammamish)	City of Bellevue	Macroinvertebrates	LewisBelRM0.3	47.567000	-122.093000		51.5	42.3	
+258	575	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Lewis Creek (Lake Sammamish)	City of Bellevue	Macroinvertebrates	LewisBelRM0.8	47.562000	-122.099000	28.5	23.5	46.1	
+259	1941	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Lewis Creek (Lake Sammamish)	City of Bellevue	Macroinvertebrates	LewisBelRM2.1	47.557500	-122.114800	61.5	67.5	57.4	
+260	161	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Vasa Creek	King County - DNRP	Ambient Monitoring	08LAK2827	47.578488	-122.113038	19	2.2	16.7	
+261	1649	WRIA 8 - Cedar-Sammamish	Sammamish River Basin	W Lake Sammamish Subbasin	Vasa Creek	City of Bellevue	Macroinvertebrates	VasaRM1.9	47.565960	-122.137434	13.3	12.8	22.5	
+262	210	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Garrison Creek - S Fork	King County - DNRP	Ambient Monitoring	09BLA0722	47.407005	-122.216196	21.5	24.5	35.9	
+263	208	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Mill Creek (Kent)	King County - DNRP	Ambient Monitoring	09BLA0675	47.381499	-122.221081	20.2	35.1	18	
+264	209	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Mill Creek (Kent)	King County - DNRP	Ambient Monitoring	09BLA0716	47.382722	-122.223995	30.5	28.7	30.9	
+265	211	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Mill Creek (Kent)	King County - DNRP	Ambient Monitoring	09BLA0756	47.369338	-122.208823	14.5	28.2		
+266	213	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Panther Creek (Black River)	King County - DNRP	Ambient Monitoring	09BLA0771	47.442177	-122.207574	29.3	28.9	32.4	
+267	214	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Panther Creek (Black River)	King County - DNRP	Ambient Monitoring	09BLA0772	47.445022	-122.211052	35.1	17.2	19.2	
+268	212	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Springbrook Creek (Black River)	King County - DNRP	Ambient Monitoring	09BLA0768	47.428348	-122.214069	55.9	53.6		
+269	216	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Black River Subbasin	Springbrook Creek tributary (0006B)	King County - DNRP	Ambient Monitoring	09BLA0817	47.466040	-122.207183	1.4	1.2	0	
+270	225	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Coal Creek (Green) Subbasin	Coal Creek (Green River)	King County - DNRP	Ambient Monitoring	09DEE2208	47.266907	-121.916937	83.8	71	84.4	
+271	228	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Coal Creek (Green) Subbasin	Coal Creek (Green River)	King County - DNRP	Ambient Monitoring	09DEE2294	47.275939	-121.894775	79.1	85.6	89.3	
+272	217	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	King County - DNRP	Ambient Monitoring	09COV1165	47.319190	-122.119050	65.9	78.6	80.7	
+273	218	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	King County - DNRP	Ambient Monitoring	09COV1418	47.309330	-122.077692	78.3	60.1	68.9	
+274	220	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	King County - DNRP	Ambient Monitoring	09COV1756	47.328770	-122.022072	84.3	77.2	72.8	
+275	3454	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-CO01.5	47.312395	-122.107782			78.8	
+276	3455	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-CO02.2	47.312350	-122.096581			86.7	
+277	3456	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Covington Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-CO03.6	47.309330	-122.077692			80	
+278	222	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Rock Creek tributary (Covington)	King County - DNRP	Ambient Monitoring	09COV1862	47.317211	-122.005220	67.3	50.1	32.7	
+279	223	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Covington Creek Subbasin	Rock Creek tributary (Covington)	King County - DNRP	Ambient Monitoring	09COV1864	47.325762	-122.001348	56.8	42.9	45.7	
+280	224	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Deep Creek Subbasin	Deep Creek (Green River)	King County - DNRP	Ambient Monitoring	09DEE2163	47.282302	-121.932687	37.2	53.5	71.3	38.8
+281	226	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Deep Creek Subbasin	Deep Creek (Green River)	King County - DNRP	Ambient Monitoring	09DEE2211	47.285142	-121.923905	49.4	58.3	70.1	51.1
+282	230	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Duwamish River Subbasin	Duwamish River tributary (0001E)	King County - DNRP	Ambient Monitoring	09DUW0091	47.510357	-122.322142	8.1	8.6	29.3	
+283	232	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Duwamish River Subbasin	Duwamish River tributary (0003)	King County - DNRP	Ambient Monitoring	09DUW0225	47.502212	-122.300156	3.7	7.7	5.2	
+284	233	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Duwamish River Subbasin	Riverton Creek (003D)	King County - DNRP	Ambient Monitoring	09DUW0277	47.489932	-122.289451	28.9			
+285	234	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Jenkins Creek Subbasin	Jenkins Creek	King County - DNRP	Ambient Monitoring	09JEN1318	47.362218	-122.099903	84.4	51.9	39	
+286	235	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Jenkins Creek Subbasin	Jenkins Creek	King County - DNRP	Ambient Monitoring	09JEN1357	47.368900	-122.098899	63.6	62.5	66.8	
+287	3457	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Jenkins Creek Subbasin	Jenkins Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-JE02.6	47.362218	-122.099903			57.8	
+288	10	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Longfellow Creek	City of Seattle	Status & Trends	LF04	47.566307	-122.366733		0.5		
+289	35	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Longfellow Creek	City of Seattle	Status & Trends	LFMA0954	47.529961	-122.363695		9		
+290	36	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Longfellow Creek	City of Seattle	Status & Trends	LFMA2559	47.543087	-122.363956		4.4		
+291	37	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Longfellow Creek	City of Seattle	Status & Trends	LFMA3396	47.555002	-122.367783		3.4		
+292	38	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Longfellow Creek	City of Seattle	Status & Trends	LFMA3490	47.558780	-122.368681		0		
+293	1795	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Longfellow Creek Subbasin	Puget Creek	City of Seattle	Status & Trends	PU01	47.557726	-122.353826		1		
+294	240	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Lower Green River - E Subbasin	Green River - Lower tributary (S 277th St.)	King County - DNRP	Ambient Monitoring	09LOW0753	47.353074	-122.207510	33.3	41	19	
+295	239	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Lower Green River - E Subbasin	Olson Creek	King County - DNRP	Ambient Monitoring	09LOW0751	47.343487	-122.205040	82	79.9	77.4	
+296	237	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Lower Green River - W Subbasin	Lower Green River tributary (0036B)	King County - DNRP	Ambient Monitoring	09LOW0325	47.464905	-122.281488	9.1			
+297	246	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Middle Green River Subbasin	Cristy Creek	King County - DNRP	Ambient Monitoring	09MID1744	47.272614	-122.021072	63.7	68.3	77.3	
+298	247	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Middle Green River Subbasin	Cristy Creek	King County - DNRP	Ambient Monitoring	09MID1817	47.267990	-122.009736	61.9	66.4	70.6	
+299	249	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Middle Green River Subbasin	Green River - Middle tributary	King County - DNRP	Ambient Monitoring	09MID2426	47.315006	-121.867614	74.1	76.8	76.1	
+300	248	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Middle Green River Subbasin	Icy Creek	King County - DNRP	Ambient Monitoring	09MID1958	47.278886	-121.978571	59.4	51.2		
+301	242	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Middle Green River Subbasin	O'Grady Creek	King County - DNRP	Ambient Monitoring	09MID1374	47.275597	-122.088114	79	45.2	86.1	
+302	251	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Mill Creek Subbasin	Mill Creek (Auburn)	King County - DNRP	Ambient Monitoring	09MIL0340	47.303209	-122.272324	44.9	60.7	42	
+303	252	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Mill Creek Subbasin	Mill Creek (Auburn)	King County - DNRP	Ambient Monitoring	09MIL0390	47.303166	-122.260837	52	40.4	39.3	
+304	254	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Newaukum Creek Subbasin	Newaukum Creek	King County - DNRP	Ambient Monitoring	09NEW1657	47.250042	-122.037744	63.3	61.2	75.9	
+305	259	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Newaukum Creek Subbasin	Newaukum Creek	King County - DNRP	Ambient Monitoring	09NEW2102	47.231078	-121.946030	87.7	71.9	92	
+306	257	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Newaukum Creek Subbasin	Newaukum Creek - N Fork	King County - DNRP	Ambient Monitoring	09NEW2076	47.235936	-121.950976	65.7	80.3	85.8	
+307	260	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Newaukum Creek Subbasin	Newaukum Creek - N Fork	King County - DNRP	Ambient Monitoring	09NEW2128	47.234245	-121.935190	90.5	79.4	71	
+308	262	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Big Soos Creek	King County - DNRP	Ambient Monitoring	09SOO0943	47.308550	-122.169040	68.3	52	76.8	
+309	3452	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Big Soos Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-BS00.7	47.308550	-122.169040			64	
+310	3453	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Big Soos Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-BS04.7	47.336409	-122.135101			70.1	
+311	270	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Little Soos Creek	King County - DNRP	Ambient Monitoring	09SOO1209	47.358599	-122.125122	50.4	50.5	82.6	
+312	271	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Little Soos Creek	King County - DNRP	Ambient Monitoring	09SOO1283	47.372825	-122.113902	43.1	60.2	53.1	
+313	3458	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Little Soos Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-LS00.3	47.358599	-122.125122			64.3	
+314	3459	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Meridian Valley Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-MV00.2	47.372250	-122.147920			18.4	
+315	267	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Soos Creek	King County - DNRP	Ambient Monitoring	09SOO1130	47.318170	-122.135959	72.1	74.4	61.5	
+316	268	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Soos Creek	King County - DNRP	Ambient Monitoring	09SOO1134	47.336409	-122.135101	79.4	36.9	74.5	
+317	264	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Soosette Creek	King County - DNRP	Ambient Monitoring	09SOO1022	47.331725	-122.155276	63.6	58.2	65.6	
+318	3461	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Soos Creek Subbasin	Soosette Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-SO01.3	47.331725	-122.155276			59.9	
+319	2537	WRIA 9 - Duwamish-Green	Duwamish - Green River Basin	Upper Green River Subbasin	Sunday Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SUND04	47.253600	-121.383000			91	
+320	551	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Dumas Bay Subbasin	Joes Creek	City of Federal Way	Macroinvertebrate Sampling	JoesFW509	47.326731	-122.376700	10.4	9.7	10.6	
+321	552	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Dumas Bay Subbasin	Joes Creek	City of Federal Way	Macroinvertebrate Sampling	JoesFWLMR	47.324608	-122.376156	7.7	6.1	18.6	
+322	554	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Dumas Bay Subbasin	Lakota Creek	City of Federal Way	Macroinvertebrate Sampling	LakFWEast	47.325175	-122.367683	16.5	19.9	13.5	
+323	553	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Dumas Bay Subbasin	Lakota Creek	City of Federal Way	Macroinvertebrate Sampling	LakFWWWTP	47.325825	-122.369636	18.4	27.3	45.7	
+324	1	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Lower Puget Sound - Seattle Subbasin	Fauntleroy Creek	City of Seattle	Status & Trends	FA02	47.522438	-122.392214		51.5		
+325	34	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Lower Puget Sound - Seattle Subbasin	Fauntleroy Creek	City of Seattle	Status & Trends	FAMA0851	47.521366	-122.386388		38.8		
+326	515	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Lower Puget Sound - Seattle Subbasin	Schmitz Creek	City of Seattle	Status & Trends	SCMA9065	47.575194	-122.401214		10.1		
+327	1628	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Miller Creek Subbasin	Miller Creek	King County - DNRP	Miller-Walker	Miller_Cove	47.444560	-122.354510	4.6	3.2	20.2	
+328	1635	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Miller Creek Subbasin	Miller Creek	King County - DNRP	Miller-Walker	Miller_SWSSD	47.447902	-122.348134	8.8	14.9	16.5	
+329	1600	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Miller Creek Subbasin	Walker Creek	King County - DNRP	Miller-Walker	WalkerPreserve	47.452032	-122.337736	43.9	46.1	33.8	
+330	2949	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Beall Creek	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	BeallVNC1	47.448819	-122.445509			31	
+331	272	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Christenson Creek	King County - DNRP	Vashon	VashChris	47.402770	-122.516930	61.1	66.2	62.8	
+332	2657	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Ellis Creek (Vashon)	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	E1223	47.416948	-122.442399	18.6			
+333	523	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Fisher Creek (Vashon)	King County - DNRP	Regulatory Effectiveness	65B	47.383942	-122.481469	64.8	52.7		
+334	1910	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Fisher Creek (Vashon)	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	65B	47.383942	-122.481469		74		
+335	2714	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Gorsuch Creek	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	P847	47.453867	-122.445505	49.6			
+336	525	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Judd Creek	King County - DNRP	Regulatory Effectiveness	28A	47.403459	-122.468866	67.8	75	54.3	
+337	2816	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Shinglemill Creek	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	E1236	47.478435	-122.481798	67.3	48.7	42.4	
+338	2263	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Shinglemill Creek	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	ShingUp1	47.465210	-122.475060	43.5	59	51.1	
+339	274	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Shinglemill Creek	King County - DNRP	Vashon	VashShing	47.476280	-122.481500	56.9	46.8	35.4	
+340	524	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Tahlequah Creek	King County - DNRP	Regulatory Effectiveness	65A	47.334583	-122.508608	52.2	50.1		
+341	2261	WRIA 9 - Duwamish-Green	Puget Sound (Duwamish-Green) Basin	Vashon-Maury Island Subbasin	Tahlequah Creek	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	65A	47.334554	-122.508612	50.3			
+342	2759	WRIA 10 - Puyallup-White	Carbon River Basin	Carbon River Subbasin	Voight Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_VOIG_0.23	47.084444	-122.182500			67.5	
+343	3119	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_SPRA_1.27	47.109203	-122.145174	63.6			
+344	3208	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-RM0.3	47.104225	-122.150084		69.7		
+345	3209	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-RM4.05 MC	47.135016	-122.120051		77.1		
+346	3207	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-RM4.05 SC	47.135580	-122.120941		69		
+347	3214	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-RM6	47.139012	-122.091667		69.4		
+348	3216	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	S Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-RM6.3	47.136456	-122.081297		74.8		
+349	3478	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	South Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC_NC_RM4.1	47.135627	-122.120743				75.8
+350	3339	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	South Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-1	47.139316	-122.092016			78	
+351	3340	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	South Prairie Creek	Puyallup Tribe of Indians	Status and Trends	SPC-LB	47.133752	-122.058358			62.5	
+352	2699	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	Spiketon Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_SPIK_0.01	47.138415	-122.064285	62.9			
+353	3479	WRIA 10 - Puyallup-White	Carbon River Basin	S Prairie Creek Subbasin	Spring Creek	Puyallup Tribe of Indians	Status and Trends	SPRING_RM0.35	47.136179	-122.122573				53.4
+354	98	WRIA 10 - Puyallup-White	Carbon River Basin	Wilkeson Creek Subbasin	Wilkeson Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_WILK_3.38	47.114500	-122.063900			85.5	
+355	3342	WRIA 10 - Puyallup-White	Carbon River Basin	Wilkeson Creek Subbasin	Wilkeson Creek	Puyallup Tribe of Indians	Status and Trends	WILK-1	47.114029	-122.065434			75.9	
+356	3215	WRIA 10 - Puyallup-White	Carbon River Basin	Wilkeson Creek Subbasin	Wilkeson Creek	Puyallup Tribe of Indians	Status and Trends	WILK-RM0.1	47.135494	-122.074344		66.1		
+357	3211	WRIA 10 - Puyallup-White	Carbon River Basin	Wilkeson Creek Subbasin	Wilkeson Creek	Puyallup Tribe of Indians	Status and Trends	WILK-RM1.2	47.123531	-122.079323		78		
+358	3213	WRIA 10 - Puyallup-White	Carbon River Basin	Wilkeson Creek Subbasin	Wilkeson Creek	Puyallup Tribe of Indians	Status and Trends	WILK-RM3.0	47.114873	-122.068955		79.2		
+359	3468	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	Puyallup Tribe of Indians	Status and Trends	BOI_RM0.05	47.175995	-122.018501				47.9
+360	3333	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	Puyallup Tribe of Indians	Status and Trends	BOI-6	47.195458	-121.951852			65.8	
+361	3212	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	Puyallup Tribe of Indians	Status and Trends	BOI-GC#2	47.195297	-121.954730		88.6		
+362	3469	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	Puyallup Tribe of Indians	Status and Trends	BOINC_RM3.9	47.192079	-121.955794				74.9
+363	2227	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	King County - DNRP	Boise Ambient	BSE_1_MudMtnRd	47.175524	-122.018775	56.5	41.3		
+364	2228	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	King County - DNRP	Boise Ambient	BSE_21_GolfCrs	47.195154	-121.953301	88.2	34.8		
+365	2226	WRIA 10 - Puyallup-White	Green Waters Basin	Mud Mt Lake Subbasin	Boise Creek	King County - DNRP	Boise Ambient	BSE_8_268thAveSE	47.190111	-121.981778	71.7	77.2		
+366	2950	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Canyon Creek (Puyallup)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CL_CANY_0.54	47.202348	-122.359642		51		
+367	95	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Canyonfalls Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	MP_CANY_0.57	47.143672	-122.222738		7.1		
+368	1103	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Clarks Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CL_CLAR_3.93	47.177150	-122.317150		72.1		
+369	3334	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Clarks Creek	Puyallup Tribe of Indians	Status and Trends	CLK-7	47.177471	-122.316824			69.2	
+370	2697	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Diru Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CL_DIRU_0.59	47.191311	-122.339390			66	
+371	96	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Fennel Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	MP_FENN_0.50	47.151350	-122.216511			77.5	
+372	3336	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Hylebos Creek	Puyallup Tribe of Indians	Status and Trends	HYL-2	47.266667	-122.329880			30.4	
+373	3364	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFWEastO213	47.260300	-122.313900			44.7	
+374	3337	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Hylebos Creek	Puyallup Tribe of Indians	Status and Trends	HYL-M	47.273264	-122.329957			31.9	
+375	2953	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Rody Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CL_RODY_0.45	47.196154	-122.347017		57.8		
+376	3210	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Rody Creek	Puyallup Tribe of Indians	Status and Trends	RODY-1	47.196613	-122.345898		42.4		
+377	3477	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Simons Creek (Wapato Creek tributary 0020)	Puyallup Tribe of Indians	Status and Trends	SIMONS_RM0.5	47.221160	-122.305930				61.6
+378	3480	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Squally Creek	Puyallup Tribe of Indians	Status and Trends	SQUALLY_RM0.1	47.220846	-122.379493				64.6
+379	2401	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Swan Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CL_SWAN_0.76	47.224000	-122.394080			53.5	
+380	3481	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Swan Creek	Puyallup Tribe of Indians	Status and Trends	SWAN_RM1	47.224753	-122.393988				63.9
+381	3341	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	Swan Creek	Puyallup Tribe of Indians	Status and Trends	SWAN-6	47.225980	-122.393436			38.1	
+382	543	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFW359	47.279381	-122.320600	52.5	60	68.7	
+383	1782	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFW359Up	47.280641	-122.319514	53.8	46.3	59.2	
+384	548	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFW373Rest	47.268283	-122.328428	54.1	35.1	49.6	
+385	549	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFW99	47.273086	-122.329236	38.9	41.6	49.1	
+386	550	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFWFtBr	47.274106	-122.329531	33	43.6	36.9	
+387	541	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFWRest1	47.276875	-122.328142	31.1	30.9	36.7	
+388	542	WRIA 10 - Puyallup-White	Lower Puyallup River Basin	Lower Puyallup River Subbasin	W Hylebos Creek	City of Federal Way	Macroinvertebrate Sampling	HylbFWRest2	47.277750	-122.328389	20.3	40.6	34.9	
+389	3338	WRIA 10 - Puyallup-White	Lowland White River Basin	Lower White River Subbasin	Salmon Creek (Puyallup)	Puyallup Tribe of Indians	Status and Trends	SAL-2	47.217185	-122.224877			40.5	
+390	3472	WRIA 10 - Puyallup-White	Rainier Basin	Huckleberry Creek (Rainier) Subbasin	Huckleberry Creek (Rainier)	Puyallup Tribe of Indians	Status and Trends	HUCK_RM0.3	47.076911	-121.588333				81.7
+391	3470	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	Deer Creek (Puyallup)	Puyallup Tribe of Indians	Status and Trends	DEER_RM0.6	46.865872	-121.971959				79.8
+392	3471	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	Fox Creek (Puyallup)	Puyallup Tribe of Indians	Status and Trends	FOX_RM0.2	47.006583	-122.193045				81.3
+393	97	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	Kapowsin Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_KAPO_0.68	47.025054	-122.211038			58.7	
+394	3473	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	Kapowsin Creek	Puyallup Tribe of Indians	Status and Trends	KAP_RM3.5	46.992625	-122.194280				42.8
+395	3474	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	LeDout Creek	Puyallup Tribe of Indians	Status and Trends	LDT_RM0.35	46.935465	-122.055435				89.8
+396	3475	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Middle Puyallup River Subbasin	Niesson Creek	Puyallup Tribe of Indians	Status and Trends	NSN_RM1.45	46.896300	-122.043400				92.2
+397	3476	WRIA 10 - Puyallup-White	Upper Puyallup River Basin	Mowich Puyallup River Subbasin	Rushingwater Creek	Puyallup Tribe of Indians	Status and Trends	RUSH_RM2.25	46.898870	-121.969800				93
+398	1645	WRIA 11 - Nisqually	Lowland Nisqually River Basin	Muck Creek Subbasin	Lacamas Creek (Nisqually)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_LACA_0.45	47.005633	-122.531654			10.9	
+399	823	WRIA 11 - Nisqually	Lowland Nisqually River Basin	Yelm Creek Subbasin	Thompson Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	ThompThCoPowerCanal	46.977525	-122.638494			74.6	
+400	2231	WRIA 11 - Nisqually	Lowland Nisqually River Basin	Yelm Creek Subbasin	Yelm Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	YelmCkThCoPeterson	46.968333	-122.625000		64.5		
+401	2818	WRIA 11 - Nisqually	Mashel River/Ohop Creek Basin	Mashel River Subbasin	Little Mashel River	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_LMAS_0.31	46.853883	-122.277478	78.1			
+402	2951	WRIA 11 - Nisqually	Mashel River/Ohop Creek Basin	Mashel River Subbasin	Mashel River	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_MASH_0.23	46.846047	-122.332003		74		
+403	2819	WRIA 11 - Nisqually	Mashel River/Ohop Creek Basin	Mashel River Subbasin	Midway Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_MIDW_0.05	46.848830	-122.247941	71.4			
+404	99	WRIA 11 - Nisqually	Mashel River/Ohop Creek Basin	Ohop Creek Subbasin	Lynch Creek (Nisqually River)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_LYNC_0.29	46.879397	-122.275141		84.8		
+405	100	WRIA 11 - Nisqually	Mashel River/Ohop Creek Basin	Ohop Creek Subbasin	Ohop Creek (Nisqually)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_OHOP_0.17	46.846213	-122.367296		58.5		
+406	2695	WRIA 11 - Nisqually	Upper Nisqually River Basin	Goat Lake Subbasin	Copper Creek (Nisqually)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_COPP_0.33	46.758090	-121.961559	79			
+407	1591	WRIA 11 - Nisqually	Upper Nisqually River Basin	Goat Lake Subbasin	Goat Creek (Nisqually)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	NI_GOAT_0.07	46.751746	-121.941010			90.1	
+408	3483	WRIA 12 - Chambers-Clover	Clover Creek Basin	Clover Creek/Steilacoom Subbasin	Chambers Creek (Tacoma)	Puyallup Tribe of Indians	Status and Trends	CHAM_RM0.45	47.194997	-122.566839				30.2
+409	2988	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Ellis Creek (Deschutes)	City of Olympia	Olympia Stream Team	13.0022	47.076449	-122.892061	76.1	58.1		
+410	812	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Ellis Creek (Deschutes)	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	EllisThCoPriestPt	47.076595	-122.891136			77.7	
+411	2989	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Indian Creek (Lower Deschutes)	City of Olympia	Olympia Stream Team	13.0026	47.036156	-122.871635	36.4	29.8		
+412	815	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Indian Creek (Lower Deschutes)	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	IndianThCoWheeler	47.035544	-122.881733			33.3	
+413	2987	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Mission Creek	City of Olympia	Olympia Stream Team	13.0025	47.067197	-122.894117	77.8	62.7		
+414	2990	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Moxlie Creek	City of Olympia	Olympia Stream Team	13.0027	47.027608	-122.882646		35.2		
+415	819	WRIA 13 - Deschutes	Deschutes Prairie Basin	Lower Deschutes River Subbasin	Moxlie Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	MoxlieThCoWatershedPk	47.033186	-122.888892			18.4	
+416	2992	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Black Lake Ditch	City of Olympia	Olympia Stream Team	13.0030	47.027213	-122.939046	13	17.4		
+417	811	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Black Lake Ditch	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	BlackLakeThCoRWJ	47.027403	-122.939449			24.8	
+418	814	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Green Cove Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	GreenThCo36th	47.083383	-122.950408	56.6			
+419	817	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	McLane Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	McLaneThCoDNR	46.997729	-123.009667		73		
+420	2015	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	McLane Creek	Thurston County	Environmental Health	McLaneThCoHealth	47.031520	-122.990520	33.4			
+421	3012	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Percival Creek	City of Olympia	Olympia Stream Team	13.0029	47.032999	-122.918807	41.9	42.8		
+422	2993	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Percival Creek	City of Olympia	Olympia Stream Team	13.0029-2	47.023130	-122.932170	58.6	32.6		
+423	3362	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Percival Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	ChapparelPercival	47.016084	-122.932727			49.5	
+424	3363	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Percival Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	PercivalCreekOly	47.032930	-122.918750			42.1	
+425	821	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Percival Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	PercThCoSPSCC	47.024938	-122.932743			42.4	
+426	2991	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Schneider Creek	City of Olympia	Olympia Stream Team	13.0131	47.059940	-122.917149		44.9		
+427	3118	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Schneider Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	SchneiderThCOHwy101	47.092648	-123.064488	84.1	89.9	84.3	
+428	822	WRIA 13 - Deschutes	Deschutes Prairie Basin	McLane Creek Subbasin	Schneider Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	SchneidThCoWestBayDr	47.060310	-122.915511			42.7	
+429	2011	WRIA 13 - Deschutes	Deschutes Prairie Basin	Woodland Creek Subbasin	Woodard Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	WoodardThCoHealth	47.091420	-122.863230		30.8		
+430	825	WRIA 13 - Deschutes	Deschutes Prairie Basin	Woodland Creek Subbasin	Woodland Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	WoodlandBThCoDraham	47.061025	-122.804289	48.3	52.8	51.8	
+431	3359	WRIA 14 - Kennedy-Goldsborough	Kennedy Creek/Goldsborough Creek Basin	Kennedy Creek Subbasin	Kennedy Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	KennedyCr@OldOlympicHwy	47.095283	-123.090793			69.1	
+432	1293	WRIA 15 - Kitsap	Hood Canal Basin	Bangor-Port Gamble Subbasin	Cougar/Kinman Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-023	47.820700	-122.648700	58.1		53.4	
+433	1274	WRIA 15 - Kitsap	Hood Canal Basin	Bangor-Port Gamble Subbasin	Gamble Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-027 - Lower	47.810400	-122.580700	68.3	73.5		
+434	1295	WRIA 15 - Kitsap	Hood Canal Basin	Bangor-Port Gamble Subbasin	Jump Off Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-030	47.806800	-122.669200	53.1		65.9	
+435	2823	WRIA 15 - Kitsap	Hood Canal Basin	Great Bend Subbasin	Gold Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-061	47.555169	-122.826565		82.1		
+436	3314	WRIA 15 - Kitsap	Hood Canal Basin	Great Bend Subbasin	Tahuya River	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-007337	47.482126	-122.917305		86.3		
+437	1286	WRIA 15 - Kitsap	Hood Canal Basin	Lynch Cove Subbasin	Union River	Kitsap County	Watershed Health Monitoring	KCSSWM-043	47.511900	-122.791700	84.6			
+438	1870	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Big Anderson Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BIGA02	47.565050	-122.951390			86.1	
+439	887	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Big Anderson Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-006	47.566967	-122.963567		77.9		
+440	1271	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Big Beef Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-003 - Lower	47.649500	-122.782400	82.8	75.4		
+441	1279	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Big Beef Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-005 - Upper	47.592700	-122.837500		73.2		
+442	873	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Boyce Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-009	47.608833	-122.909800	64.5		61.3	
+443	879	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Little Anderson Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-011	47.655733	-122.755017			82.3	
+444	1272	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Seabeck Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-013 - Lower	47.634400	-122.836300		72.3		
+445	3114	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Stavis Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-063 - lower	47.623545	-122.875879	42.6	53.9	44.9	
+446	2281	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Thomas Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-051	47.561339	-122.973500	65.7			
+447	3115	WRIA 15 - Kitsap	Hood Canal Basin	W Kitsap Subbasin	Thomas Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-064- (upstream of culvert)	47.561175	-122.972855	62.8			
+448	2817	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Anderson Island Subbasin	Schoolhouse Creek (Anderson Is.)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	AI_SCHO_0.65	47.158610	-122.704157	64.4			
+449	737	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Cooper Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	CoopBain	47.629022	-122.541568		43.9	53.5	
+450	739	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Issei Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	IssBain	47.648191	-122.566575		38.1	43.9	
+451	2359	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Manzanita Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	LwrManzBain	47.673299	-122.553632		39.4	66.7	
+452	736	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Murden Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	MurdBain	47.655517	-122.523743		12.5	17.4	
+453	734	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Ravine Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	RavBain	47.625265	-122.515733		11.8	7	
+454	735	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Springbrook Creek (Bainbridge)	City of Bainbridge Island	Water Quality and Flow Monitoring Program	SpringBain	47.643873	-122.566852		53	46.3	
+455	2235	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Bainbridge Island Subbasin	Whiskey Creek	City of Bainbridge Island	Water Quality and Flow Monitoring Program	WhisBain	47.613700	-122.513061		37.6	39.4	
+456	86	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Artondale Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_ARTO_0.30	47.300062	-122.622276	57.9			
+457	1297	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Beaver Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-033	47.569500	-122.560800		74.9		
+458	1284	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Burley Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-037 - Lower	47.414600	-122.631500		53.9		
+459	87	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Crescent Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_CRES_0.81	47.357793	-122.578397		67.4		
+460	869	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Curley Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-038 - Lower	47.515050	-122.551350	55.7	33.8	47.8	
+461	2820	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Goodnough Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_GOOD_0.31	47.382185	-122.620521	51.2			
+462	92	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	McCormick Creek (Gig Harbor)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_MCCO_0.71	47.363277	-122.618589			32.5	
+463	1285	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Olalla Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-041	47.428400	-122.568000		72.1		
+464	908	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Purdy Creek (Burley Lagoon)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_PURD_0.14	47.389211	-122.625041		66.8		
+465	2614	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Purdy Creek (Burley Lagoon)	Kitsap County	Watershed Health Monitoring	KCSSWM-058	47.403382	-122.614812		68.1		
+466	896	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Ray Nash Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	GH_RAYN_0.04	47.318713	-122.659257	47.2			
+467	2277	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Salmonberry Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-054- (Curley Trib)	47.511472	-122.597103	47.8		35.9	
+468	871	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Carr Inlet Subbasin	Wilson Creek (Colvos Passage)	Kitsap County	Watershed Health Monitoring	KCSSWM-042	47.490533	-122.520763	69.2		66.9	
+469	1270	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Barker Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-001 - Lower	47.637800	-122.670100	69.2	60.4	60.4	
+470	889	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Chico Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-002 - Mountaineers	47.586363	-122.729751		67.5		
+471	1268	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Chico Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-007 - Lower	47.592200	-122.708800		74.9	58.3	
+472	1281	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Clear Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-017 - Upper West	47.669900	-122.692200	59.9		61.2	
+473	1789	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Clear Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-045	47.683181	-122.698327		73		
+474	1952	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Clear Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-049	47.664383	-122.682095		5.6		
+475	2615	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Clear Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-059	47.654129	-122.685576	22	16.2	21.2	
+476	1269	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Dickerson Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-008 - (Chico Trib)	47.583100	-122.716800		78.5		
+477	1788	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Dickerson Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-046	47.586477	-122.714796	94		88.4	
+478	2613	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Dickerson Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-060	47.584188	-122.716094		91.7		
+479	870	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Illahee Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-010	47.609583	-122.598700	50.6		70.9	
+480	2517	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Lost Creek (Dyes Inlet)	Kitsap County	Watershed Health Monitoring	KCSSWM-057	47.587552	-122.734523	91			
+481	1288	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Mosher Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-012	47.612200	-122.654700	68.4		61.5	
+482	1275	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Steele Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-032 - Lower Main	47.652500	-122.629700	35.7	46.3	48.8	
+483	1289	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Strawberry Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-015	47.647400	-122.698600	55.6	70	54.8	
+484	2516	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Dyes Inlet / Central Kitsap Subbasin	Wildcat Creek (Dyes Inlet)	Kitsap County	Watershed Health Monitoring	KCSSWM-056	47.589032	-122.736157			89.2	
+485	1590	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Key Peninsula Subbasin	Huge Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	KP_HUGE_0.27	47.389252	-122.698460			54	
+486	107	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Key Peninsula Subbasin	Minter Creek (Key Peninsula)	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	KP_MINT_0.62	47.377118	-122.701725			81.2	
+487	2952	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Key Peninsula Subbasin	Rocky Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	KP_ROCK_0.10	47.371796	-122.781908		48.3		
+488	1292	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Big Scandia Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-020	47.715500	-122.657400		69.8		
+489	2279	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Bjorgen Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-053	47.718200	-122.617800	51.3	42.8		
+490	867	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Carpenter Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-022 - Upper	47.810435	-122.521057	54.6		57.1	
+491	2282	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Cowling Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-050	47.745324	-122.562000		65.1		
+492	1282	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Dogfish Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-024 - Lower Main	47.752200	-122.647400	68	62.8	65.9	
+493	875	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Dogfish Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-025 - Upper West Fork	47.762461	-122.637206			84.1	
+494	1283	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Dogfish Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-026 - Upper East Fork	47.756900	-122.631900	60		44	
+495	1294	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Johnson Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-029	47.733500	-122.663400		64.5		
+496	2278	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Johnson Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-055	47.733053	-122.664181	90.7		85	
+497	2280	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	Liberty-Miller-Appletree Subbasin	Lemolo Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-052	47.728700	-122.610900	77.6		75.9	
+498	1291	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Anderson Creek (Kitsap)	Kitsap County	Watershed Health Monitoring	KCSSWM-019	47.523923	-122.682634	49.6		52.4	
+499	866	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Blackjack Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-034 - Lower	47.534900	-122.632000	62.6	51.3	61.4	
+500	1276	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Blackjack Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-035 - Middle	47.516300	-122.638700	49		55.1	
+501	1277	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Blackjack Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-036 - Upper (Square Ck)	47.479900	-122.664200	71.5		69.7	
+502	1299	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Gorst Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-040	47.530500	-122.713600	70.2	55.5		
+503	2824	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Heins Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-062	47.531455	-122.717537	81.4		82.6	
+504	1290	WRIA 15 - Kitsap	Puget Sound (Kitsap) Basin	S Sinclair Inlet Subbasin	Parish Creek	Kitsap County	Watershed Health Monitoring	KCSSWM-018 - (Gorst Trib)	47.528400	-122.714200	89.5	80.2		
+505	1866	WRIA 18 - Elwha-Dungeness	Dungeness River Basin	Lower Dungeness River Subbasin	Canyon Creek (Dungeness)	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-CANY02	48.023110	-123.139810			90.1	
+506	579	WRIA 18 - Elwha-Dungeness	Elwha River Basin	Sutherland/Aldwell Lakes Subbasin	Little River	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SLIT01	48.051990	-123.506970	67.9			
+507	2108	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Ennis Creek	Clallam County	Streamkeepers	Ennis 0.1	48.114685	-123.406289		64.7		
+508	2109	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Ennis Creek	Clallam County	Streamkeepers	Ennis 1.4	48.101265	-123.391713		58		
+509	2168	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Peabody Creek	Clallam County	Streamkeepers	Peabody 1.0	48.106876	-123.426477		71.1		
+510	1868	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Tumwater Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-TUMW02	48.090740	-123.472640	87.3			
+511	2192	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Tumwater Creek	Clallam County	Streamkeepers	Tumwater 0.1a	48.122122	-123.446969		59.9		
+512	3235	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Tumwater Creek	Clallam County	Streamkeepers	Tumwater 0.8f	48.114617	-123.453937		72.2		
+513	2197	WRIA 18 - Elwha-Dungeness	Port Angeles Basin	Port Angeles Bay Subbasin	Valley Creek (Port Angeles)	Clallam County	Streamkeepers	Valley 1.0	48.110542	-123.450351		68.4		
+514	2583	WRIA 20 - Sol Duc	Calawah River/Bogachiel River Basin	Lower Calawah River Subbasin	Elk Creek	Clallam County	Quileute	Elk (Calawah) 0.8	47.959520	-124.352620			79.1	
+515	2106	WRIA 20 - Sol Duc	Calawah River/Bogachiel River Basin	Lower Calawah River Subbasin	Elk Creek	Clallam County	Quileute	Elk (Calawah) 1.9	47.952688	-124.339194			84.7	
+516	2107	WRIA 20 - Sol Duc	Calawah River/Bogachiel River Basin	Lower Calawah River Subbasin	Elk Creek	Clallam County	Quileute	Elk (Calawah) 2.9	47.947106	-124.308746			81.4	
+517	1237	WRIA 20 - Sol Duc	Mt Olympus Basin	Upper Hoh River Subbasin	Twin Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-TWIN02	47.832940	-123.992700	75.2	73.6	74.3	
+518	2190	WRIA 20 - Sol Duc	Quillayute Lowlands Basin	E Fork Dickey River Subbasin	Thunder Creek	Clallam County	Quileute	Thunder 0.8	48.013779	-124.471004	76.6		88	
+519	2582	WRIA 20 - Sol Duc	Quillayute Lowlands Basin	Lower Bogachiel River Subbasin	Mill Creek (Forks)	Clallam County	Quileute	Mill 0.1	47.928558	-124.423843			87.5	
+520	2155	WRIA 20 - Sol Duc	Quillayute Lowlands Basin	Lower Bogachiel River Subbasin	Mill Creek (Forks)	Clallam County	Quileute	Mill 3.6	47.939195	-124.380572			94	
+521	2075	WRIA 20 - Sol Duc	Upper Sol Duc River Basin	Sol Duc Valley Subbasin	Bear Creek (Sol Duc River)	Clallam County	Quileute	Bear (Sol Duc) 0.1	48.066185	-124.234594		87.2	95.8	
+522	2587	WRIA 20 - Sol Duc	Upper Sol Duc River Basin	Sol Duc Valley Subbasin	Bear Creek (Sol Duc River)	Clallam County	Quileute	Bear (Sol Duc) 5.8	48.097749	-124.157816			89.9	
+523	2590	WRIA 20 - Sol Duc	Upper Sol Duc River Basin	Sol Duc Valley Subbasin	Bear Creek (Sol Duc River)	Clallam County	Quileute	Bear (Sol Duc) SF 0.1	48.089956	-124.170742	99.8		76.1	
+524	2138	WRIA 20 - Sol Duc	Upper Sol Duc River Basin	Sol Duc Valley Subbasin	Lake Creek	Clallam County	Quileute	Lake (Sol Duc) 5.9	48.089792	-124.306021			75.3	
+525	581	WRIA 24 - Willapa	Naselle River Basin	Lower Naselle River Subbasin	Ellsworth Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-ELLS01	46.392760	-123.886390	56.6	85.1	82.7	
+526	1238	WRIA 26 - Cowlitz	Upper Cowlitz River Basin	Ohanapecosh River Subbasin	Laughing Water Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-LAUG07	46.755230	-121.540430	90.6	99.9	86.4	
+527	3120	WRIA 28 - Salmon-Washougal	Salmon Creek (Washougal) Basin	Vancouver Subbasin	Burnt Bridge Creek	Clark County Clean Water Division	LCUS	BBC050	45.634690	-122.624040	20	12.1	27.9	
+528	580	WRIA 29 - Wind-White Salmon	Wind River Basin	Indian Heaven Subbasin	Trapper Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-TRAP08	45.891710	-122.013320	85.4	77.5	90.7	
+529	973	WRIA 38 - Naches	Tieton River Basin	Oak Creek Subbasin	Oak Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-OAKC10	46.729870	-120.878070		72.6		
+530	3247	WRIA 39 - Upper Yakima	Umtanum Creek/Selah Creek Basin	Umtanum Creek/Selah Creek Subbasin	Umtanum Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-UMTA10	46.877380	-120.575000	77.4	74.1		
+531	1233	WRIA 47 - Chelan	Stehekin River Basin	Twentyfive Mile Creek Subbasin	Twentyfive Mile Creek (Chelan)	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-TWEN05	47.958100	-120.292490	80.8	87.4	78.7	
+532	3287				Aberdeen Reservoir Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-526805	47.264733	-123.694186		83.2		
+533	3157				Alder Lake Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-481854	46.755486	-122.230250	67.2			
+534	3449				Alger Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-544965	46.268260	-123.399011			84.1	
+535	3299				Allen Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005483	48.068373	-122.155751		32		
+536	3327				Anderson Creek (Hoh River)	Hoh Indian Tribe	Hoh	AndersonCreek_Hoh	47.772923	-124.323363			80.3	
+537	1310				Asotin Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-ASOT13	46.259350	-117.299140		86.4	84.4	
+538	3170				Austin Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-547711	48.703800	-122.345918	95.5			
+539	1425				Bacon Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BACO09	46.077590	-121.287970		83.5		
+540	2696				Ball Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	MP_BALL_0.13	47.163056	-122.216738	38.7	19.7	20.5	
+541	3245				Battle Creek	The Tulalip Tribes	Tulalip Tribes Watershed Health Stream Monitoring	TTW044HS-BATT01	48.058960	-122.266732		57.6	53.3	
+542	3357				Bear Creek	Sno-King Watershed Council	Sno-King Watershed Council benthic macroinvertebrate analysis of urban & suburban streams in King and Snohomish Counties	5303361	47.682914	-122.092689			54.4	
+543	3376				Bear Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-002764	47.842306	-122.162125			77.1	
+544	2694				Beaver Creek (Black River)	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	BeaverThCoLittleRock	46.897857	-123.019772	56.1			
+545	2586				Beaver Creek (Sol Duc)	Clallam County	Quileute	Beaver 0.1	48.071282	-124.291218			79.9	
+546	3393				Big Beef Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-014850	47.605242	-122.795639			70.2	
+547	1648				Big Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BIGC04	46.709340	-121.874910		97.6		
+548	3125				Big Gulch Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-015020	47.905882	-122.309780	37.6			
+549	3325				Big Gulch, South Fork	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011890	47.907795	-122.297267		26.8		
+550	3250				Big River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-355852	48.168271	-124.524611		60.3		
+551	3180				Big Soos Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-004500	47.338631	-122.135591	61.9			
+552	1432				Bird Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BIRD09	46.081190	-121.379720		75.8		
+553	2866				Black Pine Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BLPN77	47.608360	-120.950400		92.8		
+554	3202				Boeing Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018047	47.753021	-122.369063	12			
+555	3311				Boise Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018044	47.186512	-122.004472		74.7		
+556	2900				Boulder Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	BDR030	45.672335	-122.330519		83.8		
+557	2909				Brezee Creek	Clark County Clean Water Division	LCUS	BRZ010	45.860403	-122.669215			56.1	
+558	2871				Brown Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BROW01	47.413540	-123.316300		82.9		
+559	3266				Brown Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-430852	46.613715	-123.509581		42.6		
+560	3332				Bsche'tla Creek	City of Lake Forest Park	Benthic Invertebrates	Bsche'tlaCrLFPSF	47.740140	-122.288120			17.2	14.3
+561	3466				Bsche'tla Creek	City of Lake Forest Park	Benthic Invertebrates	BschtlLFPSLowerLFPSF	47.740468	-122.286949				21
+562	1408				Burping Brook	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-BURP15	47.889130	-117.130550			98.8	
+563	3409				Cameron Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-124279	46.262097	-123.230792			79.1	
+564	3151				Camp Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-387578	47.146697	-121.702887	86.9			
+565	3293				Camp Seven Pond Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-375441	46.612011	-123.536727		43.1		
+566	3121				Campen Creek	Clark County Clean Water Division	LCUS	CMP010	45.577140	-122.315370	43.6	27.9	53.1	
+567	3286				Capps Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-497010	46.641197	-123.285749		54.6		
+568	3167				Carter Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-529633	47.391508	-121.544201	92.2			
+569	3193				Cary Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-012404	47.422943	-121.959440	87.3			
+570	1647				Cayada Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-CAYA04	47.014332	-121.857520			88.5	
+571	3030				Cedar Creek	City of Kirkland	B-IBI	CedarKirk1	47.723953	-122.202051	15.5	15.9	4.6	
+572	3431				Cedar Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-345901	45.626779	-122.447370			88.4	
+573	3089				Champagne Creek	City of Kirkland	B-IBI	Champagne1	47.701000	-122.239000	13.9	20.2	14.3	
+574	3280				Chehalis River, South Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-383771	46.559770	-123.114708		23.2		
+575	2797				Chelatchie Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	CHL010	45.911123	-122.446836	68.9	69	76.1	
+576	3188				Cherry Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-009916	47.766177	-121.878052	95.6			
+577	3155				Cherry Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-454939	47.776298	-121.861165	97.1			
+578	2901				China Ditch Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	CHD010	45.692601	-122.495364		33		
+579	1410				Christmas Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-CHRI01	47.656730	-124.222190	83			
+580	3129				Clallam River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-092094	48.202388	-124.257276	79.9			
+581	3200				Clarks Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-016949	47.196223	-122.333485	15			
+582	3394				Clover Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-015381	47.127548	-122.395974			36.5	
+583	3144				Clovos Passage Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-286953	47.457075	-122.504569	31.4			
+584	1412				Coal Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-COAL01	47.971080	-124.586222	87.1			
+585	2588				Colby Creek	Clallam County	Quileute	Colby (Dickey) 0.0	47.955600	-124.559949		87	87.2	
+586	3418				Cold Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-247327	45.731995	-122.307582			95.1	
+587	3366				Cole Woods Creek	City of Bothell	Bothell Bioassesment	WD-1	47.785210	-122.186140			23.1	
+588	3041				Coleman Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-COLE10	47.111620	-120.395160	75.7	80.6	90.5	
+589	2405				Coplar Creek	Pierce County	Pierce County Watershed Health Monitoring (from 2016)	CW_COPL_0.48	47.078079	-122.169762			93.6	
+590	3190				Cottage Lake Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011448	47.745420	-122.091153	31.5			
+591	2801				Cougar Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	CGR020	45.706654	-122.682312	26.7	19.5	8.7	
+592	2529				Couse Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-COUS10	46.195400	-116.992000	58.8		56.3	
+593	2536				Cowiche Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SFCO10	46.660900	-120.764000	59.2			
+594	3134				Crane Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-141164	48.328522	-122.099249	65.8			
+595	3126				Cultus Mountain Reservoir Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-058156	48.389452	-122.162103	87			
+596	2283				Cummings Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-CUMM10	46.333030	-117.670670	67.2	76.8	87.3	
+597	2799				Curtin Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	CUR020	45.722576	-122.591133	28.5	31.9	33.2	
+598	1413				Davis Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-DAVI01	47.075310	-123.941120			85.4	
+599	3270				Davis Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-041427	47.093784	-123.957719		78.9		
+600	3166				Day Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-521159	48.459609	-122.036338	54.8			
+601	1667				Deadman Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-DEAD19	48.655940	-118.299900	86.5	73.1	69.9	
+602	3403				Dee Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-056191	45.999273	-122.624990			52.9	
+603	3257				Deep Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-322411	46.665030	-123.119741		62.5		
+604	2532				Deer Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-DEER04	46.284660	-122.463000		92.3		
+605	3412				Deer Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-175279	46.303300	-122.471495			92.3	
+606	3432				Deer Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-352648	45.626779	-122.086972			93.8	
+607	3281				Delezene Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-398170	46.934738	-123.414164		75.8		
+608	3090				Denny Creek	City of Kirkland	B-IBI	DennyKirk2	47.712000	-122.244000	36.3	41.2	29.4	
+609	3319				Denny Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-004216	47.712217	-122.242066		32.8		
+610	3323				Des Moines Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-012054	47.418928	-122.306078		21.3		
+611	2291				Dewatto Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-DEWA02	47.469060	-123.025710	88.3			
+612	3421				Disappointment Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-255215	46.236061	-122.296638			90.5	
+613	3428				Duck Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-304173	45.626779	-123.321861			88.5	
+614	3436				Duncan Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-383546	45.626779	-122.099097			96.4	
+615	3232				Dwyer Creek	Clark County Clean Water Division	LCUS	DWY020	45.632506	-122.461533		51.6		
+616	2234				Eaton Creek	Thurston County	Thurston County Benthic Macroinvertebrate Monitoring	EatonThCoYelmHwy	47.049167	-122.727500			56.2	
+617	3258				Eight Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-397669	46.607949	-123.423137		73		
+618	3328				Elk Creek (Hoh River)	Hoh Indian Tribe	Hoh	ElkCreek_Hoh	47.798147	-124.196573			81.6	
+619	3438				Elochoman River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-430340	45.626779	-123.290359			69.8	
+620	3447				Elochoman River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-524208	46.231300	-123.314038			67.4	
+621	3154				Elwah River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-417297	48.084235	-123.531847	53.9			
+622	3148				Elwell Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-302990	47.791731	-121.852635	83.6			
+623	3261				Fairchild Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-484620	46.697010	-123.635161		71.9		
+624	3318				Fennel Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-004324	47.173090	-122.132003		45.6		
+625	3183				Fennel Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005156	47.164859	-122.182001	38.3			
+626	2902				Fifth Plain Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	FPL010	45.672166	-122.494614		50.4		
+627	2903				Fifth Plain Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	FPL050	45.700011	-122.471861		69.7		
+628	3297				Finn Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-271959	46.495424	-123.814176		47.6		
+629	1430				First Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-FIRS09	47.219380	-120.604330	80.4			
+630	3186				Fisher Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-006600	47.530801	-121.843476	88.9			
+631	3290				Fronia Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-234915	46.607978	-123.263261		68.6		
+632	2798				Gee Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	GEE030	45.817177	-122.737684	54.5	42.8	54.8	
+633	2941				Gee Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	GEE050	45.799322	-122.706674	40.3			
+634	2929				Gee Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	GEE070	45.791393	-122.676652	27.2			
+635	3196				Gold Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013541	47.933316	-123.063621	86.5			
+636	2717				Gold Creek, South Fork	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-GOLD77	48.158010	-120.146500	86.7			
+637	3143				Goldsborough Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-278749	47.222641	-123.177632	84			
+638	3397				Goodnough Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018049	47.380698	-122.624668			38.2	
+639	3176				Gorsuch Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-001222	47.455002	-122.448019	43.2			
+640	2865				Granite Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-GRAN77	47.494130	-121.640600			59	
+641	3165				Green River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-513950	47.223323	-121.761385	79.8			
+642	3441				Hagen Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-449690	45.714995	-122.264740			97.2	
+643	3251				Half Moon Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-145735	46.582064	-123.471462		68.7		
+644	3380				Hansen Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005183	48.550165	-122.211791			44.3	
+645	3435				Harrington Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-370445	45.626779	-122.421103			92.2	
+646	1875				Hog Canyon Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-HOGC10	47.367940	-117.810310	23.6			
+647	3277				Hoh River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-456125	47.798383	-124.292861		84		
+648	3192				Honey Dew Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-012016	47.506337	-122.169983	3.9			
+649	3137				Hood Canal Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-192747	47.400104	-122.886016	81.4			
+650	3426				Hopkey Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-298996	45.626779	-122.543860			75.8	
+651	3252				Hoquiam River, Middle Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-060451	47.095491	-123.872906		79.6		
+652	2821				Horse Creek	City of Bothell	Bothell Bioassesment	HC-1	47.757920	-122.209500		6.5	0	
+653	1659				Huckleberry Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-HUCK04	47.008590	-121.617350		66.3		
+654	3384				Huge Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-008253	47.412447	-122.705420			82.7	
+655	2972				Hunter Creek, North Fork	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-NHUN15	48.130890	-118.050250	91.6		74.9	
+656	1409				Hyas Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-HYAS01	47.962150	-124.255960		91.2		
+657	3312				Illahee Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-006930	47.608995	-122.609138		43.2		
+658	3248				Independence Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-059875	46.769280	-123.210200		50.7		
+659	3174				Jenkins Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000404	47.338985	-122.130231	79.6			
+660	3310				Jenkins Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018092	47.378399	-122.083508		33.1		
+661	3442				Jim Crow Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-491279	46.284033	-123.563306			79.5	
+662	3197				Jimmy ComeLately Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013687	47.985850	-123.029194	90.1			
+663	3268				Johnson Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-101367	46.314325	-123.768706		36.5		
+664	2796				Jones Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	JNS060	45.681405	-122.301941	92.5	94.4	90	
+665	3446				Jones Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-520984	45.677801	-122.307714			93.6	
+666	1661				Joseph Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-JOSE11	46.027570	-117.018220		73.2		
+667	3391				Kelsey Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013552	47.603006	-122.162348			15.9	
+668	3390				Kimball Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013300	47.535568	-121.832287			50.1	
+669	3162				Kings Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-497181	47.010308	-122.140695	36.7			
+670	3401				Kiona creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-011867	46.524197	-122.001299			65.5	
+671	3407				Lacamas Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-111172	46.411602	-122.926206			49.7	
+672	2904				Lacamas Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	LAC050	45.638842	-122.456993		40.5		
+673	2921				Lacamas Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	LAC082	45.672642	-122.449881		81.9		
+674	3405				Lacamas Creek, north fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-074079	45.716351	-122.374720			98.3	
+675	3439				Lake Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-436679	46.552620	-122.284357			52.1	
+676	3153				Lake Shannon Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-414430	48.574645	-121.711729	89.1			
+677	3316				Leach Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000709	47.198202	-122.524606		19.2		
+678	3322				Lewis Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011360	47.564612	-122.093693		55.7		
+679	3410				Lewis River east fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-130703	45.834463	-122.534676			76.6	
+680	3424				Lewis River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-266516	46.050512	-122.150761			73.6	
+681	3443				Lewis River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-502842	45.965408	-122.539293			86.6	
+682	3445				Lewis River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-516770	45.963947	-122.317451			64.3	
+683	3304				Lilliwaup Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-016471	47.502708	-123.174799		80		
+684	3168				Little Mashel River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-530119	46.814321	-122.153415	56.3			
+685	2970				Little Swamp Creek	Sno-King Watershed Council	Sno-King Watershed Council benthic macroinvertebrate analysis of urban & suburban streams in King and Snohomish Counties	5303305	47.766800	-122.235730	14.4	20.4		
+686	2905				Little Washougal River	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	LWG015	45.609057	-122.352542		69.6		
+687	1418				Lost Creek Tributary	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-LOST15	48.643960	-117.436320	83.8			
+688	3269				Lytle Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-160803	47.091617	-123.834689		75.5		
+689	1669				Marble Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-MARB21	47.916870	-120.711880	92.3	86.4	90.4	
+690	2795				Matney Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	MAT010	45.670976	-122.439169	85.2	60.1	72.4	
+691	3302				Matriotti Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-008039	48.136355	-123.145226		23		
+692	3130				Matriotti Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-101294	48.082397	-123.178580	20.1			
+693	3236				Maxwelton Creek	Whidbey Watershed Stewards	Watershed Ambient Monitoring	Maxwelton_4.0	47.991200	-122.417400		35		
+694	3389				May Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011504	47.519245	-122.194845			67	
+695	3383				McAleer Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-007858	47.772958	-122.314255			27.1	
+696	3306				McAleer Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010930	47.761672	-122.299765		33.8		
+697	3370				McCormick (Vashon)	Vashon Nature Center	Vashon Benthic Macroinvertebrate Sampling	E1219	47.482259	-122.477711			60.6	
+698	3415				McDonald Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-205687	46.349064	-123.408042			88	
+699	3172				McDonald Creek Tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010979	48.021375	-123.213634	69.2			
+700	3274				Mckinnon Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-342503	47.573356	-124.220570		63.8		
+701	3343				McSorely Creek	Sno-King Watershed Council	Sno-King Watershed Council benthic macroinvertebrate analysis of urban & suburban streams in King and Snohomish Counties	5303346	47.373680	-122.322420			15	
+702	3132				Melbourne Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-125355	47.495347	-123.119424	88			
+703	1662				Menatchee Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-MENA11	46.012140	-117.366680	69.8			
+704	1420				Middle Fork Mill Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-MMIL15	48.651090	-117.682450		51.7		
+705	3088				Middle Fork Teanaway River	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-TEAN77	47.300160	-120.962430	87.3	59.5	80.1	
+706	3285				Middle Nemah River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-024267	46.429508	-123.770829		87.3		
+707	3392				Mill Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-014148	47.303418	-122.268807			44.4	
+708	3199				Mill Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-016680	47.331683	-122.240925	16.8			
+709	3416				Mill Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-223544	45.841180	-121.340001			84.2	
+710	2800				Mill Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	MIL010	45.731111	-122.627535	58.3	55.9	56.8	
+711	3406				Mill Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-081719	46.237896	-123.264591			53.6	
+712	3262				Mill Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-492953	46.688751	-123.073811		37.8		
+713	3315				Miller Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-003606	47.459347	-122.321835		17.8		
+714	3204				Miller Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-019133	47.456145	-122.337346	20.8			
+715	3160				Miller Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-495336	48.000122	-121.778546	64.1			
+716	3253				Miller Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-203799	47.665787	-124.280274		92.4		
+717	3265				Miller Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-407151	47.692946	-124.305259		80.6		
+718	3288				Mima Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-145275	46.891751	-123.089329		65.4		
+719	3203				Mission Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018321	47.461421	-122.867885	85.7			
+720	3123				Morgan Creek	Clark County Clean Water Division	LCUS	MOR005	45.757390	-122.506960	57.6			
+721	2810				Morgan Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	MOR010	45.757292	-122.505781			42.1	
+722	2975				Mountaineer Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-MOUN77	47.526880	-120.822050			89.6	
+723	2870				Naneum Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-NANE09	47.273790	-120.539400		90.7		
+724	3206				Nisqually River	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-356994	46.746076	-121.951691	47.2			
+725	3330				Nolan Creek (Hoh River)	Hoh Indian Tribe	Hoh	NolanCreek_Hoh	47.750597	-124.321252			61.9	
+726	3152				Nooksack River	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-408826	48.896881	-122.332843	45.8			
+727	3127				Nooksack River, South Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-060380	48.608846	-121.903665	74.5			
+728	3038				North Creek	City of Bothell	Bothell Bioassesment	COB05519-017444	47.786519	-122.192122		24.2		
+729	3173				North Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000140	47.854215	-122.222735	82.7			
+730	3385				North Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-008936	47.787290	-122.193146			26	
+731	1416				North Fork Goose Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-NGOO15	48.425110	-117.060710		95.6		
+732	3201				North Fork Issaquah Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-017748	47.547100	-122.028809	79.4			
+733	3417				North Siouxon Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-231647	45.977347	-122.239478			96.7	
+734	3448				Olequa Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-534780	46.415511	-122.966734			71.3	
+735	3140				Olsen Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-239772	48.764093	-122.329057	84.1			
+736	3420				Ordway Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-254327	46.301885	-123.197791			64.4	
+737	3131				Orsino Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-124636	48.716312	-122.029705	70.9			
+738	3326				Owl Creek (Hoh River)	Hoh Indian Tribe	Hoh	OwlCreek_Hoh	47.798720	-124.079289			95.7	
+739	3411				Owl Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-173823	46.076631	-122.860187			75.1	
+740	2906				Packard Creek	Clark County Clean Water Division	LCUS	PCK010	45.750236	-122.711263	44.6			
+741	3194				Penny Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013260	47.858724	-122.205003	13.7			
+742	3184				Pepin Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-006078	48.942906	-122.473203	13.3			
+743	3175				Percival Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000598	47.027840	-122.927774	33.2			
+744	3149				Pilchuck River	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-326070	47.961350	-122.068647	66.6			
+745	1670				Poorman Creek	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-POOR22	48.344370	-120.217990	92	86.3	93.3	
+746	3301				Portage Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010667	48.180866	-122.149840		66.2		
+747	2720				Porter Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-PORT01	46.980080	-123.250000		94.5		
+748	3254				Porter Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-356806	46.968581	-123.254224		78.5		
+749	3295				Porter Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-415693	46.954134	-123.282372		91		
+750	3249				Porter Creek, North Fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-201651	46.989996	-123.220308		88.9		
+751	3289				Porter Creek, North Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-133043	46.995040	-123.161725		93.2		
+752	3388				Purdy Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010429	47.407157	-122.612439			84.2	
+753	1652				Quartz Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-QUAR77	47.926270	-121.279330		82.7		
+754	3225				Queensborough Creek	City of Bothell	Bothell Bioassesment	COB05519-011576-QAQC	47.797772	-122.226154		17.4		
+755	3382				Quilceda Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-007659	48.104722	-122.162874			42.6	
+756	3307				Quilceda Creek, Middle Fork	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-001515	48.124121	-122.156103		18.2		
+757	3161				Racehorse Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-495767	48.879793	-122.126340	78.6			
+758	3158				Raging River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-487564	47.466822	-121.833839	77.9			
+759	2520				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR06.2	48.190800	-120.703600	68.3			
+760	2519				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR08.8	48.196170	-120.753160	77.1			
+761	3450				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR08.9	48.196244	-120.753273			79.5	
+762	2985				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR09.1	48.195200	-120.756980	77.6			
+763	2522				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR09.3	48.198248	-120.762721	73.3			
+764	2822				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR09.5	48.198600	-120.764840	80.9			
+765	2986				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR09.7	48.198720	-120.768930	67.9			
+766	2523				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR10.0	48.198480	-120.775560	83			
+767	2521				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR10.8	48.199380	-120.789400	78.5			
+768	2518				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR11.1	48.200300	-120.793050	77.2			
+769	3451				Railroad Creek	Washington State Department of Ecology	A Long-Term Monitoring Plan to Assess Aquatic Life Uses on Railroad Creek Using Biological Assessment	EFF16600-RR9.14	48.195200	-120.756980			72.3	
+770	3278				Raimie Creek, Right Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-078067	46.809139	-123.424983		68.2		
+771	3460				Ravensdale Creek	Washington State Department of Ecology	TMDL Biological Monitoring of Soos Creek watershed	EFF755XX-RA00.4	47.328770	-122.022072			84.7	
+772	3255				Roaring Creek Slough Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-415002	46.424487	-123.835634		86		
+773	2973				Robinson Fork	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-ROFO11	46.207510	-117.899440	79.4			
+774	3124				Rock Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-ROCK02	47.414330	-121.888080	84.6			
+775	1872				Rock Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-ROCK10	47.003210	-117.945650			52.4	
+776	2811				Rock Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	ROC010	45.776037	-122.446284			87.4	
+777	2803				Rock Creek North (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	RCN040	45.853321	-122.520716	72.8	71	65	
+778	3141				Rock Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-275976	48.303193	-122.096281	74.3			
+779	3256				Rock Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-320482	47.111508	-123.292856		73.6		
+780	3221				Royal Anne Creek	City of Bothell	Bothell Bioassesment	RAC-1	47.803755	-122.216543		32.8		
+781	3284				Rue Creek, Middle Fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-183559	46.581492	-123.693388		85.4		
+782	3146				Rufus Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-294460	48.719537	-122.355328	85.4			
+783	1657				Rush Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-RUSH04	46.042970	-121.859340	83		79.8	
+784	3128				Saar Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-078492	48.917278	-122.193728	68			
+785	3419				Salmon Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-253252	46.255401	-122.884980			32.8	
+786	2806				Salmon Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SMN020	45.706897	-122.658003			66.2	
+787	2807				Salmon Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SMN030	45.728784	-122.619124			70.6	
+788	2808				Salmon Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SMN050	45.741819	-122.546754			69.3	
+789	2812				Salmon Creek (Clark)	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SMN080	45.766352	-122.431328			63.8	
+790	3164				Sammamish River, South Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-508961	47.702554	-122.118973	11.6			
+791	3267				Satsop River, Middle Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-033639	47.190662	-123.519848		64.6		
+792	3135				Scatter Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-187016	47.210826	-121.837747	91.7			
+793	3429				Schmidt Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-322585	45.626779	-122.416632			66.7	
+794	3103				Sears	City of Bellevue	Macroinvertebrates	SearsRavine_21	47.627100	-122.147780	0	1.4	1.2	
+795	3133				Seymour Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-127708	48.736213	-122.007891	71.1			
+796	2919				Shanghai Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SHG030	45.686822	-122.465687		40.2		
+797	3320				Shell Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-002866	47.818064	-122.372716		9.5		
+798	3179				Shelton Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-003542	47.219349	-123.109243	80.4			
+799	3139				Siebert Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-231342	48.070274	-123.285833	80.7			
+800	3171				Silver Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-008366	48.620857	-122.332345	82.2			
+801	3305				Silver Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018632	47.824231	-122.203277		20		
+802	3422				Sisson Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-260619	46.329201	-123.755415			28.5	
+803	3434				Sisson Creek tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-367403	45.626779	-122.510208			70.8	
+804	1653				Skull Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SKUL77	48.118561	-121.401193	89.4			
+805	3298				Snahapish River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-182983	47.703450	-124.152658		80.5		
+806	3187				Snow Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-008949	47.935036	-122.982628	87.8			
+807	3178				Soosette Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-001924	47.323512	-122.158668	81.5			
+808	2869				South Fork Sherman Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SSHE15	48.551650	-118.417100		75.7		
+809	3150				South Prairie Creek, East Fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-339245	47.080886	-121.905107	93.4			
+810	3378				Squally Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-004677	47.217678	-122.381567			82.6	
+811	3402				Steffen creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-032283	46.502771	-122.180194			82.8	
+812	3296				Stequaleho Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-071367	47.675012	-124.115748		84.2		
+813	3444				Stillwater Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-510971	46.389594	-123.066839			47.5	
+814	3185				Struve Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-006584	47.733144	-122.064863	90.4			
+815	3110				Sturtevant's Creek	City of Bellevue	Macroinvertebrates	Sturtevant8th_21	47.601760	-122.186560	2.5	0	5.3	
+816	2937				Suds Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	SUD010	45.709547	-122.670013		24.9		
+817	1668				Sullivan Creek, North Fork	Washington State Department of Ecology	Status and Trends WA Statewide Sentinel Site Monitoring	SEN06600-SULL20	48.860980	-117.326000	69	58.2	72.2	
+818	3163				Sultan River, South Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-507811	47.943845	-121.632705	68.5			
+819	3303				Surveyor Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011015	48.016971	-123.342615		87.4		
+820	3375				Swamp Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000844	47.812952	-122.255230			49.3	
+821	3177				Swamp Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-001336	47.794410	-122.254941	69.4			
+822	2305				Sweet Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-SWEE15	48.824346	-117.409832		76.7		
+823	3279				Tacoma Creek, East Fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-060871	47.602483	-124.125809		86.3		
+824	3145				Thorndyke Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-289419	47.824820	-122.740347	71.6			
+825	3414				Tilton Creek south fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-196123	46.561605	-122.181426			73.7	
+826	3156				Tinling Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-478546	48.762396	-122.160804	91			
+827	1423				Tonata Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-TONA15	48.869450	-118.768240	83			
+828	3400				Toutle River south fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-005807	46.241263	-122.474789			95.4	
+829	3408				Toutle River south fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-119471	46.239472	-122.448245			44.1	
+830	3427				Toutle River, South Fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-300223	45.626779	-122.366499			88	
+831	1655				Union Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-UNIO04	46.934560	-121.358530			48.1	
+832	3195				Union River	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013522	47.475376	-122.827298	79.1			
+833	3181				Unnamed Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-004626	47.643578	-122.609481	49.4			
+834	3191				Unnamed Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-011632	47.478096	-122.150572	15.4			
+835	3309				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000882	47.880263	-122.304837		35.9		
+836	3324				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010784	47.518967	-122.039455		82.8		
+837	3313				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-013613	47.756612	-122.629750		74.5		
+838	3300				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-015405	47.775772	-122.636952		26.5		
+839	3321				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-017288	47.149115	-122.184582		65.4		
+840	3317				Unnamed tributary	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-017293	47.157965	-123.043598		55.6		
+841	2867				Upper Slate Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-USLA15	48.957020	-117.244800			87.8	
+842	3365				Valhalla Creek	City of Bothell	Bothell Bioassesment	VAL-1	47.745360	-122.212240			30.4	
+843	3182				Valley Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005040	47.651458	-122.150357	28.7			
+844	3264				Waddell Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-349286	46.951034	-123.077514		35.2		
+845	3147				Walker Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-302560	48.382135	-122.142127	64.9			
+846	3396				Wapato Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-017955	47.225412	-122.341091			42.1	
+847	1654				War Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-WARC77	48.364550	-120.405730		95		
+848	3425				Washougal River tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-282893	45.626779	-122.324527			51.7	
+849	3122				Westover Creek	Clark County Clean Water Division	LCUS	WST020	46.165710	-122.920180	21.8	35	34.6	
+850	2935				Whipple Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	WPL010	45.753658	-122.743587	13.7			
+851	2802				Whipple Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	WPL050	45.749721	-122.712260	43.8	50.7	39.6	
+852	2908				Whipple Creek	Clark County Clean Water Division	Clark County Assessment of Wadeable Streams	WPL080	45.735770	-122.654426	47.3			
+853	3142				White River, West Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-277971	47.089732	-121.661069	86.1			
+854	3291				Wildcat Creek	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-263200	46.703135	-123.272870		87.1		
+855	3283				Willapa River, South Fork Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-115975	46.605715	-123.701791		38.9		
+856	3282				Williams Creek Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-012643	46.529780	-123.830819		99.1		
+857	1433				Wilson Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-WILS09	47.227220	-120.558070			82.5	
+858	3329				Winfield Creek (Hoh River)	Hoh Indian Tribe	Hoh	WinfieldCreek_Hoh	47.797418	-124.227373			84.4	
+859	3440				Winston Creek South Fork tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-446589	46.432895	-122.444110			68.1	
+860	3272				Wishkah River, West Fork	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-111527	47.173598	-123.764991		81		
+861	3198				Wollochet Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-015217	47.308383	-122.610918	14.8			
+862	3234				Woodburn Creek	Clark County Clean Water Division	LCUS	WBN030	45.600305	-122.391322		59.5		
+863	2809				Woodin Creek	Clark County Clean Water Division	LCUS	WDN010	45.742730	-122.546640			43.1	
+864	3381				Woods Creek	Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005996	47.916718	-121.893292			39.9	
+865	3294				Wynoochee River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-220583	47.183865	-123.637981		92.2		
+866	3263				Wynoochee River Tributary	Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-324963	47.322582	-123.640714		48.5		
+867	1869				Youngs Creek	Washington State Department of Ecology	Ambient Freshwater Biological Monitoring Program	BIO06600-YOUN02	47.806550	-121.825090			70.9	
+868	3374					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-000114	47.830929	-122.306751			12.6	
+869	3377					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-003250	47.700619	-122.304919			9.8	
+870	3379					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-005102	48.780186	-122.489754			10.7	
+871	3386					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-009356	47.951541	-122.272082			41	
+872	3387					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-010408	47.681804	-122.155142			41.8	
+873	3395					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-016806	47.323894	-122.158141			73.3	
+874	3398					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-018368	47.377921	-122.216556			32.5	
+875	3399					Washington State Department of Ecology	Stormwater Action Monitoring for Puget Small Streams	PSS05520-019545	47.687442	-122.698045			44.8	
+876	3169					Washington State Department of Ecology	WatershedHealth_WHM0	WHM07620-531615	48.902768	-122.104316	53			
