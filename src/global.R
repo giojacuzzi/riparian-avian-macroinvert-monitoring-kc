@@ -10,3 +10,5 @@ metadata_site = read.csv('data/site_metadata.csv')
   
 data_habitat = full_join(data_land_cover, metadata_site, by = c("site" = "aru_site"))
 data_habitat = left_join(data_habitat, data_benthos, by = c("benthos_site" = "Site.ID"))
+
+data_riparianobligate = read_csv('data/processed/Species_Habitat_List.csv')
