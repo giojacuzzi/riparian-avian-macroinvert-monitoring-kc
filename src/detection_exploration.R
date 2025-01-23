@@ -87,36 +87,23 @@ message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 
 # TODO: Explore relationship between B-IBI and species richness (functional riparian insectivore guild)
 
-# Relationship between B-IBI and riparian obligate species
-
-# Create list of riparian obligate species
-riparian_species <- data_riparianobligate %>%
-  filter(data_riparianobligate$riparian_obligate_breeding == "Yes") %>%
-  select(species)
-
-site_species_split <- unnest(site_species, cols = "species")
-
-# Filter site_species_split to only include riparian obligates
-filtered_species_split <- site_species_split %>%
-  filter(species %in% riparian_species$species)
-
-# Group and count riparian obligates in each site
-
-site_riparian_count <- filtered_species_split %>%
-  group_by(site) %>%
-  summarize(species_count = n_distinct(species))
-  
-# Join with mean_BIBI
-site_bibi <- site_data %>%
-  select(site, mean_BIBI)
-
-obligate_BIBI <- site_riparian_count %>%
-  left_join(site_bibi, by = "site")
-
-# Analyze trends
-
-ggplot(obligate_BIBI, aes(x = mean_BIBI, y = species_count)) + 
+ggplot(riparian_BIBI, aes(x = mean_BIBI, y = species_count)) + 
   geom_point() +
   geom_smooth(method = "lm")
-correlation_pearson = cor(obligate_BIBI$species_count, obligate_BIBI$mean_BIBI, method = "pearson")
+correlation_pearson = cor(riparian_BIBI$species_count, riparian_BIBI$mean_BIBI, method = "pearson")
 message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+
+# Land Data vs Riparian association
+
+ggplot(riparian_imp, aes(x = totalimp, y = species_count)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+correlation_pearson = cor(riparian_imp$species_count, riparian_imp$totalimp, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+
+# Multiple regression model
+riparian_bibi_imp <- riparian_BIBI %>%
+  left_join(riparian_imp, by = "site")
+
+model <-lm(species_count.x ~ mean_BIBI + totalimp, data = obligate_bibi_imp)
+summary(model)
