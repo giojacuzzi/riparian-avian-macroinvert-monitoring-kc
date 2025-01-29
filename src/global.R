@@ -1,4 +1,6 @@
 # TODO: Load all land cover and benthos data for each site and join with the site metadata to create a "master" data_habitat dataframe
+library(tidyverse)
+library(ggplot2)
 
 path_land_cover = "data/processed/land_cover/land_cover.csv" # processed land cover data from GIS
 path_benthos_raw = "data/raw/benthos/ScoresByYear.txt" # raw PSSB benthos data
@@ -46,3 +48,4 @@ site_imp <- data_land_cover %>%
 
 riparian_imp <- site_riparian_count %>%
   left_join(site_imp, by = "site")
+

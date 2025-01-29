@@ -6,8 +6,7 @@ path_input_dir = "data/processed/predicted_detection_histories"
 path_site_data = "/Users/Steve/Documents/site_data.csv"
 ############################################################################################################
 
-library(tidyverse)
-library(ggplot2)
+
 theme_set(theme_classic())
 
 paths_site = list.files(path_input_dir, full.names = TRUE)
@@ -65,7 +64,7 @@ message('Analyzing impervious coverage x mean B-IBI...')
 
 # Calculate Pearson's correlation coefficient for impervious coverage x mean B-IBI
 correlation_pearson = cor(site_data$Impervious, site_data$mean_BIBI, method = "pearson")
-message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+message("Pearson's correlation coefficient", round(correlation_pearson, 2))
 
 # Fit a linear regression model
 model = lm(site_data$mean_BIBI ~ site_data$Impervious)
@@ -92,6 +91,8 @@ ggplot(riparian_BIBI, aes(x = mean_BIBI, y = species_count)) +
   geom_smooth(method = "lm")
 correlation_pearson = cor(riparian_BIBI$species_count, riparian_BIBI$mean_BIBI, method = "pearson")
 message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+model <-lm(species_count ~ mean_BIBI, data = riparian_BIBI)
+summary(model)
 
 # Land Data vs Riparian association
 
@@ -103,7 +104,63 @@ message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 
 # Multiple regression model
 riparian_bibi_imp <- riparian_BIBI %>%
-  left_join(riparian_imp, by = "site")
+  left_join(riparian_imp, by = "site") %>%
+  rename(species_count = species_count.x) %>%
+  select(-species_count.y)
 
-model <-lm(species_count.x ~ mean_BIBI + totalimp, data = obligate_bibi_imp)
+
+model <-lm(species_count.x ~ mean_BIBI + totalimp, data = riparian_bibi_imp)
 summary(model)
+
+# Stacked barchart
+
+# library
+library(ggplot2)
+
+
+# Stacked barchart
+
+riparian_bibi_imp <- riparian_bibi_imp %>%
+  mutate(bibi_category = case_when(
+    mean_BIBI >= 0 & mean_BIBI <= 40 ~ "low",
+    mean_BIBI > 40 & mean_BIBI <= 60 ~ "mid",
+    mean_BIBI > 60 & mean_BIBI <= 100 ~ "high")) %>%
+  mutate(imp_category = case_when(
+    totalimp >= 0 & totalimp <= 10 ~ "sensitive",
+    totalimp > 10 & totalimp <= 25 ~ "impacted",
+    totalimp > 25 & totalimp <= 100 ~ "non-supporting"
+  ))
+
+barchart_table <- filtered_species_split %>%
+  group_by(site, species) %>%
+  summarize(present = 1) %>%
+  pivot_wider(names_from = site, values_from = present, values_fill = list(present = 0))
+
+barchart_table <- barchart_table %>%
+  pivot_longer(cols = -species, names_to = "site")
+
+
+species_counts <- barchart_table %>%
+  left_join(riparian_bibi_imp, by = "site")
+
+species_counts$bibi_category <- factor(species_counts$bibi_category, 
+                                       levels = c("high", "mid", "low"))
+species_counts$imp_category <- factor(species_counts$imp_category, 
+                                       levels = c("sensitive", "impacted", "non-supporting"))
+
+species_counts$species <- factor(species_counts$species, 
+                                 levels = species_counts %>%
+                                   group_by(species) %>%
+                                   summarise(total_count = sum(value)) %>%
+                                   arrange(desc(total_count)) %>%
+                                   pull(species))
+
+# BIBI Categories
+ggplot(species_counts, aes(y = species, x = value, fill = bibi_category)) +
+  geom_bar(stat = "identity", position = "stack") + labs(title = "Species Counts by Site, BIBI", x = "Number of sites detected", y = "Species") +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1))
+
+# Impervious Categories
+ggplot(species_counts, aes(y = species, x = value, fill = imp_category)) +
+  geom_bar(stat = "identity", position = "stack") + labs(title = "Species Counts by Site, Impervious Percent", x = "Number of sites detected", y = "Species") +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1))
