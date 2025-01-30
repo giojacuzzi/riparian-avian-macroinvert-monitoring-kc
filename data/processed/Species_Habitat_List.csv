@@ -1,8 +1,8 @@
 ﻿species,habitat_1,habitat_2,habitat_3,habitat_4,range,insectivore,riparian_dependent_breeding,riparian_obligate_breeding
 American Crow,Medium Intensity Urban,High Intensity Developed,Low Intensity Developed,Open Space Developed,Year-Round,,,
-Black-capped Chickadee,Woodland,Low Intensity Developed,,,Year-Round,Yes,Yes,
+Black-capped Chickadee,Woodland,Low Intensity Developed,,,Year-Round,Yes,,
 Dark-eyed Junco,Evergreen Forest,Low Intensity Developed,Woodland,Deciduous Forest,Year-Round,,,
-Song Sparrow,Riparian,Low Intensity Developed,Forest,Grasslands,Year-Round,Yes,Yes,Yes
+Song Sparrow,Riparian,Low Intensity Developed,Forest,Grasslands,Year-Round,Yes,,
 American Robin,Riparian,Medium Intensity Urban,Forest,Grasslands,Year-Round,Yes,,
 Spotted Towhee,Forest,,,,Year-Round,Yes,,
 Anna's Hummingbird,Low Intensity Developed,Medium Intensity Urban,Woodland,Grasslands,Year-Round,,,
