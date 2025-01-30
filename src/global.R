@@ -13,20 +13,33 @@ metadata_site = read.csv('data/site_metadata.csv')
 data_habitat = full_join(data_land_cover, metadata_site, by = c("site" = "aru_site"))
 data_habitat = left_join(data_habitat, data_benthos, by = c("benthos_site" = "Site.ID"))
 
-data_riparianobligate = read_csv('data/processed/Species_Habitat_List.csv')
+data_specieslist = read_csv('data/processed/Species_Habitat_List.csv')
 
 # Create count of riparian dependent insectivores in each site
-riparian_species <- data_riparianobligate %>%
+riparian_species <- data_specieslist %>%
   filter(riparian_dependent_breeding == "Yes") %>%
   filter(insectivore == "Yes") %>%
   select(species)
+
+# List of all non-insectivore species
+noninsectiv <- data_specieslist %>%
+  filter(is.na(insectivore)) %>%
+  select(species) %>%
+  filter(!is.na(species))
 
 site_species_split <- unnest(site_species, cols = "species")
 
 filtered_species_split <- site_species_split %>%
   filter(species %in% riparian_species$species)
 
+noninsectfiltered_species_split <- site_species_split %>%
+  filter(species %in% noninsectiv$species) 
+
 site_riparian_count <- filtered_species_split %>%
+  group_by(site) %>%
+  summarize(species_count = n_distinct(species))
+
+site_noninsect_count <- noninsectfiltered_species_split %>%
   group_by(site) %>%
   summarize(species_count = n_distinct(species))
 
@@ -37,6 +50,7 @@ site_bibi <- site_data %>%
 
 riparian_BIBI <- site_riparian_count %>%
   left_join(site_bibi, by = "site")
+
 
 # Table with riparian dependent count and total imp percent
 
@@ -49,3 +63,10 @@ site_imp <- data_land_cover %>%
 riparian_imp <- site_riparian_count %>%
   left_join(site_imp, by = "site")
 
+# Table with all noninsectivores
+
+noninsect_BIBI <- site_noninsect_count %>%
+  left_join(site_bibi, by = "site")
+
+noninsect_imp <- site_noninsect_count %>%
+  left_join(site_imp, by = "site")

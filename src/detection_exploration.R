@@ -94,7 +94,24 @@ message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
 model <-lm(species_count ~ mean_BIBI, data = riparian_BIBI)
 summary(model)
 
+# Non insect BIBI
+ggplot(noninsect_BIBI, aes(x = mean_BIBI, y = species_count)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+correlation_pearson = cor(noninsect_BIBI$species_count, noninsect_BIBI$mean_BIBI, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+model <-lm(species_count ~ mean_BIBI, data = noninsect_BIBI)
+summary(model)
+
 # Land Data vs Riparian association
+
+ggplot(noninsect_imp, aes(x = totalimp, y = species_count)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+correlation_pearson = cor(noninsect_imp$species_count, noninsect_imp$totalimp, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+
+# Land Data vs Non insectivores
 
 ggplot(riparian_imp, aes(x = totalimp, y = species_count)) +
   geom_point() +
@@ -109,7 +126,7 @@ riparian_bibi_imp <- riparian_BIBI %>%
   select(-species_count.y)
 
 
-model <-lm(species_count.x ~ mean_BIBI + totalimp, data = riparian_bibi_imp)
+model <-lm(species_count ~ mean_BIBI + totalimp, data = riparian_bibi_imp)
 summary(model)
 
 # Stacked barchart
@@ -164,3 +181,4 @@ ggplot(species_counts, aes(y = species, x = value, fill = bibi_category)) +
 ggplot(species_counts, aes(y = species, x = value, fill = imp_category)) +
   geom_bar(stat = "identity", position = "stack") + labs(title = "Species Counts by Site, Impervious Percent", x = "Number of sites detected", y = "Species") +
   theme(axis.text.y = element_text(angle = 0, hjust = 1))
+
