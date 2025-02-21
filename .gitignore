@@ -4,6 +4,10 @@
 # Apple files
 .DS_Store
 
+# Image files
+.png
+.pdf
+
 # History files
 .Rproj
 .Rhistory
