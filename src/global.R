@@ -115,3 +115,4 @@ riparian_bibi_imp <- riparian_BIBI %>%
 
 richness_BIBI_landcover <- riparian_BIBI %>%
   left_join(data_land_cover, by = "site")
+
