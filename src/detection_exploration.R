@@ -1,38 +1,10 @@
 # Calculate naive species richness per site from detection histories
 
-# INPUT
-path_input_dir = "data/processed/predicted_detection_histories"
-
-path_site_data = "/Users/Steve/Documents/site_data.csv"
 ############################################################################################################
 
 
 theme_set(theme_classic())
 
-paths_site = list.files(path_input_dir, full.names = TRUE)
-
-# Calculate species presence and naive alpha diversity (species richness) by site
-message('Calculating species presence and naive alpha diversity (species richness) by site...')
-site_richness = tibble()
-site_species = tibble()
-
-for (path_site in paths_site) {
-  # Load site detection history
-  site_detections = read_csv(path_site, show_col_types = FALSE)
-  site_id = sub('.csv', '', basename(path_site))
-  message('Site ', site_id)
-  # Determine which species were detected during at least one visit at the site
-  species_detected = site_detections %>% filter(rowSums(select(., -species)) >= 1) %>% select(species)
-  site_species = bind_rows(site_species, tibble(
-    site = site_id,
-    species = as.list(species_detected)
-  ))
-  # Calculate richness
-  site_richness = bind_rows(site_richness, tibble(
-    site  = site_id,
-    alpha = nrow(species_detected)
-  ))
-}
 
 message('Species by site:')
 for (i in 1:nrow(site_species)) {
@@ -125,14 +97,14 @@ riparian_bibi_imp <- riparian_BIBI %>%
   rename(species_count = species_count.x) %>%
   select(-species_count.y)
 
+richness_BIBI_landcover <- riparian_BIBI %>%
+  left_join(data_land_cover, by = "site")
 
 model <-lm(species_count ~ mean_BIBI + totalimp, data = riparian_bibi_imp)
 summary(model)
 
-# Stacked barchart
-
-# library
-library(ggplot2)
+model <-lm(species_count ~ mean_BIBI + totalimp + Tree.Forest.High.Vegetation + Shrub.Low.Vegetation, data = richness_BIBI_landcover)
+summary(model)
 
 
 # Stacked barchart
@@ -182,3 +154,34 @@ ggplot(species_counts, aes(y = species, x = value, fill = imp_category)) +
   geom_bar(stat = "identity", position = "stack") + labs(title = "Species Counts by Site, Impervious Percent", x = "Number of sites detected", y = "Species") +
   theme(axis.text.y = element_text(angle = 0, hjust = 1))
 
+# Validated data #
+
+site_ripoblig_validated <- read.csv("/Users/Steve/Documents/GitHub/riparian-avian-and-insect-monitoring-king/data/processed/site_ripoblig_validated.csv")
+
+# Multiple regression 
+land_cover <- read.csv("/Users/Steve/Documents/GitHub/riparian-avian-and-insect-monitoring-king/data/processed/land_cover/land_cover.csv")
+site_ripoblig_validated <- site_ripoblig_validated %>%
+  left_join(land_cover, by = "site") %>%
+  left_join(site_imp, by = "site") %>%
+  left_join(site_richness, by = "site")
+
+write.csv(site_ripoblig_validated, file = "data/processed/validated_data")
+
+write_
+# BIBI
+ggplot(site_ripoblig_validated, aes(x = mean_BIBI.y, y = species_count_val)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+correlation_pearson = cor(site_ripoblig_validated$species_count_val, site_ripoblig_validated$mean_BIBI.y, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+model <-lm(species_count_val ~ mean_BIBI.y, data = site_ripoblig_validated)
+summary(model)
+
+# impervious
+ggplot(site_ripoblig_validated, aes(x = totalimp, y = species_count_val)) + 
+  geom_point() +
+  geom_smooth(method = "lm")
+correlation_pearson = cor(site_ripoblig_validated$species_count_val, site_ripoblig_validated$totalimmp, method = "pearson")
+message("Pearson's correlation coefficient ", round(correlation_pearson, 2))
+model <-lm(species_count_val ~ totalimp, data = site_ripoblig_validated)
+summary(model)
