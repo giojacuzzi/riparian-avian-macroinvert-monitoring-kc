@@ -2,22 +2,50 @@
 
 library(piecewiseSEM)
 
-richness_BIBI_landcover
+data = read.csv('data/processed/site_ripoblig_validated.csv')
 
-urban_bibi = lm(mean_BIBI ~ totalimp, richness_BIBI_landcover)
-urban_bibi_bird = lm(species_count ~ mean_BIBI + totalimp, richness_BIBI_landcover)
+# Break down component regressions
+model_bibi = lm(
+  mean_BIBI ~ totalimp + Tree.Forest.High.Vegetation,
+  data
+)
+model_alpha_total = glm(
+  alpha ~ mean_BIBI + totalimp + stream_dist + Shrub.Low.Vegetation + Tree.Forest.High.Vegetation,
+  data,
+  family = poisson(link = "log")
+)
+model_alpha_riparian = glm(
+  species_count_val ~ mean_BIBI + totalimp + stream_dist + Shrub.Low.Vegetation + Tree.Forest.High.Vegetation,
+  data,
+  family = poisson(link = "log")
+)
 
-model = psem(urban_bibi, urban_bibi_bird, data = richness_BIBI_landcover)
-model
-plot(model)
-fisherC(model)
+# Use the `psem` function to create the SEMs
+sem_alpha_total = psem(
+  model_bibi,
+  model_alpha_total
+)
+sem_alpha_riparian = psem(
+  model_bibi,
+  model_alpha_riparian
+)
 
-## Validated Data ##
-site_ripoblig_validated
+# Look at and plot objects, checking structure
+sem_alpha_total
+plot(sem_alpha_total)
+sem_alpha_riparian
+plot(sem_alpha_riparian)
 
-urban_bibi = lm(mean_BIBI.y ~ totalimp, site_ripoblig_validated)
-urban_bibi_bird = lm(species_count_val ~ mean_BIBI.y + totalimp, site_ripoblig_validated)
-model = psem(urban_bibi, urban_bibi_bird, data = site_ripoblig_validated)
-plot(model)
+# Conduct tests of directed separation (for each missing path)
+# Establish the basis set & evaluate independence claims
 
+# Use `dsep` function to perform the tests automagically
+dSep(sem_alpha_total)
+dSep(sem_alpha_riparian)
 
+# Use `fisherC` function to evaluate claims
+fisherC(sem_alpha_total) # P > 0.05 == model fits well
+fisherC(sem_alpha_riparian)
+
+summary(sem_alpha_total)
+summary(sem_alpha_riparian)

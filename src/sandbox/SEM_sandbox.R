@@ -83,13 +83,14 @@ C
 dSep(model)
 
 # Can use `fisherC` function to evaluate claims
-fisherC(model)
+fisherC(model) # P <= 0.05 == model does NOT fit well!
 
 # The relationship between rich and distance is significant
 # Re-introduce to the model
 model2 <- update(model, rich ~ abiotic + hetero + distance)
 
 model2
+plot(model2)
 
 dSep(model2) # only 1 claim now
 fisherC(model2) # P > 0.05 == model fits well!
