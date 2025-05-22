@@ -1,54 +1,47 @@
-# Install dependencies
-packages = c(
-  'dplyr',
-  'mapview',
-  'sf',
-  'tigris',
-  'raster',
-  'terra'
-)
-install.packages("devtools")
-devtools:::install_github("gearslaboratory/gdalUtils", dependencies = TRUE)
-install.packages(packages[!(packages %in% rownames(installed.packages()))])
-
 # Load dependencies
 library(dplyr)
 library(mapview)
 library(sf)
 library(tigris)
-library(gdalUtils)
 library(raster)
 library(terra)
+library(ggplot2)
+
 # Load, clean, and process data ############################################################
 
 # Load Puget Sound Stream Benthos data
-data_path = "/Users/Steve/Desktop/Capstone/Puget Sound Stream Benthos - ScoresByYear.txt"
-data_raw = read.table(data_path, header = TRUE, sep = "\t", fill = TRUE)
+# Permalink: https://pugetsoundstreambenthos.org/Download.aspx?page=Download%2FScoresByYear.ashx&TR=-1&minY=2020
+# Raw .txt opened in Excel and saved as .csv to resolve tab-delimited formatting issues
+data_path = "data/raw/benthos/ScoresByYear.csv"
+data_raw = read.csv(data_path)
 # View(data) # Run this line to inspect the data directly
 
 # Clean data
-data = data_raw
-data[data == ''] = NA # replace missing values with NA
-is_numeric <- function(x) { !is.na(as.numeric(as.character(x))) }
-data = data[is_numeric(data$Latitude) & is_numeric(data$Longitude), ] # remove invalid coords
-data = data[!is.na(data$Longitude) & !is.na(data$Latitude), ] # remove points with no coords
+data = data_raw %>% janitor::clean_names()
 
 # Subset sites sampled at least once within past several years
-years = c('X2023', 'X2022', 'X2021', 'X2020')
-data = data[, c('Site.ID', 'Basin', 'Stream', 'Agency', 'Project', 'Latitude', 'Longitude', years)] # subset data of interest
+years = c('x2024', 'x2023', 'x2022', 'x2021', 'x2020')
+data = data[, c('site_id', 'basin', 'stream', 'agency', 'project', 'latitude', 'longitude', years)] # subset data of interest
 data[, years] = lapply(data[, years], as.numeric) # convert to numeric
 data = data[rowSums(!is.na(data[, years])) >= 1, ]
 
 # Calculate mean B-IBI over the chosen years
-data$mean_BIBI <- rowMeans(data[, years], na.rm = TRUE)
+data$mean_BIBI = rowMeans(data[, years], na.rm = TRUE)
 
 # Categorize B-IBI means as low/mid/high terciles
-cutoffs = quantile(data$mean_BIBI, probs = c(1/3, 2/3), na.rm = TRUE)
-cutoffs
-data$tercile_BIBI = cut(data$mean_BIBI, breaks = c(-Inf, cutoffs, Inf), labels = c("Low", "Mid", "High"))
+tercile_cutoffs = quantile(data$mean_BIBI, probs = c(1/3, 2/3), na.rm = TRUE)
+data$mean_tercile_BIBI = cut(data$mean_BIBI, breaks = c(-Inf, tercile_cutoffs, Inf), labels = c("Low", "Mid", "High"))
+
+category_cutoffs <- c(0, 20, 40, 60, 80, 100)
+category_labels <- c("Very Poor", "Poor", "Fair", "Good", "Excellent")
+data$mean_category_BIBI = cut(data$mean_BIBI,
+                            breaks = category_cutoffs,
+                            labels = category_labels,
+                            right = FALSE,  # interval includes the left, excludes the right
+                            include.lowest = TRUE)
 
 # Calculate B-IBI trend over the chosen years as linear regression slope
-year_numbers <- as.numeric(gsub('X', '', years))
+year_numbers <- as.numeric(gsub('x', '', years))
 calculate_slope = function(row) { # function to calculate the slope for each row
   non_na_indices = which(!is.na(row))
   if (length(non_na_indices) < 2) return(NA)
@@ -57,12 +50,12 @@ calculate_slope = function(row) { # function to calculate the slope for each row
   fit = lm(non_na_values ~ non_na_years)
   return(coef(fit)[2])
 }
-data$trend_BIBI = apply(data[, years], 1, calculate_slope)
+data$trend_slope_BIBI = apply(data[, years], 1, calculate_slope)
 
 # Convert to sf points #####################################################################
 
 # Convert to shapefile points
-data_sf = st_as_sf(data, coords=c('Longitude', 'Latitude'), crs='NAD83', agr='constant')
+data_sf = st_as_sf(data, coords=c('longitude', 'latitude'), crs='NAD83', agr='constant')
 data_sf$long = st_coordinates(data_sf$geometry)[,'X']
 data_sf$lat  = st_coordinates(data_sf$geometry)[,'Y']
 
@@ -73,179 +66,144 @@ king_county = wa_counties[wa_counties$NAME == 'King', ]
 # Subset sites within King County
 sites = st_intersection(data_sf, king_county)
 
-# Print number of sites per tercile
-summary(sites$tercile_BIBI)
+# Print number of sites per tercile and category
+summary(sites$mean_tercile_BIBI)
+summary(sites$mean_category_BIBI)
 
 # Plot sites on a map, colored by tercile
-mapview(sites, zcol='tercile_BIBI')
+mapview(sites, zcol='mean_tercile_BIBI')
+mapview(sites, zcol='mean_category_BIBI')
 
 # Plot other variables as separate map layers
-mapview(sites, zcol='mean_BIBI') + mapview(sites, zcol='trend_BIBI')
+mapview(sites, zcol='mean_BIBI') + mapview(sites, zcol='trend_slope_BIBI')
 
 # Load impervious surface data ###################################################
 
 # Create virtual raster VRTs pointing to IMGs without any modification
-imp_raster_imgfile = '/Volumes/gioj_t7_1/NLCD/NLCD_impervious_2021_release_all_files_20230630/nlcd_2021_impervious_l48_20230630.img'
-imp_raster_file    = '_output/nlcd_2021_impervious_l48_20230630.vrt'
+# https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/metadata/Annual_NLCD_FctImp_2023_CU_C1V0.xml
+imp_raster_imgfile = 'data/raw/environment/Annual_NLCD_FctImp_2023_CU_C1V0.tif'
 
-# Create virtual raster VRT pointing to IMG without any modification
-gdalbuildvrt(
-  gdalfile = imp_raster_imgfile,
-  output.vrt = imp_raster_file
-)
+# Mask the raster to King County extent and consolidate coordinate systems
+imp_raster  <- rast(imp_raster_imgfile)
+king_county <- st_transform(king_county, crs(imp_raster))
+imp_raster  <- crop(imp_raster, vect(king_county))
+imp_raster  <- mask(imp_raster, vect(king_county))
+sites <- st_transform(sites, crs(imp_raster))
+# mapview(aggregate(imp_raster, fact = 4, fun = mean)) + mapview(sites)
 
-# Albers equal-area projection
-# aea = '+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+# Calculate mean impervious surface coverage for site buffers ###################################################
 
-# Use gdalwarp to extract the county area from the NLCD impervious percentage raster (already in Albers projection)
-polygon_file = '_output/king_county.gpkg'
-if (file.exists(polygon_file)) file.remove(polygon_file)
-raster_file = '_output/impervious_surface_raster.tif'
-if (file.exists(raster_file)) file.remove(raster_file)
+# 100 meter buffer (~3.14 ha) roughly corresponds to the home range size of most riparian-associated species under consideration
+buffer_sizes = c(100, 250, 500, 1000) # meters
+sites_buffered = sites
+for (buffer_size in buffer_sizes) {
+  # Create circular buffers around site points
+  buffers <- st_buffer(sites, dist = buffer_size)
+  imp_buffers <- mask(imp_raster, vect(buffers))
 
-st_write(st_union(king_county), dsn = polygon_file, driver = 'GPKG', append = F)
-gdalwarp(
-  srcfile = imp_raster_file, dstfile = raster_file,
-  cutline = polygon_file, crop_to_cutline = T,
-  tr = c(30, 30), dstnodata = 'None'
-)
-
-impervious_surface = raster(raster_file)
-king_county_trs = st_transform(king_county, st_crs(impervious_surface))
-king_county_mask   = rasterize(king_county_trs, impervious_surface)
-impervious_surface = mask(impervious_surface, king_county_mask)
-mapview(impervious_surface)
-
-# Calculate local 100 and 200 meter buffer impervious coverage % ########################################
-sites = st_transform(sites, crs = st_crs(impervious_surface))
-raster_with_zeros <- reclassify(impervious_surface, cbind(NA, 0))
-
-# Create buffer around each point and get raster values inside
-local_imp_coverage <- sapply(1:nrow(sites), function(i) {
-  print(paste('Calculating local impervious coverage for site', i))
-  site <- sites[i, ]
-  buffer <- st_buffer(site, 100) # 100 meter recording range radius
-  local_mask <- rasterize(buffer, raster_with_zeros)
-  masked_raster <- mask(raster_with_zeros, local_mask)
-
-  sum_value <- sum(masked_raster[], na.rm = TRUE) * 0.01
-  
-  
-  local_imp_area <- sum_value * 900 # 30m x 30m = 900 square meters
-  buffer_area <- length(na.omit(masked_raster[])) * 900
-  ratio = local_imp_area / buffer_area
-  return(ratio)
-})
-
-sites$local100_imp_coverage = local_imp_coverage
-
-local_imp_coverage <- sapply(1:nrow(sites), function(i) {
-  print(paste('Calculating local impervious coverage for site', i))
-  site <- sites[i, ]
-  buffer <- st_buffer(site, 200) # 200 meter radius
-  local_mask <- rasterize(buffer, raster_with_zeros)
-  masked_raster <- mask(raster_with_zeros, local_mask)
-  
-  sum_value <- sum(masked_raster[], na.rm = TRUE) * 0.01
-  
-  
-  local_imp_area <- sum_value * 900 # 30m x 30m = 900 square meters
-  buffer_area <- length(na.omit(masked_raster[])) * 900
-  ratio = local_imp_area / buffer_area
-  return(ratio)
-})
-
-sites$local200_imp_coverage = local_imp_coverage
+  # Calculate mean impervious surface coverage within buffers
+  imp_mean <- terra::extract(imp_raster, vect(buffers), fun = mean, na.rm = TRUE)
+  col_name = paste0("imp_mean_", buffer_size, "m")
+  sites_buffered[[col_name]] <- imp_mean[,2]
+}
+mapview(imp_buffers) + mapview(sites_buffered, zcol = col_name)
 
 # Plot mean_BIBI against local_imp_coverage
-plot(sites$local100_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
-regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
-abline(regression, col = "red")
-summary(regression)$r.squared
-
-hist(sites$local100_imp_coverage)
-
-mapview(sites, zcol='local100_imp_coverage')
-
-# Calculate regional drainage impervious coverage % ####################################
-
-# Load washershed boundaries (https://ecology.wa.gov/water-shorelines/water-supply/water-availability/watershed-look-up)
-WBDHU12 = st_read('/Volumes/gioj_t7_1/WBDHU/WBDHU12/WBDHU12.shp')
-WBDHU12 = st_transform(WBDHU12, crs=st_crs(king_county))
-WBDHU12 = st_intersection(WBDHU12, king_county)
-WBDHU12 = st_transform(WBDHU12, crs=st_crs(impervious_surface))
-
-# Calculate the ratio of impervious surface area to total area for each watershed
-# Initialize a vector to store the ratio for each watershed
-total_area <- numeric(nrow(WBDHU12))
-total_imp_area <- numeric(nrow(WBDHU12))
-impervious_ratio <- numeric(nrow(WBDHU12))
-
-# Iterate over each watershed
-for (i in 1:nrow(WBDHU12)) {
-  print(paste('Calculating regional drainage impervious coverage for drainage', i))
-  
-  # Extract the raster values within the current watershed polygon
-  watershed_mask <- rasterize(WBDHU12[i, ], impervious_surface)
-  masked_raster <- mask(impervious_surface, watershed_mask)
-  imp_sum = sum(masked_raster[], na.rm = TRUE) * 0.01
-
-  # Calculate the total impervious surface area in the watershed
-  total_impervious_area <- imp_sum * 900 # 30m x 30m = 900 square meters
-  # print(paste('total_impervious_area', total_impervious_area))
-  
-  # Calculate the total area of the watershed in square meters
-  watershed_area <- length(na.omit(masked_raster[])) * 900 #st_area(WBDHU12[i, ])
-  # print(paste('watershed_area       ', watershed_area))
-  
-  # Calculate the ratio of impervious surface area to total area
-  ratio = total_impervious_area / watershed_area
-  # print(paste('ratio                ', ratio))
-  impervious_ratio[i] <- ratio
-  total_area[i] <- watershed_area
-  total_imp_area[i] <- total_impervious_area
+for (buffer_size in buffer_sizes) {
+  temp = sites_buffered
+  temp = temp %>% mutate(imp_mean = temp[[paste0("imp_mean_", buffer_size,"m")]])
+  p <- ggplot(sites_buffered %>% mutate(imp_mean = temp[[paste0("imp_mean_", buffer_size,"m")]]),
+              aes(x = imp_mean, y = mean_BIBI)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE, color = "blue") +
+    labs(title = paste0("Mean impervious surface coverage x mean B-IBI (", buffer_size," m)")) +
+    xlim(0,100) + ylim(0,100)
+  model <- lm(mean_BIBI ~ imp_mean, data = temp)
+  rsq <- summary(model)$r.squared
+  p = p + annotate("text", x = Inf, y = -Inf, label = paste0("R² = ", round(rsq, 3)), hjust = 1.1, vjust = -1.1, size = 5, color = "blue")
+  print(p + theme_minimal())
 }
 
-# Add the calculated ratios as a new column in the WBDHU12 data frame
-WBDHU12$drainage_imp_coverage <- impervious_ratio
+# Note that B-IBI is most strongly affected by urbanization at the watershed, not local level
 
-# Intersect sites with watershed impervious coverage
-WBDHU12 = st_transform(WBDHU12, crs = st_crs(sites))
-sites = st_intersection(sites, WBDHU12)
+# Get previously surveyed sites
+chosen_site_metadata = read.csv("data/site_metadata.csv") %>% janitor::clean_names()
+aru_sites = st_as_sf(chosen_site_metadata, coords=c('aru_long', 'aru_lat'), crs='NAD83', agr='constant')
+aru_sites$long = st_coordinates(aru_sites$geometry)[,'X']
+aru_sites$lat  = st_coordinates(aru_sites$geometry)[,'Y']
 
-# Plot mean_BIBI against drainage_imp_coverage
-plot(sites$drainage_imp_coverage, sites$mean_BIBI, main = 'regional % impervious (drainage) x mean B-IBI')
-regression <- lm(mean_BIBI ~ drainage_imp_coverage, data = sites)
-abline(regression, col = "red")
-summary(regression)$r.squared
+sites_buffered = sites_buffered %>% mutate(previously_surveyed = site_id %in% aru_sites$benthos_site)
+mapview(imp_buffers) + mapview(sites_buffered, zcol = "previously_surveyed") + mapview(aru_sites)
 
-hist(sites$drainage_imp_coverage)
+# Make failed surveys available again
+sites_lost = c(171, 167, 152)
+sites_buffered[sites_buffered$site_id %in% sites_lost, "previously_surveyed"] = FALSE
 
-mapview(WBDHU12, zcol='drainage_imp_coverage') + mapview(sites, zcol='tercile_BIBI')
+# Exclude sites with abs(trend_slope_BIBI) > 10
+sites_available = sites_buffered %>% filter(abs(trend_slope_BIBI) < 2 | previously_surveyed == TRUE | site_id %in% sites_lost)
 
-# Plot and save results to file #############################################
+buffer_size = 100
+p = ggplot(data = sites_available %>%
+             mutate(imp_mean = sites_available[[paste0("imp_mean_", buffer_size,"m")]],
+                    bibi_data_for_2024 = !is.na(sites_available$x2024)
+                    ),
+           aes(x = imp_mean, y = mean_BIBI)) +
+  geom_point(aes(color = previously_surveyed, shape = bibi_data_for_2024), size = 3) +
+  geom_text(aes(label = site_id), vjust = -1, size = 3) +
+  scale_color_manual(values = c("FALSE" = "gray", "TRUE" = "blue")) +
+  labs(
+    title = "Old and candidate sites",
+    x = paste0("Mean impervious surface coverage (", buffer_size, " m)"),
+    y = "Mean B-IBI",
+    color = "Previously surveyed by ARU",
+    shape = "B-IBI data collected in 2024"
+  ) +
+  theme_minimal(); print(p)
 
-par(mfrow = c(2, 3))
+# View selected sites
+site_list = c(171, 167, 152)
 
-plot(sites$local100_imp_coverage, sites$mean_BIBI, main = 'local % impervious (100m buffer) x mean B-IBI')
-regression <- lm(mean_BIBI ~ local100_imp_coverage, data = sites)
-abline(regression, col = "red")
+buffer_size = 100
+sites_selected = sites_available %>% filter(site_id %in% site_list | previously_surveyed == TRUE)
+p = ggplot(data = sites_selected %>%
+             mutate(imp_mean = sites_selected[[paste0("imp_mean_", buffer_size,"m")]]),
+           aes(x = imp_mean, y = mean_BIBI)) +
+  geom_point(aes(color = !previously_surveyed), size = 3) +
+  geom_text(aes(label = site_id), vjust = -1, size = 3) +
+  scale_color_manual(values = c("FALSE" = "gray", "TRUE" = "blue")) +
+  labs(
+    title = "New and old sites",
+    x = paste0("Mean impervious surface coverage (", buffer_size, " m)"),
+    y = "Mean B-IBI",
+    color = "New site selected to survey"
+  ) +
+  theme_minimal(); print(p)
 
-plot(sites$local200_imp_coverage, sites$mean_BIBI, main = 'local % impervious (200m buffer) x mean B-IBI')
-regression <- lm(mean_BIBI ~ local200_imp_coverage, data = sites)
-abline(regression, col = "red")
+mapview(sites_available %>% filter(site_id %in% site_list | previously_surveyed == TRUE), zcol = "previously_surveyed") 
 
-plot(sites$drainage_imp_coverage, sites$mean_BIBI, main = 'regional % impervious (drainage) x mean B-IBI')
-regression <- lm(mean_BIBI ~ drainage_imp_coverage, data = sites)
-abline(regression, col = "red")
 
-hist(sites$local100_imp_coverage)
+# ## DISTRIBUTION OF LOCAL % IMPERVIOUS ############################################
+# for (buffer_size in buffer_sizes) {
+#   in_col_name = paste0("imp_mean_", buffer_size, "m")
+#   out_col_name = paste0("imp_category_", buffer_size, "m")
+#   breaks_imp_lmh = seq(min(sites_buffered[[in_col_name]]), max(sites_buffered[[in_col_name]]), length.out=4)
+#   labels_imp_lmh = c("Low", "Mid", "High")
+#   sites_buffered[[out_col_name]] = cut(sites_buffered[[in_col_name]], breaks = breaks_imp_lmh, labels = labels_imp_lmh, right = FALSE, include.lowest = TRUE)
+#   summary(sites_buffered[[out_col_name]])
+# }
 
-hist(sites$local200_imp_coverage)
-
-hist(sites$drainage_imp_coverage)
-
-par(mfrow = c(1, 1))
-
-results = sites %>% st_drop_geometry()
-write.csv(results, "_output/potential_sites.csv", row.names = FALSE)
+# # COUNTS #####################################################################
+# 
+# # Number of potential sites per IMP/BIBI LMH combination
+# buffer_size = 100
+# sites_test %>% count(paste0("imp_category_", buffer_size, "m"), mean_tercile_BIBI)
+# 
+# # Print each row corresponding to the combinations
+# counted_df <- sites %>%
+#   group_by(imp_lmh, bibi_lmh) %>%
+#   summarize(n = n(), .groups = "drop")
+# for (i in 1:nrow(counted_df)) {
+#   combination <- counted_df[i, c("imp_lmh", "bibi_lmh")]
+#   subset_df <- sites[sites$imp_lmh == combination$imp_lmh & sites$bibi_lmh == combination$bibi_lmh, ]
+#   print(subset_df)
+# }
