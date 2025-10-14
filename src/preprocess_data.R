@@ -13,8 +13,9 @@ standard_crs_code = "EPSG:32610"
 
 ############################################################
 # Load ARU and PSSB site locations and define study area
+message("Loading ARU and PSSB site locations")
 
-site_metadata = read_csv("data/site_metadata.csv")
+site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE)
 site_metadata$year = year(site_metadata$date_start)
 
 # Calculate distance between paired ARU and PSSB sites
@@ -35,8 +36,10 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
 
 ############################################################
 # Load PSSB B-IBI data
+message("Loading PSSB B-IBI data")
 
-pssb_data = read_csv("data/raw/benthos/ScoresByYear.csv") %>% janitor::clean_names()
+pssb_data = read_csv("data/raw/benthos/ScoresByYear.csv", show_col_types = FALSE) %>%
+  janitor::clean_names()
 
 sites_aru = left_join(sites_aru, pssb_data, by = c("site_id", "stream", "basin"))
 sites_aru = sites_aru %>% rowwise() %>% mutate(bibi_mean = mean(c_across(x2020:x2024), na.rm = TRUE)) %>% ungroup()
@@ -51,6 +54,7 @@ mapview(sites_aru, zcol = "bibi_year")
 
 ############################################################
 # Load lc land cover and impervious surface data
+message("Loading land cover and impervious surface data")
 
 lc_raw  = rast("data/raw/environment/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif")
 imp_raw = rast('data/raw/environment/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif')
@@ -120,6 +124,7 @@ imp = project(imp, standard_crs_code)
 ############################################################
 # Calculate land cover data for all sites
 buffer_size = 1000
+message("Calculating land cover composition with buffer size ", buffer_size)
 
 nlcd_data = list()
 pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = nrow(sites_aru), clear = FALSE)
@@ -201,48 +206,8 @@ if (FALSE) {
 }
 
 ############################################################
-# Visualize land cover rasters for all sites
-
-raster_to_df <- function(r, site_name) {
-  df <- as.data.frame(r, xy = TRUE)
-  colnames(df)[3] <- "class"
-  df$site <- site_name
-  return(df)
-}
-
-all_sites_df <- bind_rows(
-  lapply(seq_along(nlcd_data), function(i) {
-    raster_to_df(nlcd_data[[i]]$rast_lc, names(nlcd_data)[i])
-  })
-)
-all_sites_df$class <- factor(all_sites_df$class, levels = nlcd_levels$class)
-present_levels <- nlcd_levels %>% filter(class %in% unique(all_sites_df$class))
-
-# Order sites by decreasing amount of development
-developed_counts <- all_sites_df %>%
-  filter(grepl("^Developed", class)) %>%
-  group_by(site) %>%
-  summarise(developed_n = n(), .groups = "drop")
-site_order <- developed_counts %>%
-  arrange(desc(developed_n)) %>%
-  pull(site)
-all_sites_df <- all_sites_df %>%
-  mutate(site = factor(site, levels = site_order))
-
-# Plot
-p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
-  geom_tile() +
-  scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
-  facet_wrap(~ site, scales = "free") +
-  theme_minimal() + theme(
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid = element_blank()
-  ) +
-  labs(title = "Land cover", x = "", y = ""); print(p)
-
-############################################################
 # Join land cover data with sites into a single table
+message("Joining data")
 
 # Convert nlcd_data into a single table and pivot wider
 nlcd_summary <- lapply(names(nlcd_data), function(id) {
@@ -271,7 +236,9 @@ imp_mean_df <- lapply(names(nlcd_data), function(id) {
 site_data <- site_data %>%
   left_join(imp_mean_df, by = "site_id")
 
+############################################################
 # Visualize data
+message("Visualizing data")
 
 # Step 1: Order site_id by nlcd_Developed
 site_order <- site_data %>%
@@ -314,6 +281,46 @@ p = ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
     "Shrub/Scrub"           = "#af963c"
   )) +
   theme_minimal(); print(p)
+
+# Visualize land cover rasters for all sites
+
+raster_to_df <- function(r, site_name) {
+  df <- as.data.frame(r, xy = TRUE)
+  colnames(df)[3] <- "class"
+  df$site <- site_name
+  return(df)
+}
+
+all_sites_df <- bind_rows(
+  lapply(seq_along(nlcd_data), function(i) {
+    raster_to_df(nlcd_data[[i]]$rast_lc, names(nlcd_data)[i])
+  })
+)
+all_sites_df$class <- factor(all_sites_df$class, levels = nlcd_levels$class)
+present_levels <- nlcd_levels %>% filter(class %in% unique(all_sites_df$class))
+
+# Order sites by decreasing amount of development
+developed_counts <- all_sites_df %>%
+  filter(grepl("^Developed", class)) %>%
+  group_by(site) %>%
+  summarise(developed_n = n(), .groups = "drop")
+site_order <- developed_counts %>%
+  arrange(desc(developed_n)) %>%
+  pull(site)
+all_sites_df <- all_sites_df %>%
+  mutate(site = factor(site, levels = site_order))
+
+# Plot
+p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
+  geom_tile() +
+  scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
+  facet_wrap(~ site, scales = "free") +
+  theme_minimal() + theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(title = paste0("Land cover (buffer size ", buffer_size, " m)"), x = "", y = ""); print(p)
 
 hist(site_data$bibi_year)
 hist(site_data$imp_mean)
