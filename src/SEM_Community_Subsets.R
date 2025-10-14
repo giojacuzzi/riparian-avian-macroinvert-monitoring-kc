@@ -44,8 +44,10 @@ dSep(sem_alpha_total)
 dSep(sem_alpha_riparian)
 
 # Use `fisherC` function to evaluate claims
-fisherC(sem_alpha_total) # P > 0.05 == model fits well
+# A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically significantly different than the structure implied by the data, and that alternative pathways or causal links with missing variables warrant further exploration
+fisherC(sem_alpha_total) # P > 0.05 => model fits well
 fisherC(sem_alpha_riparian)
 
+# Nagelkerke R2 describes proportion of variance explained by the model
 summary(sem_alpha_total)
 summary(sem_alpha_riparian)

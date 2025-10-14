@@ -1,5 +1,7 @@
 # Data files
 /data/processed/predicted_detection_histories
+/data/birdnet
+/data/raw
 
 # Apple files
 .DS_Store
