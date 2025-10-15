@@ -8,9 +8,9 @@ library(sf)
 library(geosphere)
 library(progress)
 
-buffer_size = 1000
+buffer_size = 500 # ~500m insect emergence flux range falloff; try 1km also
 threshold = 0.9
-days_threshold = 2
+days_threshold = 3
 
 standard_crs_number = 32610
 standard_crs_code = "EPSG:32610"
@@ -269,8 +269,8 @@ p = ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
   labs(
     x = "Percent cover",
     y = "Site ID",
-    fill = "Class",
-    title = "NLCD land cover composition"
+    fill = "Summary class",
+    title = paste0("NLCD land cover composition (", buffer_size, " m buffer)")
   ) +
   scale_fill_manual(values = c(
     "Developed"             = "#eb0000",
@@ -323,7 +323,7 @@ p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
     axis.ticks = element_blank(),
     panel.grid = element_blank()
   ) +
-  labs(title = paste0("Land cover (buffer size ", buffer_size, " m)"), x = "", y = ""); print(p)
+  labs(title = paste0("NLCD land cover configuration (", buffer_size, " m buffer)"), x = "", y = ""); print(p)
 
 hist(site_data$bibi)
 hist(site_data$imp_mean)
@@ -364,7 +364,7 @@ insectivore_species <- species_metadata %>%
   filter(insectivore == "Yes") %>%
   pull(common_name)
 
-# site_species_matrix <- detections %>%
+# site_species_matrix_surveys <- detections %>%
 #   distinct(site_id, common_name) %>%
 #   mutate(present = 1) %>%
 #   pivot_wider(
@@ -372,7 +372,53 @@ insectivore_species <- species_metadata %>%
 #     values_from = present,
 #     values_fill = 0
 #   )
-# site_species_matrix
+# site_species_matrix_surveys
+
+detections_with_survey <- detections %>%
+  group_by(site_id) %>%
+  mutate(survey_num = as.integer(difftime(date, min(date), units = "days")) + 1) %>%
+  ungroup()
+
+detections_presence <- detections_with_survey %>%
+  group_by(site_id, survey_num, common_name) %>%
+  summarise(present = 1, .groups = "drop")  # 1 = detected at least once that day
+
+species_site_survey_matrix <- detections_presence %>%
+  pivot_wider(
+    names_from = survey_num,
+    values_from = present,
+    values_fill = 0  # 0 = not detected that day
+  )
+
+species_matrices <- species_site_survey_matrix %>%
+  group_split(common_name) %>%
+  setNames(unique(detections_presence$common_name))
+
+species_site_survey_long <- species_site_survey_matrix %>%
+  pivot_longer(
+    cols = -c(site_id, common_name),
+    names_to = "survey_num",
+    values_to = "detected"
+  ) %>%
+  mutate(survey_num = as.integer(survey_num))
+
+detections_summary <- species_site_survey_long %>%
+  group_by(common_name, survey_num) %>%
+  summarise(total_detections = sum(detected), .groups = "drop")
+
+p = ggplot(detections_summary, aes(x = survey_num, y = as.integer(total_detections))) +
+  geom_line() +
+  facet_wrap(~ common_name, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "Species detections across all sites and surveys",
+    x = "Survey number",
+    y = "Total detections across sites"
+  ); print(p)
+
+# TODO: Species accumulation curves?
+
+#######
 
 site_species_matrix_days_detected <- detections %>%
   group_by(site_id, common_name) %>%
@@ -384,7 +430,6 @@ site_species_matrix_days_detected <- detections %>%
   )
 site_species_matrix <- site_species_matrix_days_detected %>%
   mutate(across(-site_id, ~ if_else(. > days_threshold, 1, 0)))
-
 
 site_insectivores_matrix <- site_species_matrix %>%
   select(site_id, all_of(insectivore_species))
@@ -400,7 +445,7 @@ ggplot(site_data_bird, aes(x = bibi, y = richness)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
-ggplot(site_data_bird, aes(x = bibi, y = richness_insectivore)) +
+ggplot(site_data_bird, aes(x = bibi, y = richness)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
@@ -411,9 +456,11 @@ mapview(site_data_bird, zcol = "richness_insectivore")
 ############################################################
 # SEM
 
-# TODO: calculate distance from stream
-
 library(piecewiseSEM)
+
+# TODO: Break out insectivore guild into aerial insectivores via AVONET
+# - Aerial / Insessorial
+# - Invertivore / Aquatic predator / Omnivore
 
 data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
   bibi, richness, richness_insectivore,
@@ -426,7 +473,7 @@ model_bibi = lm(
   data
 )
 model_alpha_total = glm(
-  richness ~ bibi + imp_mean + nlcd_forest,
+  richness_insectivore ~ bibi + imp_mean + nlcd_forest,
   data,
   family = poisson(link = "log")
 )
@@ -446,6 +493,5 @@ plot(sem_alpha_total)
 # Use `dsep` function to perform the tests automagically dSep(sem_alpha_total)
 # Use `fisherC` function to evaluate claims
 # A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically significantly different than the structure implied by the data, and that alternative pathways or causal links with missing variables warrant further exploration
-# P > 0.05 => model fits well
 # Nagelkerke R2 describes proportion of variance explained by the model
-summary(sem_alpha_total)
+print(summary(sem_alpha_total))
