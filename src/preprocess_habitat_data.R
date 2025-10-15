@@ -8,6 +8,8 @@ library(sf)
 library(geosphere)
 library(progress)
 
+buffer_size = 1000
+
 standard_crs_number = 32610
 standard_crs_code = "EPSG:32610"
 
@@ -39,18 +41,18 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
 message("Loading PSSB B-IBI data")
 
 pssb_data = read_csv("data/raw/benthos/ScoresByYear.csv", show_col_types = FALSE) %>%
-  janitor::clean_names()
+  janitor::clean_names() %>% select(site_id, x2020, x2021, x2022, x2023, x2024)
 
-sites_aru = left_join(sites_aru, pssb_data, by = c("site_id", "stream", "basin"))
+sites_aru = left_join(sites_aru, pssb_data, by = c("site_id"))
 sites_aru = sites_aru %>% rowwise() %>% mutate(bibi_mean = mean(c_across(x2020:x2024), na.rm = TRUE)) %>% ungroup()
-sites_aru = sites_aru %>% rowwise() %>% mutate(bibi_year = NA) %>%
-  mutate(bibi_year = case_when( # Get the BIBI for the year in which the site was sampled
+sites_aru = sites_aru %>% rowwise() %>% mutate(bibi = NA) %>%
+  mutate(bibi = case_when( # Get the BIBI for the year in which the site was sampled
     year == 2024 ~ x2024,
     year == 2025 ~ x2024, # NOTE: 2025 not yet available
-    TRUE ~ bibi_year
+    TRUE ~ bibi
   ))
 
-mapview(sites_aru, zcol = "bibi_year")
+mapview(sites_aru, zcol = "bibi")
 
 ############################################################
 # Load lc land cover and impervious surface data
@@ -123,7 +125,6 @@ imp = project(imp, standard_crs_code)
 
 ############################################################
 # Calculate land cover data for all sites
-buffer_size = 1000
 message("Calculating land cover composition with buffer size ", buffer_size)
 
 nlcd_data = list()
@@ -322,16 +323,129 @@ p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
   ) +
   labs(title = paste0("Land cover (buffer size ", buffer_size, " m)"), x = "", y = ""); print(p)
 
-hist(site_data$bibi_year)
+hist(site_data$bibi)
 hist(site_data$imp_mean)
 
-ggplot(site_data, aes(x = imp_mean, y = bibi_year)) +
+ggplot(site_data, aes(x = imp_mean, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
-ggplot(site_data, aes(x = nlcd_Developed, y = bibi_year)) +
+ggplot(site_data, aes(x = nlcd_Developed, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
 ggplot(site_data, aes(x = imp_mean, y = nlcd_Developed)) +
   geom_point() + theme_minimal()
+
+
+############################################################
+# Derive putative detection histories and diversity metrics
+
+# Load classifier prediction data
+message("Loading classifier prediction data")
+path_prediction_data = "data/cache/aggregate_pam_data/prediction_data.feather"
+prediction_data = arrow::read_feather(path_prediction_data) %>% rename(site_id = site)
+
+# Obtain putative detections with naive threshold
+message("Obtaining putative detections with naive threshold")
+threshold = 0.9
+detections = prediction_data %>% filter(confidence >= threshold)
+
+start_date_2024 <- min(detections$date[detections$season == "2024"])
+end_date_2024 <- max(detections$date[detections$season == "2024"])
+start_date_2025 <- min(detections$date[detections$season == "2025"])
+end_date_2025 <- max(detections$date[detections$season == "2025"])
+
+species = sort(unique(detections$common_name))
+species_metadata = read_csv("data/processed/Species_Habitat_List.csv", show_col_types = FALSE) %>% rename(common_name = species) %>% filter(common_name %in% species)
+
+insectivore_species <- species_metadata %>%
+  filter(insectivore == "Yes") %>%
+  pull(common_name)
+
+# site_species_matrix <- detections %>%
+#   distinct(site_id, common_name) %>%
+#   mutate(present = 1) %>%
+#   pivot_wider(
+#     names_from = common_name,
+#     values_from = present,
+#     values_fill = 0
+#   )
+# site_species_matrix
+
+site_species_matrix_days_detected <- detections %>%
+  group_by(site_id, common_name) %>%
+  summarise(n_dates = n_distinct(date), .groups = "drop") %>%  # count unique survey dates
+  pivot_wider(
+    names_from = common_name,
+    values_from = n_dates,
+    values_fill = 0   # species not detected on any date = 0
+  )
+days_threshold <- 2
+site_species_matrix <- site_species_matrix_days_detected %>%
+  mutate(across(-site_id, ~ if_else(. > days_threshold, 1, 0)))
+
+
+site_insectivores_matrix <- site_species_matrix %>%
+  select(site_id, all_of(insectivore_species))
+
+richness = site_species_matrix %>% mutate(richness = rowSums(across(-site_id))) %>% select(site_id, richness)
+richness_insectivore = site_insectivores_matrix %>% mutate(richness_insectivore = rowSums(across(-site_id))) %>% select(site_id, richness_insectivore)
+
+# Join with other site data
+site_data_bird = right_join(site_data, richness, by = "site_id")
+site_data_bird = right_join(site_data_bird, richness_insectivore, by = "site_id")
+
+ggplot(site_data_bird, aes(x = bibi, y = richness)) +
+  geom_point() + geom_smooth(method = "lm") +
+  theme_minimal()
+
+ggplot(site_data_bird, aes(x = bibi, y = richness_insectivore)) +
+  geom_point() + geom_smooth(method = "lm") +
+  theme_minimal()
+
+site_data_bird = left_join(site_data_bird %>% mutate(site_id = as.double(site_id)), site_metadata %>% select(site_id, lat_aru, long_aru), by = "site_id")
+site_data_bird = site_data_bird %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
+mapview(site_data_bird, zcol = "richness_insectivore")
+
+############################################################
+# SEM
+
+# TODO: calculate distance from stream
+
+library(piecewiseSEM)
+
+data = as.data.frame(site_data_bird) %>% clean_names() %>% select(
+  bibi, richness, richness_insectivore,
+  nlcd_forest, nlcd_shrub_scrub, nlcd_wetlands, nlcd_developed, imp_mean
+)
+
+# Fit component regressions
+model_bibi = lm(
+  bibi ~ imp_mean + nlcd_forest,
+  data
+)
+model_alpha_total = glm(
+  richness ~ bibi + imp_mean + nlcd_forest,
+  data,
+  family = poisson(link = "log")
+)
+
+# Create structural equation model
+sem_alpha_total = psem(
+  model_bibi,
+  model_alpha_total
+)
+
+# Inspect model structure
+sem_alpha_total
+plot(sem_alpha_total)
+
+# Conduct tests of directed separation (for each missing path)
+# Establish the basis set & evaluate independence claims
+# Use `dsep` function to perform the tests automagically dSep(sem_alpha_total)
+# Use `fisherC` function to evaluate claims
+# A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically significantly different than the structure implied by the data, and that alternative pathways or causal links with missing variables warrant further exploration
+# P > 0.05 => model fits well
+# Nagelkerke R2 describes proportion of variance explained by the model
+summary(sem_alpha_total)
