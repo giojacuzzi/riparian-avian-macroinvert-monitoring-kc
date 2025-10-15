@@ -9,6 +9,8 @@ library(geosphere)
 library(progress)
 
 buffer_size = 1000
+threshold = 0.9
+days_threshold = 2
 
 standard_crs_number = 32610
 standard_crs_code = "EPSG:32610"
@@ -348,7 +350,6 @@ prediction_data = arrow::read_feather(path_prediction_data) %>% rename(site_id =
 
 # Obtain putative detections with naive threshold
 message("Obtaining putative detections with naive threshold")
-threshold = 0.9
 detections = prediction_data %>% filter(confidence >= threshold)
 
 start_date_2024 <- min(detections$date[detections$season == "2024"])
@@ -381,7 +382,6 @@ site_species_matrix_days_detected <- detections %>%
     values_from = n_dates,
     values_fill = 0   # species not detected on any date = 0
   )
-days_threshold <- 2
 site_species_matrix <- site_species_matrix_days_detected %>%
   mutate(across(-site_id, ~ if_else(. > days_threshold, 1, 0)))
 
@@ -415,7 +415,7 @@ mapview(site_data_bird, zcol = "richness_insectivore")
 
 library(piecewiseSEM)
 
-data = as.data.frame(site_data_bird) %>% clean_names() %>% select(
+data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
   bibi, richness, richness_insectivore,
   nlcd_forest, nlcd_shrub_scrub, nlcd_wetlands, nlcd_developed, imp_mean
 )
