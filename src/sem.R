@@ -126,12 +126,29 @@ lc  = project(lc, standard_crs_code)
 imp = project(imp, standard_crs_code)
 
 ############################################################
+# Load tree canopy cover
+message("Loading tree canopy cover data")
+tcc_raw = rast("data/raw/environment/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif")
+
+template = project(study_area, crs(tcc_raw))
+message("Cropping tree canopy cover data")
+tcc = mask(crop(tcc_raw, template), template)
+message("Projecting tree canopy cover data")
+tcc = project(tcc, standard_crs_code)
+# Clean data
+tcc[tcc > 100] = NA
+tcc[is.nan(tcc)] <- NA
+
+############################################################
 # Calculate land cover data for all sites
 message("Calculating land cover composition with buffer size ", buffer_size)
 
 nlcd_data = list()
 pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = nrow(sites_aru), clear = FALSE)
 for (s in 1:nrow(sites_aru)) {
+  
+  # TODO: Exclude specific sites from analysis?
+  
   site = st_as_sf(sites_aru[s])
   site_buffer = st_buffer(site, buffer_size)
 
@@ -179,13 +196,22 @@ for (s in 1:nrow(sites_aru)) {
   
   site_imp = mask(crop(imp, site_buffer), site_buffer)
   imp_mean = mean(values(site_imp), na.rm = TRUE)
+  imp_sum  = sum(values(site_imp), na.rm = TRUE)
+  
+  site_tcc = mask(crop(tcc, site_buffer), site_buffer)
+  tcc_mean = mean(values(site_tcc), na.rm = TRUE)
+  tcc_sum  = sum(values(site_tcc), na.rm = TRUE)
   
   nlcd_data[[as.character(site$site_id)]] = list(
     rast_lc       = site_lc,
     rast_imp      = site_imp,
+    rast_tcc      = site_tcc,
     cover_summary = cover_summary,
     cover_detail  = cover_detail,
-    imp_mean      = imp_mean
+    imp_mean      = imp_mean,
+    imp_sum       = imp_sum,
+    tcc_mean      = tcc_mean,
+    tcc_sum       = tcc_sum
   )
   pb$tick()
 }
@@ -231,9 +257,14 @@ site_data <- sites_df %>% left_join(nlcd_summary, by = "site_id")
 imp_mean_df <- lapply(names(nlcd_data), function(id) {
   data.frame(
     site_id = id,
-    imp_mean = nlcd_data[[id]]$imp_mean
+    imp_mean = nlcd_data[[id]]$imp_mean,
+    imp_sum  = nlcd_data[[id]]$imp_sum,
+    tcc_mean = nlcd_data[[id]]$tcc_mean,
+    tcc_sum  = nlcd_data[[id]]$tcc_sum
   )
 }) %>% bind_rows()
+
+# TODO: for other imp_sum etc.
 
 # Join impervious surface
 site_data <- site_data %>%
@@ -244,15 +275,12 @@ site_data <- site_data %>%
 message("Visualizing data")
 
 # Step 1: Order site_id by nlcd_Developed
-site_order <- site_data %>%
-  arrange(desc(nlcd_Developed)) %>%
-  pull(site_id)
+site_order <- site_data %>% arrange(desc(nlcd_Developed)) %>% pull(site_id)
 
 # Step 2: Convert to long format (same as before)
 nlcd_cols <- grep("^nlcd_", names(site_data), value = TRUE)
 
-nlcd_long <- site_data %>%
-  select(site_id, all_of(nlcd_cols)) %>%
+nlcd_long <- site_data %>% select(site_id, all_of(nlcd_cols)) %>%
   pivot_longer(
     cols = -site_id,
     names_to = "landcover",
@@ -303,14 +331,11 @@ all_sites_df$class <- factor(all_sites_df$class, levels = nlcd_levels$class)
 present_levels <- nlcd_levels %>% filter(class %in% unique(all_sites_df$class))
 
 # Order sites by decreasing amount of development
-developed_counts <- all_sites_df %>%
-  filter(grepl("^Developed", class)) %>%
+site_order = all_sites_df %>%
   group_by(site) %>%
-  summarise(developed_n = n(), .groups = "drop")
-site_order <- developed_counts %>%
-  arrange(desc(developed_n)) %>%
-  pull(site)
-all_sites_df <- all_sites_df %>%
+  summarise(developed_n = sum(grepl("^Developed", class)), .groups = "drop") %>%
+  arrange(desc(developed_n)) %>% pull(site)
+all_sites_df = all_sites_df %>%
   mutate(site = factor(site, levels = site_order))
 
 # Plot
@@ -325,20 +350,59 @@ p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
   ) +
   labs(title = paste0("NLCD land cover configuration (", buffer_size, " m buffer)"), x = "", y = ""); print(p)
 
+imp_df <- bind_rows(
+  lapply(seq_along(nlcd_data), function(i) {
+    raster_to_df(nlcd_data[[i]]$rast_imp, names(nlcd_data)[i])
+  })
+) %>%
+  mutate(site = factor(site, levels = site_order))
+
+p = ggplot(imp_df, aes(x = x, y = y, fill = class)) +
+  geom_tile() +
+  facet_wrap(~ site, scales = "free") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme_minimal() + theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(title = paste0("NLCD fractional impervious surface (", buffer_size, " m buffer)"), x = "", y = "", fill = "Impervious %"); print(p)
+
+tcc_df <- bind_rows(
+  lapply(seq_along(nlcd_data), function(i) {
+    raster_to_df(nlcd_data[[i]]$rast_tcc, names(nlcd_data)[i])
+  })
+) %>% mutate(class = as.numeric(class)) %>%
+  mutate(site = factor(site, levels = site_order))
+
+p = ggplot(tcc_df, aes(x = x, y = y, fill = class)) +
+  geom_tile() +
+  facet_wrap(~ site, scales = "free") +
+  # scale_fill_viridis_c(option = "D") +
+  scale_fill_gradient(low = "white", high = "darkgreen") +
+  theme_minimal() + theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(title = paste0("USFS tree canopy cover (", buffer_size, " m buffer)"), x = "", y = "", fill = "Cover %"); print(p)
+
 hist(site_data$bibi)
 hist(site_data$imp_mean)
+hist(site_data$imp_sum)
+hist(site_data$tcc_mean)
+hist(site_data$tcc_sum)
 
-ggplot(site_data, aes(x = imp_mean, y = bibi)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
-
-ggplot(site_data, aes(x = nlcd_Developed, y = bibi)) +
+ggplot(site_data, aes(x = imp_sum, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
 ggplot(site_data, aes(x = imp_mean, y = nlcd_Developed)) +
   geom_point() + theme_minimal()
 
+ggplot(site_data, aes(x = tcc_sum, y = bibi)) +
+  geom_point() + geom_smooth(method = "lm") +
+  theme_minimal()
 
 ############################################################
 # Derive putative detection histories and diversity metrics
@@ -445,7 +509,7 @@ ggplot(site_data_bird, aes(x = bibi, y = richness)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
-ggplot(site_data_bird, aes(x = bibi, y = richness)) +
+ggplot(site_data_bird, aes(x = bibi, y = richness_insectivore)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
@@ -463,17 +527,20 @@ library(piecewiseSEM)
 # - Invertivore / Aquatic predator / Omnivore
 
 data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
-  bibi, richness, richness_insectivore,
-  nlcd_forest, nlcd_shrub_scrub, nlcd_wetlands, nlcd_developed, imp_mean
+  bibi,
+  "imp_mean", "imp_sum", nlcd_developed,
+  richness, richness_insectivore,
+  nlcd_forest, "tcc_mean", "tcc_sum",
+  nlcd_shrub_scrub, nlcd_wetlands
 )
 
 # Fit component regressions
 model_bibi = lm(
-  bibi ~ imp_mean + nlcd_forest,
+  bibi ~ imp_sum + nlcd_forest,
   data
 )
 model_alpha_total = glm(
-  richness_insectivore ~ bibi + imp_mean + nlcd_forest,
+  richness_insectivore ~ bibi + imp_sum + nlcd_forest,
   data,
   family = poisson(link = "log")
 )
