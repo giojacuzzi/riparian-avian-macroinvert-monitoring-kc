@@ -421,10 +421,24 @@ end_date_2024 <- max(detections$date[detections$season == "2024"])
 start_date_2025 <- min(detections$date[detections$season == "2025"])
 end_date_2025 <- max(detections$date[detections$season == "2025"])
 
-species = sort(unique(detections$common_name))
-species_metadata = read_csv("data/processed/Species_Habitat_List.csv", show_col_types = FALSE) %>% rename(common_name = species) %>% filter(common_name %in% species)
+species = read_lines("data/audio/Full_Species_List.txt") %>% as_tibble() %>%
+  separate(value, into = c("scientific_name", "common_name"), sep = "_") %>%
+  filter(common_name %in% sort(unique(detections$common_name)))
 
-insectivore_species <- species_metadata %>%
+# Break out insectivore guild into aerial insectivores via AVONET
+avonet = readxl::read_xlsx('data/traits/AVONET Supplementary dataset 1.xlsx', sheet = "AVONET2_eBird") %>%
+  janitor::clean_names() %>%
+  rename(scientific_name = species2, family = family2, order = order2) %>%
+  filter(scientific_name %in% species$scientific_name) %>%
+  select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
+species_metadata = left_join(species, avonet, by = "scientific_name")
+
+insectivore_species = species_metadata %>%
+  filter(trophic_niche %in% c("Invertivore", "Aquatic predator")) %>%
+  filter(primary_lifestyle %in% c("Aerial", "Insessorial")) %>%
+  pull(common_name)
+
+alt_insectivores = read_csv("data/processed/Species_Habitat_List.csv", show_col_types = FALSE) %>% rename(common_name = species) %>% filter(common_name %in% species$common_name) %>%
   filter(insectivore == "Yes") %>%
   pull(common_name)
 
@@ -522,9 +536,10 @@ mapview(site_data_bird, zcol = "richness_insectivore")
 
 library(piecewiseSEM)
 
-# TODO: Break out insectivore guild into aerial insectivores via AVONET
-# - Aerial / Insessorial
-# - Invertivore / Aquatic predator / Omnivore
+ggplot(site_data_bird %>% st_drop_geometry() %>% select(imp_sum, tcc_sum) %>% pivot_longer(cols = everything(), names_to = "variable", values_to = "value"), aes(x = value, fill = variable)) +
+  geom_histogram(show.legend = FALSE) +
+  facet_wrap(~ variable, scales = "free") +
+  theme_minimal()
 
 data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
   bibi,
@@ -536,11 +551,11 @@ data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
 
 # Fit component regressions
 model_bibi = lm(
-  bibi ~ imp_sum + nlcd_forest,
+  bibi ~ imp_sum + tcc_sum,
   data
 )
 model_alpha_total = glm(
-  richness_insectivore ~ bibi + imp_sum + nlcd_forest,
+  richness_insectivore ~ bibi + imp_sum + tcc_sum,
   data,
   family = poisson(link = "log")
 )
