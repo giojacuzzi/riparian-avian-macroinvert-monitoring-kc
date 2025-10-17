@@ -387,12 +387,6 @@ p = ggplot(tcc_df, aes(x = x, y = y, fill = class)) +
   ) +
   labs(title = paste0("USFS tree canopy cover (", buffer_size, " m buffer)"), x = "", y = "", fill = "Cover %"); print(p)
 
-hist(site_data$bibi)
-hist(site_data$imp_mean)
-hist(site_data$imp_sum)
-hist(site_data$tcc_mean)
-hist(site_data$tcc_sum)
-
 ggplot(site_data, aes(x = imp_sum, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
@@ -411,6 +405,11 @@ ggplot(site_data, aes(x = tcc_sum, y = bibi)) +
 message("Loading classifier prediction data")
 path_prediction_data = "data/cache/aggregate_pam_data/prediction_data.feather"
 prediction_data = arrow::read_feather(path_prediction_data) %>% rename(site_id = site)
+
+# Discard sites 257 and 259 that are dominated by agriculture
+sites_to_discard = as.character(c(257, 259))
+message("Discarding sites ", paste(sites_to_discard, collapse = ", "))
+prediction_data = prediction_data %>% filter(!(site_id %in% sites_to_discard))
 
 # Obtain putative detections with naive threshold
 message("Obtaining putative detections with naive threshold")
@@ -434,9 +433,12 @@ avonet = readxl::read_xlsx('data/traits/AVONET Supplementary dataset 1.xlsx', sh
 species_metadata = left_join(species, avonet, by = "scientific_name")
 
 insectivore_species = species_metadata %>%
-  filter(trophic_niche %in% c("Invertivore", "Aquatic predator")) %>%
-  filter(primary_lifestyle %in% c("Aerial", "Insessorial")) %>%
-  pull(common_name)
+  filter(trophic_niche %in% c("Invertivore"))
+
+# insectivore_species = species_metadata %>%
+#   filter(trophic_niche %in% c("Invertivore", "Aquatic predator")) %>%
+#   filter(primary_lifestyle %in% c("Aerial", "Insessorial")) %>%
+#   pull(common_name)
 
 alt_insectivores = read_csv("data/processed/Species_Habitat_List.csv", show_col_types = FALSE) %>% rename(common_name = species) %>% filter(common_name %in% species$common_name) %>%
   filter(insectivore == "Yes") %>%
@@ -484,7 +486,7 @@ detections_summary <- species_site_survey_long %>%
   group_by(common_name, survey_num) %>%
   summarise(total_detections = sum(detected), .groups = "drop")
 
-p = ggplot(detections_summary, aes(x = survey_num, y = as.integer(total_detections))) +
+ggplot(detections_summary, aes(x = survey_num, y = as.integer(total_detections))) +
   geom_line() +
   facet_wrap(~ common_name, scales = "free_y") +
   theme_minimal() +
@@ -492,11 +494,9 @@ p = ggplot(detections_summary, aes(x = survey_num, y = as.integer(total_detectio
     title = "Species detections across all sites and surveys",
     x = "Survey number",
     y = "Total detections across sites"
-  ); print(p)
+  )
 
 # TODO: Species accumulation curves?
-
-#######
 
 site_species_matrix_days_detected <- detections %>%
   group_by(site_id, common_name) %>%
@@ -510,7 +510,28 @@ site_species_matrix <- site_species_matrix_days_detected %>%
   mutate(across(-site_id, ~ if_else(. > days_threshold, 1, 0)))
 
 site_insectivores_matrix <- site_species_matrix %>%
-  select(site_id, all_of(insectivore_species))
+  select(site_id, all_of(insectivore_species$common_name))
+
+# Visualize species composition at each site
+site_species_long <- site_species_matrix %>%
+  pivot_longer(cols = -site_id, names_to = "common_name", values_to = "detected") %>%
+  filter(detected == 1) %>%
+  group_by(site_id) %>%
+  mutate(richness = n()) %>%
+  ungroup() %>%
+  arrange(richness)
+
+ggplot(left_join(site_species_long, species_metadata, by = "common_name"), aes(y = reorder(site_id, richness), fill = trophic_niche)) +
+  geom_bar() +
+  labs(title = "Species presence by trophic niche") +
+  theme_minimal()
+
+ggplot(left_join(site_species_long, species_metadata, by = "common_name"), aes(y = reorder(site_id, richness), fill = primary_lifestyle)) +
+  geom_bar() +
+  labs(title = "Species presence by primary foraging lifestyle") +
+  theme_minimal()
+  
+# Calculate richness of different groups
 
 richness = site_species_matrix %>% mutate(richness = rowSums(across(-site_id))) %>% select(site_id, richness)
 richness_insectivore = site_insectivores_matrix %>% mutate(richness_insectivore = rowSums(across(-site_id))) %>% select(site_id, richness_insectivore)
@@ -527,9 +548,43 @@ ggplot(site_data_bird, aes(x = bibi, y = richness_insectivore)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
+ggplot(site_data_bird, aes(x = tcc_sum, y = richness_insectivore)) +
+  geom_point() + geom_smooth(method = "lm") +
+  theme_minimal()
+
 site_data_bird = left_join(site_data_bird %>% mutate(site_id = as.double(site_id)), site_metadata %>% select(site_id, lat_aru, long_aru), by = "site_id")
 site_data_bird = site_data_bird %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
 mapview(site_data_bird, zcol = "richness_insectivore")
+
+##############
+
+# library(vegan)
+# 
+# species_mat <- site_species_matrix %>%
+#   column_to_rownames("site_id") %>%
+#   as.matrix()
+# 
+# nmds <- metaMDS(species_mat, distance = "jaccard", binary = TRUE, k = 2, trymax = 100)
+# nmds
+# 
+# nmds_sites <- as.data.frame(scores(nmds, display = "sites")) %>%
+#   rownames_to_column("site_id")
+# 
+# env_data <- site_data_bird %>% select(site_id, bibi, tcc_sum, imp_sum) %>% mutate(site_id = as.character(site_id))
+# 
+# nmds_sites <- nmds_sites %>%
+#   left_join(env_data, by = "site_id")
+# 
+# nmds_species <- as.data.frame(scores(nmds, display = "species")) %>%
+#   rownames_to_column("species")
+# 
+# ggplot(nmds_sites, aes(x = NMDS1, y = NMDS2)) +
+#   geom_point(size = 3) +   # color by environmental variable
+#   stat_ellipse(level = 0.95) +
+#   geom_text(aes(label = site_id), vjust = -1, size = 3) +
+#   scale_color_viridis_c(option = "plasma") +
+#   theme_minimal(base_size = 12) +
+#   labs(title = "NMDS of species composition")
 
 ############################################################
 # SEM
