@@ -174,7 +174,7 @@ for (s in 1:nrow(sites_aru)) {
   cover_summary <- cover_detail %>%
     mutate(
       group = case_when(
-        grepl("Developed", class) ~ "Developed",
+        grepl("Intensity", class) ~ "Developed, Variable Intensity",
         grepl("Forest", class) ~ "Forest",
         # grepl("Shrub|Grass", class) ~ "Grass/Shrub",
         grepl("Wetlands", class) ~ "Wetlands",
@@ -246,7 +246,8 @@ nlcd_summary <- lapply(names(nlcd_data), function(id) {
 }) %>% bind_rows()
 nlcd_summary <- nlcd_summary %>%
   select(site_id, group, percent) %>%
-  pivot_wider(names_from = group, values_from = percent, names_prefix = "nlcd_")
+  pivot_wider(names_from = group, values_from = percent, names_prefix = "nlcd_") %>%
+  janitor::clean_names()
 
 # Join land cover data
 sites_df <- as.data.frame(sites_aru)  # extract attributes
@@ -275,7 +276,7 @@ site_data <- site_data %>%
 message("Visualizing data")
 
 # Step 1: Order site_id by nlcd_Developed
-site_order <- site_data %>% arrange(desc(nlcd_Developed)) %>% pull(site_id)
+site_order <- site_data %>% arrange(desc(nlcd_developed_variable_intensity)) %>% pull(site_id)
 
 # Step 2: Convert to long format (same as before)
 nlcd_cols <- grep("^nlcd_", names(site_data), value = TRUE)
@@ -301,15 +302,16 @@ p = ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
     title = paste0("NLCD land cover composition (", buffer_size, " m buffer)")
   ) +
   scale_fill_manual(values = c(
-    "Developed"             = "#eb0000",
-    "Forest"                = "#1c5f2c",
-    "Wetlands"              = "#6c9fb8",
-    "Agriculture"           = "#ead963",
-    "Barren Land"           = "#b3ac9f",
-    "Grassland/Herbaceous"  = "#dde9af",
-    "Open Water"            = "#466b9f",
-    "Perennial Ice/Snow"    = "#d1defa",
-    "Shrub/Scrub"           = "#af963c"
+    "developed_variable_intensity"             = "#eb0000",
+    "developed_open_space"             = "#eb9999",
+    "forest"                = "#1c5f2c",
+    "wetlands"              = "#6c9fb8",
+    "agriculture"           = "#ead963",
+    "barren_land"           = "#b3ac9f",
+    "grassland_herbaceous"  = "#dde9af",
+    "open_water"            = "#466b9f",
+    "perennial_ice_snow"    = "#d1defa",
+    "shrub_scrub"           = "#af963c"
   )) +
   theme_minimal(); print(p)
 
@@ -391,7 +393,7 @@ ggplot(site_data, aes(x = imp_sum, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") +
   theme_minimal()
 
-ggplot(site_data, aes(x = imp_mean, y = nlcd_Developed)) +
+ggplot(site_data, aes(x = imp_mean, y = nlcd_developed_variable_intensity)) +
   geom_point() + theme_minimal()
 
 ggplot(site_data, aes(x = tcc_sum, y = bibi)) +
@@ -530,6 +532,16 @@ ggplot(left_join(site_species_long, species_metadata, by = "common_name"), aes(y
   geom_bar() +
   labs(title = "Species presence by primary foraging lifestyle") +
   theme_minimal()
+
+ggplot(left_join(site_species_matrix, site_data, by = "site_id"),
+       aes(x = bibi, y = `Wilson's Warbler`)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
+  geom_point() + theme_minimal()
+
+ggplot(left_join(site_species_matrix, site_data, by = "site_id"),
+       aes(x = bibi, y = `Belted Kingfisher`)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
+  geom_point() + theme_minimal()
   
 # Calculate richness of different groups
 
@@ -596,13 +608,30 @@ ggplot(site_data_bird %>% st_drop_geometry() %>% select(imp_sum, tcc_sum) %>% pi
   facet_wrap(~ variable, scales = "free") +
   theme_minimal()
 
+candidate_vars = c("bibi",
+                   "imp_sum", "nlcd_developed_variable_intensity", "nlcd_developed_open_space",
+                   "richness", "richness_insectivore",
+                   "nlcd_forest", "tcc_sum",
+                   "nlcd_shrub_scrub", "nlcd_wetlands")
+
 data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
-  bibi,
-  "imp_mean", "imp_sum", nlcd_developed,
-  richness, richness_insectivore,
-  nlcd_forest, "tcc_mean", "tcc_sum",
-  nlcd_shrub_scrub, nlcd_wetlands
+  all_of(candidate_vars)
 )
+
+# Explore pairwise collinearity
+pairwise_collinearity = function(vars, threshold = 0.8) {
+  cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
+  cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
+  return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
+}
+
+pairwise_collinearity(data)
+data_subset = data %>% select(bibi, imp_sum, tcc_sum)
+pairwise_collinearity(data_subset)
+
+# VIF analysis for multicollinearity (consider dropping variable(s) with high VIF values (> 10))
+model = lm(rnorm(nrow(data_subset)) ~ ., data = data_subset)
+sort(car::vif(model))
 
 # Fit component regressions
 model_bibi = lm(
