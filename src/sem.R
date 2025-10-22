@@ -1,5 +1,6 @@
 #########################################################################################
 ## Clean and cache geospatial dependencies for the study area
+in_data_geospatial = "/Volumes/gioj_work/riparian-avian-macroinvert-monitoring-kc/data/raw/geospatial"
 out_filepath = "data/cache/preprocess_geospatial_data/geospatial_data.rds"
 #########################################################################################
 
@@ -49,7 +50,7 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
 # Load land cover and impervious surface data
 message("Loading USGS NLCD land cover data")
 
-lc_raw  = rast("data/raw/geospatial/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif")
+lc_raw  = rast(paste0(in_data_geospatial, "/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif"))
 
 template = project(vect(study_area), crs(lc_raw))
 rast_landcover  = mask(crop(lc_raw, template), template)
@@ -108,7 +109,7 @@ plot(rast_landcover)
 # Load impervious surface percentage
 message("Loading USGS NLCD impervious surface data")
 
-imp_raw = rast('data/raw/geospatial/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif')
+imp_raw = rast(paste0(in_data_geospatial, "/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif"))
 
 template = project(vect(study_area), crs(imp_raw))
 rast_impervious = mask(crop(imp_raw, template), template)
@@ -118,7 +119,7 @@ plot(rast_impervious)
 ############################################################
 # Load tree canopy cover
 message("Loading USFS tree canopy cover data")
-tcc_raw = rast("data/raw/geospatial/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif")
+tcc_raw = rast(paste0(in_data_geospatial, "/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif"))
 
 template = project(vect(study_area), crs(tcc_raw))
 rast_canopycover = mask(crop(tcc_raw, template), template)
@@ -135,7 +136,7 @@ message("Loading USDA/DOI Landfire geospatial data")
 
 # Vegetation cover
 # "Represents the vertically projected percent cover of the live canopy for a 30-m cell. rast_vegcover is produced separately for tree, shrub, and herbaceous lifeforms. Training data depicting percentages of canopy cover are obtained from plot-level ground-based visual assessments and lidar observations. These are combined with Landsat imagery (from multiple seasons), to inform models built independently for each lifeform. Tree, shrub, and herbaceous lifeforms each have a potential range from 10% to 100% (cover values less than 10% are binned into the 10% value). The three independent lifeform datasets are merged into a single product based on the dominant lifeform of each pixel. The rast_vegcover product is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Height (rast_vegheight)."
-evc_raw = rast("data/raw/geospatial/Landfire/LF2024_EVC_250_CONUS/LC24_EVC_250.tif")
+evc_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_EVC_250_CONUS/LC24_EVC_250.tif"))
 template = project(vect(study_area), crs(evc_raw))
 rast_vegcover = mask(crop(evc_raw, template), template)
 
@@ -152,7 +153,7 @@ plot(rast_vegcover)
 
 # Vegetation height
 # "Represents the average height of the dominant vegetation for a 30-m cell. rast_vegheight is produced separately for tree, shrub, and herbaceous lifeforms using training data depicting the weighted average height by species cover and Existing Vegetation Type (rast_vegtype) lifeform. Decision tree models using field reference data, lidar, and Landsat are developed separately for each lifeform, then lifeform specific height class layers are merged along with land cover into a single rast_vegheight product based on the dominant lifeform of each pixel. rast_vegheight ranges are continuous for the herbaceous lifeform category ranging from 0.1 to 1 meter with decimeter increments, 0.1 to 3 meters for shrub lifeform, and 1 to 99 meters for tree lifeform. If the height values of each lifeform exceed the continuous value range, they are binned into the appropriate maximum height class. rast_vegheight is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Cover (rast_vegcover)."
-evh_raw = rast("data/raw/geospatial/Landfire/LF2024_EVH_250_CONUS/LC24_EVH_250.tif")
+evh_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_EVH_250_CONUS/LC24_EVH_250.tif"))
 template = project(vect(study_area), crs(evh_raw))
 rast_vegheight = mask(crop(evh_raw, template), template)
 
@@ -193,7 +194,7 @@ plot(rast_herbheight)
 
 # Vegetation type
 # "Represents the current distribution of the terrestrial ecological systems classification developed by NatureServe for the western hemisphere. In this context, a terrestrial ecological system is defined as a group of plant community types that tend to co-occur within landscapes with similar ecological processes, substrates, and/or environmental gradients. See the rast_vegtype product page (https://landfire.gov/vegetation/rast_vegtype) for more information about ecological systems and NVC classifications."
-evt_raw = rast("data/raw/geospatial/Landfire/LF2024_EVT_250_CONUS/LC24_EVT_250.tif")
+evt_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_EVT_250_CONUS/LC24_EVT_250.tif"))
 template = project(vect(study_area), crs(evt_raw))
 rast_vegtype = mask(crop(evt_raw, template), template)
 
@@ -210,7 +211,7 @@ plot(rast_vegtype)
 
 # Successional class
 # "Categorizes current vegetation composition and structure into up to five successional classes, with successional classes defined in the appropriate Biophysical Settings (BpS) Model. There are two additional categories for uncharacteristic species (exotic or invasive vegetation), and uncharacteristic native vegetation cover, structure, or composition. Current successional classes and their historical reference conditions are compared to assess departure of vegetation characteristics. The classification schemes used to produce BpS and SClass may vary slightly between adjacent map zones, and reference conditions may be simulated independently in different map zones for the same BpS.
-sc_raw = rast("data/raw/geospatial/Landfire/LF2024_SClass_250_CONUS/LC24_SCla_250.tif")
+sc_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_SClass_250_CONUS/LC24_SCla_250.tif"))
 template = project(vect(study_area), crs(sc_raw))
 rast_sclass = mask(crop(sc_raw, template), template)
 
@@ -223,34 +224,60 @@ plot(rast_sclass)
 # Load landfire geospatial data
 message("Loading King County DNRP hydrological data")
 
-# basins = st_read("data/raw/geospatial/King County DNRP/KC_basins.shp")
+# basins = st_read(paste0(in_data_geospatial, "/King County DNRP/KC_basins.shp")
 
-# areas = st_read("data/raw/geospatial/NHD_H_1711_HU4_Shape/Shape/NHDArea.shp")
+# areas = st_read(paste0(in_data_geospatial, "/NHD_H_1711_HU4_Shape/Shape/NHDArea.shp")
 
-# flowlines = st_read("data/raw/geospatial/NHD_H_1711_HU4_Shape/Shape/NHDFlowline.shp")
+# flowlines = st_read(paste0(in_data_geospatial, "/NHD_H_1711_HU4_Shape/Shape/NHDFlowline.shp")
 
 # "The riparian delineations we have are for both fixed widths as well as “functionally dynamic” buffers that may be more ecologically relevant."
 # "As Abood and others (2012) describe, the variable-width, or “dynamic,” buffer is likely more ecologically relevant because it accounts for factors that affect how a stream interacts and is influenced by the riparian zone. A recent literature review of riparian buffers done by King County (2019b) highlights the range of widths needed to maintain various functions (e.g., erosion control, shade). The review did not evaluate this concept of dynamic buffers, but the findings illustrate that riparian functions are maintained at different widths depending on a range of factors including but not limited to the size of stream, soil composition, vegetation type and age, etc.
-sf_ripfb = st_read("data/raw/geospatial/King County DNRP/RiparianBuffer_basin.shp", quiet = TRUE)
+sf_ripfb = st_read(paste0(in_data_geospatial, "/King County DNRP/RiparianBuffer_basin.shp"), quiet = TRUE)
 sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_area) %>% st_transform(st_crs(sf_ripfb)))) > 0)
 
 # "The pattern, quality, and connectivity of riparian areas can also be really interesting and I’ve wondered how that may affect birds and other wildlife. For instance, in Seattle, the streams can have pretty decent but very narrow riparian areas because they are in canyons. In other suburban watersheds, the riparian areas can be vegetated but lack the tall evergreens or complex structure - they may be wider and even “greener” but not as functional? Maybe birds with small territories can fare OK in urban riparian areas?"
 
 ############################################################
+# Load NASA GEDI-Fusion forest structure data
+message("Loading NASA GEDI-Fusion forest structure data")
+
+# "Foliage height diversity (a unitless index)"
+fhd_raw = rast(paste0(in_data_geospatial, "/NASA/gedifusion_fhd_2020.tif"))
+template = project(vect(study_area), crs(fhd_raw))
+rast_fhd = mask(crop(fhd_raw, template), template)
+
+plot(rast_fhd)
+
+# "Fractional canopy cover (proportion)"
+cover_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_cover_2020.tif"))
+template   = project(vect(study_area), crs(cover_raw))
+rast_cover = mask(crop(cover_raw, template), template)
+
+plot(rast_cover)
+
+# TODO: rh98 "Corresponds to the height at which 98% of the waveform energy is captured - comparable to a canopy height measure"
+
+# TODO: pavd5to10m "Plant area vegetation density (PAVD); the proportion of vegetation within the 5-10 m stratum above ground surface (PAVD 5-10 m)""
+
+# TODO: pavd20m "The proportion of vegetation density (PAVD) greater than 20 m above ground surface, chosen to represent the presence of a mature upper canopy within different forest types"
+
+############################################################
 # Project all data to same EPSG:32610 coordinate reference system
 message("Projecting data to ", standard_crs_code)
-study_area = project(vect(study_area), standard_crs_code)
-rast_landcover  = project(rast_landcover, standard_crs_code)
-rast_impervious = project(rast_impervious, standard_crs_code)
+study_area       = project(vect(study_area), standard_crs_code)
+rast_landcover   = project(rast_landcover,   standard_crs_code)
+rast_impervious  = project(rast_impervious,  standard_crs_code)
 rast_canopycover = project(rast_canopycover, standard_crs_code)
-rast_vegcover = project(rast_vegcover, standard_crs_code)
-rast_vegheight = project(rast_vegheight, standard_crs_code)
-rast_treeheight = project(rast_treeheight, standard_crs_code)
+rast_vegcover    = project(rast_vegcover,    standard_crs_code)
+rast_vegheight   = project(rast_vegheight,   standard_crs_code)
+rast_treeheight  = project(rast_treeheight,  standard_crs_code)
 rast_shrubheight = project(rast_shrubheight, standard_crs_code)
-rast_herbheight = project(rast_herbheight, standard_crs_code)
-rast_vegtype = project(rast_vegtype, standard_crs_code)
-rast_sclass = project(rast_sclass, standard_crs_code)
-sf_ripfb = sf_ripfb %>% st_transform(crs = standard_crs_code)
+rast_herbheight  = project(rast_herbheight,  standard_crs_code)
+rast_vegtype     = project(rast_vegtype,     standard_crs_code)
+rast_sclass      = project(rast_sclass,      standard_crs_code)
+rast_fhd         = project(rast_fhd,         standard_crs_code)
+rast_cover       = project(rast_cover,       standard_crs_code)
+sf_ripfb         = sf_ripfb %>% st_transform(crs = standard_crs_code)
 
 names(rast_landcover) = "landcover"
 names(rast_impervious) = "impervious"
