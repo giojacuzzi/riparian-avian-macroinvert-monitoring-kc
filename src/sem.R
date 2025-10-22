@@ -1,21 +1,28 @@
-# Load ARU and PSSB site locations, define study area,
-# and calculate all site covariates from land cover data
+#########################################################################################
+## Clean and cache geospatial dependencies for the study area
+out_filepath = "data/cache/preprocess_geospatial_data/geospatial_data.rds"
+#########################################################################################
 
-library(tidyverse)
-library(terra)
-library(mapview)
-library(sf)
-library(geosphere)
-library(progress)
+# Load required packages (install any missing)
+pkgs = c(
+  "tidyverse",  # data manipulation
+  "sf",         # vector data
+  "terra",      # raster data
+  "tidyterra",  # raster data manipulation
+  "tigris",     # political boundaries
+  "geosphere",  # distance metrics
+  "mapview",    # interactive geospatial visualization
+  "progress"    # dynamic progress bar
+)
+sapply(pkgs, function(pkg) {
+  if (!pkg %in% installed.packages()[, "Package"]) install.packages(pkg, dependencies = TRUE)
+  library(pkg, character.only = TRUE)
+  as.character(packageVersion(pkg))
+})
 
-buffer_size = 500 # ~500m insect emergence flux range falloff; try 1km also
-threshold = 0.9
-days_threshold = 3
-
-standard_crs_number = 32610
 standard_crs_code = "EPSG:32610"
 
-############################################################
+#########################################################################################
 # Load ARU and PSSB site locations and define study area
 message("Loading ARU and PSSB site locations")
 
@@ -32,48 +39,24 @@ site_metadata = site_metadata %>% rowwise() %>%
 
 sites_aru = site_metadata %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
 sites_pssb = site_metadata %>% st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
-study_area = st_as_sfc(st_bbox(st_buffer(sites_aru, 10000)))
+study_area = counties(state = "WA", year = 2024, cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = standard_crs_code)
 
 mapview(study_area, alpha.regions = 0, lwd = 2) +
   mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
 ############################################################
-# Load PSSB B-IBI data
-message("Loading PSSB B-IBI data")
+# Load land cover and impervious surface data
+message("Loading USGS NLCD land cover data")
 
-pssb_data = read_csv("data/raw/benthos/ScoresByYear.csv", show_col_types = FALSE) %>%
-  janitor::clean_names() %>% select(site_id, x2020, x2021, x2022, x2023, x2024)
+lc_raw  = rast("data/raw/geospatial/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif")
 
-sites_aru = left_join(sites_aru, pssb_data, by = c("site_id"))
-sites_aru = sites_aru %>% rowwise() %>% mutate(bibi_mean = mean(c_across(x2020:x2024), na.rm = TRUE)) %>% ungroup()
-sites_aru = sites_aru %>% rowwise() %>% mutate(bibi = NA) %>%
-  mutate(bibi = case_when( # Get the BIBI for the year in which the site was sampled
-    year == 2024 ~ x2024,
-    year == 2025 ~ x2024, # NOTE: 2025 not yet available
-    TRUE ~ bibi
-  ))
-
-mapview(sites_aru, zcol = "bibi")
-
-############################################################
-# Load lc land cover and impervious surface data
-message("Loading land cover and impervious surface data")
-
-lc_raw  = rast("data/raw/environment/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif")
-imp_raw = rast('data/raw/environment/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif')
-stopifnot(crs(lc_raw) == crs(imp_raw))
-
-study_area = project(vect(study_area), crs(lc_raw))
-sites_aru  = project(vect(sites_aru), crs(lc_raw))
-stopifnot(crs(lc_raw) == crs(study_area) && crs(lc_raw) == crs(sites_aru))
-
-lc  = mask(crop(lc_raw, study_area), study_area)
-imp = mask(crop(imp_raw, study_area), study_area)
+template = project(vect(study_area), crs(lc_raw))
+rast_landcover  = mask(crop(lc_raw, template), template)
 
 # Factor land cover data
 # https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description
-lc = as.factor(lc)
+# rast_landcover = as.factor(rast_landcover)
 nlcd_levels <- data.frame(
   id = c(11,12,21,22,23,24,31,41,42,43,52,71,81,82,90,95),
   class = c(
@@ -113,31 +96,297 @@ nlcd_levels <- data.frame(
     "#6c9fb8"
   )
 )
-levels(lc) <- nlcd_levels
-levels(lc)[[1]] # Verify
+# levels(rast_landcover) <- nlcd_levels
 
-plot(lc, col = nlcd_levels$color)
-plot(imp)
+rast_landcover[] = as.integer(factor(rast_landcover[], levels = nlcd_levels$id))
+levels(rast_landcover) = data.frame(id = 1:nrow(nlcd_levels), class = nlcd_levels$class, color = nlcd_levels$color)
+levels(rast_landcover)[[1]] # verify
 
-# Project all data to EPSG:32610
-sites_aru  = project(sites_aru, standard_crs_code)
-study_area = project(study_area, standard_crs_code)
-lc  = project(lc, standard_crs_code)
-imp = project(imp, standard_crs_code)
+plot(rast_landcover)
+
+############################################################
+# Load impervious surface percentage
+message("Loading USGS NLCD impervious surface data")
+
+imp_raw = rast('data/raw/geospatial/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif')
+
+template = project(vect(study_area), crs(imp_raw))
+rast_impervious = mask(crop(imp_raw, template), template)
+
+plot(rast_impervious)
 
 ############################################################
 # Load tree canopy cover
-message("Loading tree canopy cover data")
-tcc_raw = rast("data/raw/environment/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif")
+message("Loading USFS tree canopy cover data")
+tcc_raw = rast("data/raw/geospatial/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif")
 
-template = project(study_area, crs(tcc_raw))
-message("Cropping tree canopy cover data")
-tcc = mask(crop(tcc_raw, template), template)
-message("Projecting tree canopy cover data")
-tcc = project(tcc, standard_crs_code)
-# Clean data
-tcc[tcc > 100] = NA
-tcc[is.nan(tcc)] <- NA
+template = project(vect(study_area), crs(tcc_raw))
+rast_canopycover = mask(crop(tcc_raw, template), template)
+
+values(rast_canopycover) <- as.numeric(values(rast_canopycover))
+rast_canopycover[rast_canopycover > 100] = NA
+rast_canopycover[is.nan(rast_canopycover)] = NA
+
+plot(rast_canopycover)
+
+############################################################
+# Load landfire geospatial data
+message("Loading USDA/DOI Landfire geospatial data")
+
+# Vegetation cover
+# "Represents the vertically projected percent cover of the live canopy for a 30-m cell. rast_vegcover is produced separately for tree, shrub, and herbaceous lifeforms. Training data depicting percentages of canopy cover are obtained from plot-level ground-based visual assessments and lidar observations. These are combined with Landsat imagery (from multiple seasons), to inform models built independently for each lifeform. Tree, shrub, and herbaceous lifeforms each have a potential range from 10% to 100% (cover values less than 10% are binned into the 10% value). The three independent lifeform datasets are merged into a single product based on the dominant lifeform of each pixel. The rast_vegcover product is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Height (rast_vegheight)."
+evc_raw = rast("data/raw/geospatial/Landfire/LF2024_EVC_250_CONUS/LC24_EVC_250.tif")
+template = project(vect(study_area), crs(evc_raw))
+rast_vegcover = mask(crop(evc_raw, template), template)
+
+evc_values = as.data.frame(values(rast_vegcover)) %>% rename(VALUE = 1) %>% filter(!is.na(VALUE))
+evc_table  = as.data.frame(cats(rast_vegcover)[[1]]) %>% select(VALUE, CLASSNAMES)
+(evc_composition = evc_values %>%
+    group_by(VALUE) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    mutate(pcnt = (count / sum(count))) %>%
+    left_join(evc_table, by = "VALUE") %>%
+    arrange(desc(pcnt)))
+
+plot(rast_vegcover)
+
+# Vegetation height
+# "Represents the average height of the dominant vegetation for a 30-m cell. rast_vegheight is produced separately for tree, shrub, and herbaceous lifeforms using training data depicting the weighted average height by species cover and Existing Vegetation Type (rast_vegtype) lifeform. Decision tree models using field reference data, lidar, and Landsat are developed separately for each lifeform, then lifeform specific height class layers are merged along with land cover into a single rast_vegheight product based on the dominant lifeform of each pixel. rast_vegheight ranges are continuous for the herbaceous lifeform category ranging from 0.1 to 1 meter with decimeter increments, 0.1 to 3 meters for shrub lifeform, and 1 to 99 meters for tree lifeform. If the height values of each lifeform exceed the continuous value range, they are binned into the appropriate maximum height class. rast_vegheight is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Cover (rast_vegcover)."
+evh_raw = rast("data/raw/geospatial/Landfire/LF2024_EVH_250_CONUS/LC24_EVH_250.tif")
+template = project(vect(study_area), crs(evh_raw))
+rast_vegheight = mask(crop(evh_raw, template), template)
+
+evh_table = as.data.frame(cats(rast_vegheight)[[1]])
+(evh_table$CLASSNAMES[evh_table$VALUE %in% unique(values(rast_vegheight))])
+
+evh_values = as.data.frame(values(rast_vegheight)) %>% rename(VALUE = 1) %>% filter(!is.na(VALUE))
+evh_table  = as.data.frame(cats(rast_vegheight)[[1]]) %>% select(VALUE, CLASSNAMES)
+(evh_composition = evh_values %>%
+    group_by(VALUE) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    mutate(pcnt = (count / sum(count))) %>%
+    left_join(evh_table, by = "VALUE") %>%
+    arrange(desc(pcnt)))
+
+plot(rast_vegheight)
+
+# Convert vegetation height data from categorical to continuous
+
+tree_cats = cats(rast_vegheight)[[1]] %>% mutate(HEIGHT = NA)
+tree_rows = grepl("^Tree Height", tree_cats$CLASSNAMES)
+tree_cats$HEIGHT[tree_rows] = as.numeric(sub(".*= ([0-9\\.]+).*", "\\1", tree_cats$CLASSNAMES[tree_rows]))
+rast_treeheight = classify(rast_vegheight, rcl = as.matrix(data.frame(from = tree_cats$VALUE, to = tree_cats$HEIGHT)), others = NA)
+plot(rast_treeheight)
+
+shrub_cats = cats(rast_vegheight)[[1]] %>% mutate(HEIGHT = NA)
+shrub_rows = grepl("^Shrub Height", shrub_cats$CLASSNAMES)
+shrub_cats$HEIGHT[shrub_rows] = as.numeric(sub(".*= ([0-9\\.]+).*", "\\1", shrub_cats$CLASSNAMES[shrub_rows]))
+rast_shrubheight = classify(rast_vegheight, rcl = as.matrix(data.frame(from = shrub_cats$VALUE, to = shrub_cats$HEIGHT)), others = NA)
+plot(rast_shrubheight)
+
+herb_cats = cats(rast_vegheight)[[1]] %>% mutate(HEIGHT = NA)
+herb_rows = grepl("^Herb Height", herb_cats$CLASSNAMES)
+herb_cats$HEIGHT[herb_rows] = as.numeric(sub(".*= ([0-9\\.]+).*", "\\1", herb_cats$CLASSNAMES[herb_rows]))
+rast_herbheight = classify(rast_vegheight, rcl = as.matrix(data.frame(from = herb_cats$VALUE, to = herb_cats$HEIGHT)), others = NA)
+plot(rast_herbheight)
+
+
+# Vegetation type
+# "Represents the current distribution of the terrestrial ecological systems classification developed by NatureServe for the western hemisphere. In this context, a terrestrial ecological system is defined as a group of plant community types that tend to co-occur within landscapes with similar ecological processes, substrates, and/or environmental gradients. See the rast_vegtype product page (https://landfire.gov/vegetation/rast_vegtype) for more information about ecological systems and NVC classifications."
+evt_raw = rast("data/raw/geospatial/Landfire/LF2024_EVT_250_CONUS/LC24_EVT_250.tif")
+template = project(vect(study_area), crs(evt_raw))
+rast_vegtype = mask(crop(evt_raw, template), template)
+
+evt_values = as.data.frame(values(rast_vegtype)) %>% rename(VALUE = 1) %>% filter(!is.na(VALUE))
+evt_table  = as.data.frame(cats(rast_vegtype)[[1]]) %>%  select(VALUE, EVT_NAME)
+(evt_composition = evt_values %>%
+    group_by(VALUE) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    mutate(pcnt = (count / sum(count))) %>%
+    left_join(evt_table, by = "VALUE") %>%
+    arrange(desc(pcnt)))
+
+plot(rast_vegtype)
+
+# Successional class
+# "Categorizes current vegetation composition and structure into up to five successional classes, with successional classes defined in the appropriate Biophysical Settings (BpS) Model. There are two additional categories for uncharacteristic species (exotic or invasive vegetation), and uncharacteristic native vegetation cover, structure, or composition. Current successional classes and their historical reference conditions are compared to assess departure of vegetation characteristics. The classification schemes used to produce BpS and SClass may vary slightly between adjacent map zones, and reference conditions may be simulated independently in different map zones for the same BpS.
+sc_raw = rast("data/raw/geospatial/Landfire/LF2024_SClass_250_CONUS/LC24_SCla_250.tif")
+template = project(vect(study_area), crs(sc_raw))
+rast_sclass = mask(crop(sc_raw, template), template)
+
+sc_table = as.data.frame(cats(rast_sclass)[[1]])
+(sc_table$DESCRIPTIO[sc_table$VALUE %in% unique(values(rast_sclass))])
+
+plot(rast_sclass)
+
+############################################################
+# Load landfire geospatial data
+message("Loading King County DNRP hydrological data")
+
+# basins = st_read("data/raw/geospatial/King County DNRP/KC_basins.shp")
+
+# areas = st_read("data/raw/geospatial/NHD_H_1711_HU4_Shape/Shape/NHDArea.shp")
+
+# flowlines = st_read("data/raw/geospatial/NHD_H_1711_HU4_Shape/Shape/NHDFlowline.shp")
+
+# "The riparian delineations we have are for both fixed widths as well as “functionally dynamic” buffers that may be more ecologically relevant."
+# "As Abood and others (2012) describe, the variable-width, or “dynamic,” buffer is likely more ecologically relevant because it accounts for factors that affect how a stream interacts and is influenced by the riparian zone. A recent literature review of riparian buffers done by King County (2019b) highlights the range of widths needed to maintain various functions (e.g., erosion control, shade). The review did not evaluate this concept of dynamic buffers, but the findings illustrate that riparian functions are maintained at different widths depending on a range of factors including but not limited to the size of stream, soil composition, vegetation type and age, etc.
+sf_ripfb = st_read("data/raw/geospatial/King County DNRP/RiparianBuffer_basin.shp", quiet = TRUE)
+sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_area) %>% st_transform(st_crs(sf_ripfb)))) > 0)
+
+# "The pattern, quality, and connectivity of riparian areas can also be really interesting and I’ve wondered how that may affect birds and other wildlife. For instance, in Seattle, the streams can have pretty decent but very narrow riparian areas because they are in canyons. In other suburban watersheds, the riparian areas can be vegetated but lack the tall evergreens or complex structure - they may be wider and even “greener” but not as functional? Maybe birds with small territories can fare OK in urban riparian areas?"
+
+############################################################
+# Project all data to same EPSG:32610 coordinate reference system
+message("Projecting data to ", standard_crs_code)
+study_area = project(vect(study_area), standard_crs_code)
+rast_landcover  = project(rast_landcover, standard_crs_code)
+rast_impervious = project(rast_impervious, standard_crs_code)
+rast_canopycover = project(rast_canopycover, standard_crs_code)
+rast_vegcover = project(rast_vegcover, standard_crs_code)
+rast_vegheight = project(rast_vegheight, standard_crs_code)
+rast_treeheight = project(rast_treeheight, standard_crs_code)
+rast_shrubheight = project(rast_shrubheight, standard_crs_code)
+rast_herbheight = project(rast_herbheight, standard_crs_code)
+rast_vegtype = project(rast_vegtype, standard_crs_code)
+rast_sclass = project(rast_sclass, standard_crs_code)
+sf_ripfb = sf_ripfb %>% st_transform(crs = standard_crs_code)
+
+names(rast_landcover) = "landcover"
+names(rast_impervious) = "impervious"
+names(rast_canopycover) = "canopycover"
+names(rast_vegcover) = "vegcover"
+names(rast_vegheight) = "vegheight"
+names(rast_vegtype) = "vegtype"
+names(rast_sclass) = "sclass"
+
+geospatial_data = list(
+  rast_landcover = rast_landcover,
+  rast_impervious = rast_impervious,
+  rast_canopycover = rast_canopycover,
+  rast_vegcover = rast_vegcover,
+  rast_vegheight = rast_vegheight,
+  rast_vegtype = rast_vegtype,
+  rast_sclass = rast_sclass,
+  sf_ripfb = sf_ripfb
+)
+
+# Cache data
+# TODO: CACHE AS PERSISTENT TIF AND SHAPEFILE FILES!
+if (!dir.exists(dirname(out_filepath))) dir.create(dirname(out_filepath), recursive = TRUE)
+saveRDS(geospatial_data, out_filepath)
+message("Saved geospatial data cache to ", out_filepath)
+
+############################################################
+############################################################
+############################################################
+
+############################################################################################################
+# Load ARU and PSSB site locations and calculate all site covariates from land cover data
+
+# Load required packages (install any missing)
+pkgs = c(
+  "tidyverse",  # data manipulation
+  "sf",         # vector data
+  "terra",      # raster data
+  "tidyterra",  # raster data manipulation
+  "tigris",     # political boundaries
+  "geosphere",  # distance metrics
+  "mapview",    # interactive geospatial visualization
+  "progress"    # dynamic progress bar
+)
+sapply(pkgs, function(pkg) {
+  if (!pkg %in% installed.packages()[, "Package"]) install.packages(pkg, dependencies = TRUE)
+  library(pkg, character.only = TRUE)
+  as.character(packageVersion(pkg))
+})
+
+buffer_size = 500 # ~500m insect emergence flux range falloff
+threshold = 0.9
+days_threshold = 3
+
+crs_standard = "EPSG:32610" # shared coordinate reference system (metric)
+
+############################################################################################################
+# Load ARU and PSSB site locations and define study area
+message("Loading ARU and PSSB site locations")
+
+site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE)
+site_metadata$year = year(site_metadata$date_start)
+
+# Calculate distance between paired ARU and PSSB sites
+site_metadata = site_metadata %>% rowwise() %>%
+  mutate(dist_m = geosphere::distHaversine(
+    c(long_aru,  lat_aru),
+    c(long_pssb, lat_pssb)
+  )) %>%
+  ungroup()
+
+sites_aru = site_metadata %>%
+  st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326) %>% st_transform(crs = crs_standard)
+sites_pssb = site_metadata %>%
+  st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326) %>% st_transform(crs = crs_standard)
+
+# Define study area by a buffered bounding box around the sites...
+study_area = st_as_sfc(st_bbox(st_buffer(sites_aru, 1500)))
+# ... or by a geopolitical boundary (e.g. King County)
+study_area = counties(state = "WA", cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
+
+mapview(study_area, alpha.regions = 0, lwd = 2) +
+  mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
+  mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
+
+############################################################################################################
+# Load PSSB B-IBI data
+message("Loading PSSB B-IBI data")
+
+pssb_data = read_csv("data/raw/benthos/ScoresByYear.csv", show_col_types = FALSE) %>%
+  janitor::clean_names() %>% select(site_id, x2020, x2021, x2022, x2023, x2024)
+
+sites_aru = left_join(sites_aru, pssb_data, by = c("site_id"))
+sites_aru = sites_aru %>% rowwise() %>% mutate(bibi_mean = mean(c_across(x2020:x2024), na.rm = TRUE)) %>% ungroup()
+sites_aru = sites_aru %>% rowwise() %>% mutate(bibi = NA) %>%
+  mutate(bibi = case_when( # Get the BIBI for the year in which the site was sampled
+    year == 2024 ~ x2024,
+    year == 2025 ~ x2024, # NOTE: 2025 not yet available
+    TRUE ~ bibi
+  ))
+
+mapview(sites_aru, zcol = "bibi")
+
+############################################################
+# TODO: Load and process geospatial data
+message("Loading geospatial data")
+
+theme_set(theme_minimal())
+
+# gs_data = readRDS("data/cache/preprocess_geospatial_data/geospatial_data.rds")
+
+# Raster static plotting options
+plot(rast_landcover)
+ggplot() + geom_spatraster(data = rast_landcover)
+
+plot(rast_landcover)
+plot(rast_impervious)
+plot(rast_canopycover)
+plot(rast_vegcover)
+plot(rast_treeheight)
+plot(rast_shrubheight)
+plot(rast_herbheight)
+plot(rast_vegtype)
+plot(rast_sclass)
+
+# If your continuous raster object is very large
+plot(rast_canopycover) # plot statically
+mapview(aggregate(rast_canopycover, fact = 10, fun = "mean")) # ...plot dynamically at reduced (mean) resolution
+
+# If your categorical raster object is very large
+plot(rast_landcover) # plot statically
+mapview(aggregate(rast_landcover, fact = 10, fun = "modal")) # ...plot dynamically at reduced (modal) resolution
+
+# If your sf object is very large
+mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...plot dynamically at reduced resolution
+ggplot(st_simplify(sf_ripfb, dTolerance = 250)) + geom_sf() # ...plot statically at reduced resolution
 
 ############################################################
 # Calculate land cover data for all sites
@@ -149,12 +398,10 @@ for (s in 1:nrow(sites_aru)) {
   
   # TODO: Exclude specific sites from analysis?
   
-  site = st_as_sf(sites_aru[s])
+  site = st_as_sf(sites_aru[s,])
   site_buffer = st_buffer(site, buffer_size)
-
-  site_lc = mask(crop(lc, site_buffer), site_buffer)
-  site_lc[] = as.integer(factor(site_lc[], levels = nlcd_levels$id))
-  levels(site_lc) = data.frame(id = 1:nrow(nlcd_levels), class = nlcd_levels$class)
+  
+  site_lc = mask(crop(rast_landcover, site_buffer), site_buffer)
   # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_lc) + mapview(site_imp)
   
   freq_table <- freq(site_lc)
@@ -194,24 +441,37 @@ for (s in 1:nrow(sites_aru)) {
   present_levels = nlcd_levels[present_ids, ]
   # plot(site_lc, col = present_levels$color)
   
-  site_imp = mask(crop(imp, site_buffer), site_buffer)
-  imp_mean = mean(values(site_imp), na.rm = TRUE)
+  site_imp = mask(crop(rast_impervious, site_buffer), site_buffer)
   imp_sum  = sum(values(site_imp), na.rm = TRUE)
   
-  site_tcc = mask(crop(tcc, site_buffer), site_buffer)
-  tcc_mean = mean(values(site_tcc), na.rm = TRUE)
+  site_tcc = mask(crop(rast_canopycover, site_buffer), site_buffer)
   tcc_sum  = sum(values(site_tcc), na.rm = TRUE)
+  
+  site_treeheight = mask(crop(rast_treeheight, site_buffer), site_buffer)
+  treeheight_mean  = mean(values(site_treeheight), na.rm = TRUE)
+  treeheight_sd   = sd(values(site_treeheight), na.rm = TRUE)
+  
+  # site_shrubheight = mask(crop(rast_shrubheight, site_buffer), site_buffer)
+  # site_herbheight = mask(crop(rast_herbheight, site_buffer), site_buffer)
+  
+  # site_vegcover = mask(crop(rast_vegcover, site_buffer), site_buffer)
+  
+  site_ripfb = st_intersection(sf_ripfb, site_buffer)
+  site_ripfb = st_union(site_ripfb)
+  ripfb_area = st_area(site_ripfb)
+  # mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_ripfb)
   
   nlcd_data[[as.character(site$site_id)]] = list(
     rast_lc       = site_lc,
-    rast_imp      = site_imp,
+    rast_impervious = site_imp,
     rast_tcc      = site_tcc,
     cover_summary = cover_summary,
     cover_detail  = cover_detail,
-    imp_mean      = imp_mean,
     imp_sum       = imp_sum,
-    tcc_mean      = tcc_mean,
-    tcc_sum       = tcc_sum
+    tcc_sum       = tcc_sum,
+    treeheight_mean = treeheight_mean,
+    treeheight_sd  = treeheight_sd,
+    ripfb_area    = ripfb_area
   )
   pb$tick()
 }
@@ -227,11 +487,13 @@ if (FALSE) {
     scale_fill_manual(values = setNames(present_levels$color, present_levels$class)) +
     coord_equal() + theme_minimal()
   
-  site_imp = nlcd_data[[1]]$rast_imp
+  site_imp = nlcd_data[[1]]$rast_impervious
   site_imp_df = as.data.frame(site_imp, xy = TRUE)
-  ggplot(site_imp_df, aes(x = x, y = y, fill = Annual_NLCD_FctImp_2023_CU_C1V0)) + geom_raster() +
+  ggplot(site_imp_df, aes(x = x, y = y, fill = impervious)) + geom_raster() +
     scale_fill_continuous(limits = c(0, 100)) +
     coord_equal() + theme_minimal()
+  
+  mapview(site_lc) + mapview(site_imp)
 }
 
 ############################################################
@@ -254,14 +516,14 @@ sites_df <- as.data.frame(sites_aru)  # extract attributes
 sites_df$site_id = as.character(sites_df$site_id)
 site_data <- sites_df %>% left_join(nlcd_summary, by = "site_id")
 
-# Extract imp_mean for each site
+# Extract sums for each site
 imp_mean_df <- lapply(names(nlcd_data), function(id) {
   data.frame(
     site_id = id,
-    imp_mean = nlcd_data[[id]]$imp_mean,
     imp_sum  = nlcd_data[[id]]$imp_sum,
-    tcc_mean = nlcd_data[[id]]$tcc_mean,
-    tcc_sum  = nlcd_data[[id]]$tcc_sum
+    tcc_sum  = nlcd_data[[id]]$tcc_sum,
+    treeheight_mean = nlcd_data[[id]]$treeheight_mean,
+    treeheight_sd = nlcd_data[[id]]$treeheight_sd
   )
 }) %>% bind_rows()
 
@@ -354,7 +616,7 @@ p = ggplot(all_sites_df, aes(x = x, y = y, fill = class)) +
 
 imp_df <- bind_rows(
   lapply(seq_along(nlcd_data), function(i) {
-    raster_to_df(nlcd_data[[i]]$rast_imp, names(nlcd_data)[i])
+    raster_to_df(nlcd_data[[i]]$rast_impervious, names(nlcd_data)[i])
   })
 ) %>%
   mutate(site = factor(site, levels = site_order))
@@ -390,15 +652,16 @@ p = ggplot(tcc_df, aes(x = x, y = y, fill = class)) +
   labs(title = paste0("USFS tree canopy cover (", buffer_size, " m buffer)"), x = "", y = "", fill = "Cover %"); print(p)
 
 ggplot(site_data, aes(x = imp_sum, y = bibi)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
-
-ggplot(site_data, aes(x = imp_mean, y = nlcd_developed_variable_intensity)) +
-  geom_point() + theme_minimal()
+  geom_point() + geom_smooth(method = "lm")
 
 ggplot(site_data, aes(x = tcc_sum, y = bibi)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
+  geom_point() + geom_smooth(method = "lm")
+
+ggplot(site_data, aes(x = imp_sum, y = nlcd_developed_variable_intensity)) +
+  geom_point()
+
+ggplot(site_data, aes(x = imp_sum, y = tcc_sum)) +
+  geom_point()
 
 ############################################################
 # Derive putative detection histories and diversity metrics
@@ -542,7 +805,43 @@ ggplot(left_join(site_species_matrix, site_data, by = "site_id"),
        aes(x = bibi, y = `Belted Kingfisher`)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   geom_point() + theme_minimal()
-  
+
+primary_lifestyle_summary <- site_species_long %>%
+  left_join(species_metadata, by = "common_name") %>%
+  group_by(site_id, primary_lifestyle) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = primary_lifestyle, values_from = count, values_fill = 0)
+
+trophic_niche_summary <- site_species_long %>%
+  left_join(species_metadata, by = "common_name") %>%
+  group_by(site_id, trophic_niche) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = trophic_niche, values_from = count, values_fill = 0)
+
+trophic_niche_long <- trophic_niche_summary %>%
+  pivot_longer(cols = -site_id, names_to = "trophic_niche", values_to = "count")
+
+primary_lifestyle_long <- primary_lifestyle_summary %>%
+  pivot_longer(cols = -site_id, names_to = "primary_lifestyle", values_to = "count")
+
+# Plot trends in trophic niche richness
+ggplot(left_join(trophic_niche_long, site_data %>% select(site_id, tcc_sum), by = "site_id"), aes(x = tcc_sum, y = count, color = trophic_niche, group = trophic_niche, fill = trophic_niche)) +
+  geom_point() +
+  geom_smooth(aes(group = trophic_niche), method = "lm", se = FALSE)
+
+ggplot(left_join(trophic_niche_long, site_data %>% select(site_id, imp_sum), by = "site_id"), aes(x = imp_sum, y = count, color = trophic_niche, group = trophic_niche, fill = trophic_niche)) +
+  geom_point() +
+  geom_smooth(aes(group = trophic_niche), method = "lm", se = FALSE)
+
+# Plot trends in trophic level richness
+ggplot(left_join(primary_lifestyle_long, site_data %>% select(site_id, tcc_sum), by = "site_id"), aes(x = tcc_sum, y = count, color = primary_lifestyle, group = primary_lifestyle, fill = primary_lifestyle)) +
+  geom_point() +
+  geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
+
+ggplot(left_join(primary_lifestyle_long, site_data %>% select(site_id, imp_sum), by = "site_id"), aes(x = imp_sum, y = count, color = primary_lifestyle, group = primary_lifestyle, fill = primary_lifestyle)) +
+  geom_point() +
+  geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
+
 # Calculate richness of different groups
 
 richness = site_species_matrix %>% mutate(richness = rowSums(across(-site_id))) %>% select(site_id, richness)
@@ -553,16 +852,16 @@ site_data_bird = right_join(site_data, richness, by = "site_id")
 site_data_bird = right_join(site_data_bird, richness_insectivore, by = "site_id")
 
 ggplot(site_data_bird, aes(x = bibi, y = richness)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
+  geom_point() + geom_smooth(method = "lm")
 
 ggplot(site_data_bird, aes(x = bibi, y = richness_insectivore)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
+  geom_point() + geom_smooth(method = "lm")
 
 ggplot(site_data_bird, aes(x = tcc_sum, y = richness_insectivore)) +
-  geom_point() + geom_smooth(method = "lm") +
-  theme_minimal()
+  geom_point() + geom_smooth(method = "lm")
+
+ggplot(site_data_bird, aes(x = treeheight_mean, y = richness_insectivore)) +
+  geom_point() + geom_smooth(method = "lm")
 
 site_data_bird = left_join(site_data_bird %>% mutate(site_id = as.double(site_id)), site_metadata %>% select(site_id, lat_aru, long_aru), by = "site_id")
 site_data_bird = site_data_bird %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
@@ -612,6 +911,7 @@ candidate_vars = c("bibi",
                    "imp_sum", "nlcd_developed_variable_intensity", "nlcd_developed_open_space",
                    "richness", "richness_insectivore",
                    "nlcd_forest", "tcc_sum",
+                   "treeheight_mean", "treeheight_sd",
                    "nlcd_shrub_scrub", "nlcd_wetlands")
 
 data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
@@ -619,7 +919,7 @@ data = as.data.frame(site_data_bird) %>% janitor::clean_names() %>% select(
 )
 
 # Explore pairwise collinearity
-pairwise_collinearity = function(vars, threshold = 0.8) {
+pairwise_collinearity = function(vars, threshold = 0.7) {
   cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
   cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
   return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
@@ -634,15 +934,11 @@ model = lm(rnorm(nrow(data_subset)) ~ ., data = data_subset)
 sort(car::vif(model))
 
 # Fit component regressions
-model_bibi = lm(
-  bibi ~ imp_sum + tcc_sum,
-  data
-)
-model_alpha_total = glm(
-  richness_insectivore ~ bibi + imp_sum + tcc_sum,
-  data,
-  family = poisson(link = "log")
-)
+model_bibi = lm(bibi ~ imp_sum + tcc_sum,
+                data)
+
+model_alpha_total = glm(richness_insectivore ~ bibi + imp_sum + tcc_sum + treeheight_mean,
+                        data, family = poisson(link = "log"))
 
 # Create structural equation model
 sem_alpha_total = psem(
@@ -661,3 +957,16 @@ plot(sem_alpha_total)
 # A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically significantly different than the structure implied by the data, and that alternative pathways or causal links with missing variables warrant further exploration
 # Nagelkerke R2 describes proportion of variance explained by the model
 print(summary(sem_alpha_total))
+
+# ALTERNATIVE
+m1 = lm(bibi ~ imp_sum + tcc_sum, data)
+m2 = lm(tcc_sum ~ treeheight_mean + imp_sum, data)
+m3 = glm(richness_insectivore ~ bibi + imp_sum + tcc_sum + treeheight_mean, data, family = poisson(link = "log"))
+sem_alt = psem(
+  m1,
+  m2,
+  m3
+)
+plot(sem_alt)
+print(summary(sem_alt))
+
