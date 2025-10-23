@@ -1,6 +1,7 @@
 #########################################################################################
 ## Clean and cache geospatial dependencies for the study area
 in_data_geospatial = "/Volumes/gioj_work/riparian-avian-macroinvert-monitoring-kc/data/raw/geospatial"
+out_dir = "data/cache/preprocess_geospatial_data"
 out_filepath = "data/cache/preprocess_geospatial_data/geospatial_data.rds"
 #########################################################################################
 
@@ -239,6 +240,8 @@ sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_ar
 
 ############################################################
 # Load NASA GEDI-Fusion forest structure data
+#
+# https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-gedi-fusion-structure-2236-1
 message("Loading NASA GEDI-Fusion forest structure data")
 
 # "Foliage height diversity (a unitless index)"
@@ -255,58 +258,64 @@ rast_cover = mask(crop(cover_raw, template), template)
 
 plot(rast_cover)
 
-# TODO: rh98 "Corresponds to the height at which 98% of the waveform energy is captured - comparable to a canopy height measure"
+# "Corresponds to the height at which 98% of the waveform energy is captured - comparable to a canopy height measure"
+height_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_rh98_2020.tif"))
+template   = project(vect(study_area), crs(height_raw))
+rast_height = mask(crop(height_raw, template), template)
 
-# TODO: pavd5to10m "Plant area vegetation density (PAVD); the proportion of vegetation within the 5-10 m stratum above ground surface (PAVD 5-10 m)""
+plot(rast_height)
 
-# TODO: pavd20m "The proportion of vegetation density (PAVD) greater than 20 m above ground surface, chosen to represent the presence of a mature upper canopy within different forest types"
+# "Plant area vegetation density (PAVD); the proportion of vegetation within the 5-10 m stratum above ground surface (PAVD 5-10 m)""
+pavd55o10m_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_pavd5to10m_2020.tif"))
+template   = project(vect(study_area), crs(pavd55o10m_raw))
+rast_pavd55o10m = mask(crop(pavd55o10m_raw, template), template)
+
+plot(rast_pavd55o10m)
+
+# "The proportion of vegetation density (PAVD) greater than 20 m above ground surface, chosen to represent the presence of a mature upper canopy within different forest types"
+
+pavd20m_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_pavd20m_2020.tif"))
+template   = project(vect(study_area), crs(pavd20m_raw))
+rast_pavd20m = mask(crop(pavd20m_raw, template), template)
+
+plot(rast_pavd20m)
 
 ############################################################
 # Project all data to same EPSG:32610 coordinate reference system
 message("Projecting data to ", standard_crs_code)
 study_area       = project(vect(study_area), standard_crs_code)
-rast_landcover   = project(rast_landcover,   standard_crs_code)
-rast_impervious  = project(rast_impervious,  standard_crs_code)
-rast_canopycover = project(rast_canopycover, standard_crs_code)
-rast_vegcover    = project(rast_vegcover,    standard_crs_code)
-rast_vegheight   = project(rast_vegheight,   standard_crs_code)
-rast_treeheight  = project(rast_treeheight,  standard_crs_code)
-rast_shrubheight = project(rast_shrubheight, standard_crs_code)
-rast_herbheight  = project(rast_herbheight,  standard_crs_code)
-rast_vegtype     = project(rast_vegtype,     standard_crs_code)
-rast_sclass      = project(rast_sclass,      standard_crs_code)
-rast_fhd         = project(rast_fhd,         standard_crs_code)
-rast_cover       = project(rast_cover,       standard_crs_code)
-sf_ripfb         = sf_ripfb %>% st_transform(crs = standard_crs_code)
 
-names(rast_landcover) = "landcover"
-names(rast_impervious) = "impervious"
-names(rast_canopycover) = "canopycover"
-names(rast_vegcover) = "vegcover"
-names(rast_vegheight) = "vegheight"
-names(rast_vegtype) = "vegtype"
-names(rast_sclass) = "sclass"
-
-geospatial_data = list(
-  rast_landcover = rast_landcover,
-  rast_impervious = rast_impervious,
-  rast_canopycover = rast_canopycover,
-  rast_vegcover = rast_vegcover,
-  rast_vegheight = rast_vegheight,
-  rast_vegtype = rast_vegtype,
-  rast_sclass = rast_sclass,
-  sf_ripfb = sf_ripfb
+rast_data = list(
+  rast_landcover   = project(rast_landcover,   standard_crs_code),
+  rast_impervious  = project(rast_impervious,  standard_crs_code),
+  rast_canopycover = project(rast_canopycover, standard_crs_code),
+  rast_vegcover    = project(rast_vegcover,    standard_crs_code),
+  rast_vegheight   = project(rast_vegheight,   standard_crs_code),
+  rast_treeheight  = project(rast_treeheight,  standard_crs_code),
+  rast_shrubheight = project(rast_shrubheight, standard_crs_code),
+  rast_herbheight  = project(rast_herbheight,  standard_crs_code),
+  rast_vegtype     = project(rast_vegtype,     standard_crs_code),
+  rast_sclass      = project(rast_sclass,      standard_crs_code),
+  rast_fhd         = project(rast_fhd,         standard_crs_code),
+  rast_cover       = project(rast_cover,       standard_crs_code),
+  rast_height      = project(rast_height,      standard_crs_code),
+  rast_pavd55o10m  = project(rast_pavd55o10m,  standard_crs_code),
+  rast_pavd20m     = project(rast_pavd20m,     standard_crs_code)
 )
 
-# Cache data
-# TODO: CACHE AS PERSISTENT TIF AND SHAPEFILE FILES!
-if (!dir.exists(dirname(out_filepath))) dir.create(dirname(out_filepath), recursive = TRUE)
-saveRDS(geospatial_data, out_filepath)
-message("Saved geospatial data cache to ", out_filepath)
+sf_ripfb = sf_ripfb %>% st_transform(crs = standard_crs_code)
 
-############################################################
-############################################################
-############################################################
+# Cache data
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+for (n in names(rast_data)) {
+  out_filepath = file.path(out_dir, paste0(n, ".tif"))
+  writeRaster(rast_data[[n]], out_filepath, overwrite = TRUE)
+  message("Cached ", out_filepath)
+}
+
+out_filepath = file.path(out_dir, "sf_ripfb.gpkg")
+st_write(sf_ripfb, out_filepath, append = FALSE)
+message("Cached ", out_filepath)
 
 ############################################################################################################
 # Load ARU and PSSB site locations and calculate all site covariates from land cover data
@@ -387,33 +396,43 @@ message("Loading geospatial data")
 
 theme_set(theme_minimal())
 
-# gs_data = readRDS("data/cache/preprocess_geospatial_data/geospatial_data.rds")
+# Load cached data
+rast_filepaths = list.files(out_dir, pattern = "^rast_.*\\.tif$", full.names = TRUE)
+rast_data = lapply(rast_filepaths, rast)
+names(rast_data) = gsub("\\.tif$", "", basename(rast_filepaths))
+
+sf_ripfb = st_read("data/cache/preprocess_geospatial_data/sf_ripfb.gpkg")
 
 # Raster static plotting options
-plot(rast_landcover)
-ggplot() + geom_spatraster(data = rast_landcover)
+plot(rast_data$rast_landcover)
+ggplot() + geom_spatraster(data = rast_data$rast_landcover)
 
-plot(rast_landcover)
-plot(rast_impervious)
-plot(rast_canopycover)
-plot(rast_vegcover)
-plot(rast_treeheight)
-plot(rast_shrubheight)
-plot(rast_herbheight)
-plot(rast_vegtype)
-plot(rast_sclass)
+plot(rast_data$rast_landcover)
+plot(rast_data$rast_impervious)
+plot(rast_data$rast_canopycover)
+plot(rast_data$rast_vegcover)
+plot(rast_data$rast_treeheight)
+plot(rast_data$rast_shrubheight)
+plot(rast_data$rast_herbheight)
+plot(rast_data$rast_vegtype)
+plot(rast_data$rast_sclass)
+plot(rast_data$rast_fhd)
+plot(rast_data$rast_cover)
+plot(rast_data$rast_height)
+plot(rast_data$rast_pavd55o10m)
+plot(rast_data$rast_pavd20m)
 
 # If your continuous raster object is very large
-plot(rast_canopycover) # plot statically
-mapview(aggregate(rast_canopycover, fact = 10, fun = "mean")) # ...plot dynamically at reduced (mean) resolution
+plot(rast_data$rast_canopycover) # plot statically
+mapview(aggregate(rast_data$rast_canopycover, fact = 10, fun = "mean")) # ...plot dynamically at reduced (mean) resolution
 
 # If your categorical raster object is very large
-plot(rast_landcover) # plot statically
-mapview(aggregate(rast_landcover, fact = 10, fun = "modal")) # ...plot dynamically at reduced (modal) resolution
+plot(rast_data$rast_landcover) # plot statically
+mapview(aggregate(rast_data$rast_landcover, fact = 10, fun = "modal")) # ...plot dynamically at reduced (modal) resolution
 
 # If your sf object is very large
-mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...plot dynamically at reduced resolution
 ggplot(st_simplify(sf_ripfb, dTolerance = 250)) + geom_sf() # ...plot statically at reduced resolution
+mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...plot dynamically at reduced resolution
 
 ############################################################
 # Calculate land cover data for all sites
@@ -428,7 +447,7 @@ for (s in 1:nrow(sites_aru)) {
   site = st_as_sf(sites_aru[s,])
   site_buffer = st_buffer(site, buffer_size)
   
-  site_lc = mask(crop(rast_landcover, site_buffer), site_buffer)
+  site_lc = mask(crop(rast_data$rast_landcover, site_buffer), site_buffer)
   # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_lc) + mapview(site_imp)
   
   freq_table <- freq(site_lc)
@@ -468,13 +487,13 @@ for (s in 1:nrow(sites_aru)) {
   present_levels = nlcd_levels[present_ids, ]
   # plot(site_lc, col = present_levels$color)
   
-  site_imp = mask(crop(rast_impervious, site_buffer), site_buffer)
+  site_imp = mask(crop(rast_data$rast_impervious, site_buffer), site_buffer)
   imp_sum  = sum(values(site_imp), na.rm = TRUE)
   
-  site_tcc = mask(crop(rast_canopycover, site_buffer), site_buffer)
+  site_tcc = mask(crop(rast_data$rast_canopycover, site_buffer), site_buffer)
   tcc_sum  = sum(values(site_tcc), na.rm = TRUE)
   
-  site_treeheight = mask(crop(rast_treeheight, site_buffer), site_buffer)
+  site_treeheight = mask(crop(rast_data$rast_treeheight, site_buffer), site_buffer)
   treeheight_mean  = mean(values(site_treeheight), na.rm = TRUE)
   treeheight_sd   = sd(values(site_treeheight), na.rm = TRUE)
   
