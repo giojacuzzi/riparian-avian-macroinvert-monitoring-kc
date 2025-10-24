@@ -1,6 +1,6 @@
-# sem.R ==============================================================================
-# Load ARU and PSSB site locations and calculate all site covariates from land cover
-# data
+# 3_explore_data.R ===================================================================
+# Load ARU and PSSB site locations, calculate all site covariates from land cover
+# data, and do some exploratory structural equation modeling
 #
 # Inputs:
 in_path_site_metadata   = "data/site_metadata.csv"

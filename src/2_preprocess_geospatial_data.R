@@ -1,4 +1,4 @@
-#########################################################################################
+# 2_preprocess_geospatial_data.R ========================================================
 # Clean and cache geospatial dependencies for the study area
 #
 # Inputs:
@@ -6,9 +6,8 @@ in_data_geospatial = "/Volumes/gioj_work/riparian-avian-macroinvert-monitoring-k
 in_path_nlcd_metadata = "data/raw/nlcd_metadata.csv"
 # Outputs:
 out_dir = "data/cache/2_preprocess_geospatial_data"
-#########################################################################################
 
-# Load required packages (automatically install any missing)
+# Load required packages (automatically install any missing) ----------------------------
 pkgs = c(
   "tidyverse",  # data manipulation
   "sf",         # vector data
@@ -27,8 +26,7 @@ sapply(pkgs, function(pkg) {
 
 crs_standard = "EPSG:32610"
 
-#########################################################################################
-# Load ARU and PSSB site locations and define study area
+# Load ARU and PSSB site locations and define study area ------------------------------------
 message("Loading ARU and PSSB site locations")
 
 site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE)
@@ -50,8 +48,7 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
   mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
-#########################################################################################
-# Load land cover and impervious surface data
+# Load land cover and impervious surface data ------------------------------------------------
 message("Loading USGS NLCD land cover data")
 
 lc_raw  = rast(paste0(in_data_geospatial, "/NLCD/Annual_NLCD_LndCov_2023_CU_C1V0.tif"))
@@ -69,8 +66,7 @@ levels(rast_nlcd_landcover)[[1]] # verify
 
 plot(rast_nlcd_landcover)
 
-#########################################################################################
-# Load impervious surface percentage
+# Load impervious surface percentage ------------------------------------------------------
 message("Loading USGS NLCD impervious surface data")
 
 imp_raw = rast(paste0(in_data_geospatial, "/NLCD/Annual_NLCD_FctImp_2023_CU_C1V0.tif"))
@@ -80,8 +76,7 @@ rast_nlcd_impervious = mask(crop(imp_raw, template), template)
 
 plot(rast_nlcd_impervious)
 
-#########################################################################################
-# Load tree canopy cover
+# Load tree canopy cover ------------------------------------------------------------------
 message("Loading USFS tree canopy cover data")
 tcc_raw = rast(paste0(in_data_geospatial, "/Forest Service Science TCC/science_tcc_conus_wgs84_v2023-5_20230101_20231231.tif"))
 
@@ -94,8 +89,7 @@ rast_usfs_canopycover[is.nan(rast_usfs_canopycover)] = NA
 
 plot(rast_usfs_canopycover)
 
-#########################################################################################
-# Load landfire geospatial data
+# Load landfire geospatial data --------------------------------------------------------
 message("Loading USDA/DOI Landfire geospatial data")
 
 # Vegetation cover
@@ -183,8 +177,7 @@ sc_table = as.data.frame(cats(rast_landfire_sclass)[[1]])
 
 plot(rast_landfire_sclass)
 
-#########################################################################################
-# Load King County DNRP hydrological data
+# Load King County DNRP hydrological data --------------------------------------------------
 message("Loading King County DNRP hydrological data")
 
 # basins = st_read(paste0(in_data_geospatial, "/King County DNRP/KC_basins.shp")
@@ -198,8 +191,7 @@ sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_ar
 
 # "The pattern, quality, and connectivity of riparian areas can also be really interesting and I’ve wondered how that may affect birds and other wildlife. For instance, in Seattle, the streams can have pretty decent but very narrow riparian areas because they are in canyons. In other suburban watersheds, the riparian areas can be vegetated but lack the tall evergreens or complex structure - they may be wider and even “greener” but not as functional? Maybe birds with small territories can fare OK in urban riparian areas?"
 
-#########################################################################################
-# Load NASA GEDI-Fusion forest structure data
+# Load NASA GEDI-Fusion forest structure data ----------------------------------------------
 #
 # https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-gedi-fusion-structure-2236-1
 message("Loading NASA GEDI-Fusion forest structure data")
@@ -240,8 +232,7 @@ rast_gedi_pavd20m = mask(crop(pavd20m_raw, template), template)
 
 plot(rast_gedi_pavd20m)
 
-#########################################################################################
-# Project all data to same EPSG:32610 coordinate reference system
+# Project all data to same EPSG:32610 coordinate reference system -----------------------------
 message("Projecting data to ", crs_standard)
 study_area       = project(vect(study_area), crs_standard)
 
@@ -281,8 +272,7 @@ rast_data = list(
 
 sf_ripfb = sf_ripfb %>% st_transform(crs = crs_standard)
 
-#########################################################################################
-# Cache data
+# Cache data ----------------------------------------------------------------------------
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 for (n in names(rast_data)) {
   out_filepath = file.path(out_dir, paste0(n, ".tif"))

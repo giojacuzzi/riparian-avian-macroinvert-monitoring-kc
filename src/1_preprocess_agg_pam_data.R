@@ -1,4 +1,4 @@
-#########################################################################################
+# 1_preprocess_agg_pam_data.R ==========================================================
 # Derive and cache putative species detection histories and diversity metrics from aggregated PAM data
 #
 # Inputs:
@@ -10,7 +10,6 @@ path_species_list = "data/pam/species_list.txt"
 path_avonet_traits = "data/traits/AVONET Supplementary dataset 1.xlsx"
 # Outputs:
 out_detect_hist_data = "data/cache/1_preprocess_agg_pam_data/detections.rds"
-#########################################################################################
 
 # Load required packages (automatically install any missing)
 pkgs = c(
@@ -27,8 +26,7 @@ sapply(pkgs, function(pkg) {
 message("Loading classifier prediction data")
 prediction_data = read_feather(path_prediction_data) %>% rename(site_id = site)
 
-#########################################################################################
-# Clean data
+# Clean data --------------------------------------------------------------------------------
 
 # Obtain putative detections with naive threshold
 message("Obtaining putative detections with naive threshold")
@@ -48,8 +46,7 @@ detections = detections %>%
   filter(n_surveys >= threshold_detected_days) %>%
   inner_join(detections, by = c("site_id", "common_name"))
 
-#########################################################################################
-# Determine detected species and detections per site
+# Determine detected species and detections per site ----------------------------------------
 
 species_names = read_lines(path_species_list) %>% as_tibble() %>%
   separate(value, into = c("scientific_name", "common_name"), sep = "_") %>%
@@ -71,8 +68,7 @@ site_summary = detections %>% group_by(site_id) %>%
   ) %>% arrange(desc(n_species))
 print(site_summary, n = nrow(site_summary))
 
-#########################################################################################
-## Format detection data into species x site x survey
+## Format detection data into species x site x survey ----------------------------------------
 
 # Determine survey numbers by year
 clean_detections <- detections %>%
@@ -121,8 +117,7 @@ survey_cols = setdiff(names(species_site_survey_wide), c("site_id", "common_name
 species_site_survey_wide = species_site_survey_wide %>%
   relocate(all_of(survey_cols[order(as.numeric(survey_cols))]), .after = common_name)
 
-#########################################################################################
-# Visualize assemblage composition across sites
+# Visualize assemblage composition across sites ----------------------------------------
 
 # Load species trait metadata
 avonet = readxl::read_xlsx(path_avonet_traits, sheet = "AVONET2_eBird") %>%
@@ -150,8 +145,7 @@ print(ggplot(primary_lifestyle_per_site %>% left_join(site_summary, by = "site_i
   geom_bar(stat = "identity") +
   theme_minimal())
 
-#########################################################################################
-# Cache putative species detection history and diversity data
+# Cache putative species detection history and diversity data ------------------------------
 
 detect_hist_data = list(
   threshold_classifier_score = threshold_classifier_score,

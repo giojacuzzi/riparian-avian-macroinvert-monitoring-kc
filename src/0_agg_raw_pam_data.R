@@ -1,4 +1,4 @@
-####################################################################################
+# 0_agg_raw_pam_data.R ===============================================================
 # Aggregate raw prediction (.csv) data and associated metadata
 #
 # Directory structure is ".../season/deployment/serialno/date/serialno_date_time.csv"
@@ -18,7 +18,6 @@ pred_filetype = ".BirdNET.results.csv"
 # Cached dataframe of prediction file counts (i.e. recordings) per unit-survey
 # Cached dataframe of all predictions
 path_out_dir = "data/cache/0_aggregate_raw_pam_data"
-####################################################################################
 
 path_out_survey_file_counts = paste0(path_out_dir, '/survey_file_counts.feather')
 path_out_prediction_data = paste0(path_out_dir, '/prediction_data.feather')
