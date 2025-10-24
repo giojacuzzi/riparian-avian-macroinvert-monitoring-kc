@@ -7,7 +7,7 @@ path_input_dir = "data/processed/predicted_detection_histories"
 path_site_data = "/Users/Steve/Documents/site_data.csv"
 paths_site = list.files(path_input_dir, full.names = TRUE)
 path_land_cover = "data/processed/land_cover/land_cover.csv" # processed land cover data from GIS
-path_benthos_raw = "data/raw/benthos/ScoresByYear.txt" # raw PSSB benthos data
+path_benthos_raw = "data/raw/pssb/ScoresByYear.txt" # raw PSSB benthos data
 
 # Calculate species presence and naive alpha diversity (species richness) by site
 message('Calculating species presence and naive alpha diversity (species richness) by site...')

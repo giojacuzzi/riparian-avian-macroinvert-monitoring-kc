@@ -4,7 +4,7 @@
 #
 # Inputs:
 in_path_site_metadata   = "data/site_metadata.csv"
-in_path_pssb_data       = "data/raw/benthos/ScoresByYear.csv"
+in_path_pssb_data       = "data/raw/pssb/ScoresByYear.csv"
 in_path_nlcd_metadata   = "data/raw/nlcd_metadata.csv"
 in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections.rds"
 in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"

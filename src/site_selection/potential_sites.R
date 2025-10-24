@@ -13,7 +13,7 @@ library(ggplot2)
 # Load Puget Sound Stream Benthos data
 # Permalink: https://pugetsoundstreambenthos.org/Download.aspx?page=Download%2FScoresByYear.ashx&TR=-1&minY=2020
 # Raw .txt opened in Excel and saved as .csv to resolve tab-delimited formatting issues
-data_path = "data/raw/benthos/ScoresByYear.csv"
+data_path = "data/raw/pssb/ScoresByYear.csv"
 data_raw = read.csv(data_path)
 # View(data) # Run this line to inspect the data directly
 
