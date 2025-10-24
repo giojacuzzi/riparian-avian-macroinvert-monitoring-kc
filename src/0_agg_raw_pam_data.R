@@ -9,21 +9,21 @@
 # active survey period is represented with individual .csv files (i.e. a recording with
 # no detections should still be represented by an empty .csv file)
 #
-# INPUT:
+# Inputs:
 # Root directory containing raw prediction data with metadata in structure defined above
 root_dir_in = "data/pam/predictions"
 pred_filetype = ".BirdNET.results.csv"
-
 #
-# OUTPUT:
+# Outputs:
 # Cached dataframe of prediction file counts (i.e. recordings) per unit-survey
 # Cached dataframe of all predictions
-path_out_dir = "data/cache/aggregate_pam_data"
+path_out_dir = "data/cache/0_aggregate_raw_pam_data"
 ####################################################################################
 
 path_out_survey_file_counts = paste0(path_out_dir, '/survey_file_counts.feather')
 path_out_prediction_data = paste0(path_out_dir, '/prediction_data.feather')
 
+library(arrow)
 library(tidyverse)
 library(janitor)
 library(progress)
@@ -84,7 +84,7 @@ survey_summary = predictions_metadata %>%
   )
 ggplot(survey_summary) +
   geom_segment(aes(x = min_date, xend = max_date, 
-                   y = reorder(site, min_date), yend = site), size = 2) +
+                   y = reorder(site, min_date), yend = site), linewidth = 2) +
   labs(x = "Date", y = "Site", title = "Survey effort") +
   theme_minimal() +
   theme(legend.position = "none")
@@ -150,7 +150,7 @@ message("2024: start date ", start_date_2024, ", end date ", end_date_2024)
 message("Days: ", end_date_2024 - start_date_2024)
 ggplot(survey_summary %>% filter(lubridate::year(min_date) == 2024)) +
   geom_segment(aes(x = min_date, xend = max_date, 
-                   y = reorder(site, min_date), yend = site), size = 2) +
+                   y = reorder(site, min_date), yend = site), linewidth = 2) +
   scale_x_date(limits = as.Date(c("2024-06-01", "2024-09-14"))) +
   geom_vline(xintercept = start_date_2024, color = "red") +
   geom_vline(xintercept = end_date_2024, color = "red") +
@@ -165,7 +165,7 @@ message("2025: start date ", start_date_2025, ", end date ", end_date_2025)
 message("Days: ", end_date_2025 - start_date_2025)
 ggplot(survey_summary %>% filter(lubridate::year(min_date) == 2025)) +
   geom_segment(aes(x = min_date, xend = max_date, 
-                   y = reorder(site, min_date), yend = site), size = 2) +
+                   y = reorder(site, min_date), yend = site), linewidth = 2) +
   scale_x_date(limits = as.Date(c("2025-06-01", "2025-09-14"))) +
   geom_vline(xintercept = start_date_2025, color = "red") +
   geom_vline(xintercept = end_date_2025, color = "red") +
@@ -223,5 +223,5 @@ message(nrow(prediction_data), " predictions aggregated")
 
 # Write results to cache
 dir.create(dirname(path_out_prediction_data), recursive = TRUE, showWarnings = FALSE)
-arrow::write_feather(prediction_data, path_out_prediction_data)
+write_feather(prediction_data, path_out_prediction_data)
 message(crayon::green("Cached prediction data to", path_out_prediction_data))
