@@ -132,10 +132,14 @@ message("Calculating imperviousness at the basin scale")
 sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
   clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
 sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
-# mapview(sf_basins12d) + mapview(sites_aru)
+mapview(sf_basins12d) + mapview(sites_aru)
+
+# Calculate mean imperviousness per basin
 basin_impervious = terra::extract(rast_data$rast_nlcd_impervious, vect(sf_basins12d), fun = mean, na.rm = TRUE)
 sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
-# mapview(sf_basins12d, zcol = "impervious")
+mapview(sf_basins12d, zcol = "basin_impervious")
+
+# Store results
 site_data = st_intersection(site_data, sf_basins12d)
 
 # Calculate geospatial variables for all sites at local scale --------------------------------
@@ -158,8 +162,6 @@ rast_stats = function(rast, na.rm = TRUE) {
 geospatial_site_data = list()
 pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = nrow(sites_aru), clear = FALSE)
 for (s in 1:nrow(sites_aru)) {
-  
-  # TODO: Exclude specific sites from analysis?
 
   # Create a buffer around the site
   site = st_as_sf(sites_aru[s,])
@@ -565,8 +567,8 @@ sort(car::vif(m_richness_invertivore))
 
 # Create structural equation model
 sem_alpha_total = psem(
-  model_bibi,
-  model_alpha_total
+  m_bibi,
+  m_richness_invertivore
 )
 
 # Inspect model structure
