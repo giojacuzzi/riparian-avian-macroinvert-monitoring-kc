@@ -21,6 +21,7 @@ pkgs = c(
   "tigris",     # political boundaries
   "geosphere",  # distance metrics
   "mapview",    # interactive geospatial visualization
+  "leafsync",   # synchronized mapview panels
   "progress",   # dynamic progress bar
   "ggrepel"     # plot annotations
 )
@@ -497,8 +498,13 @@ candidate_vars = c(
   "abund_forest"     = "nlcd_forest",
   "abund_wetland"    = "nlcd_wetlands",
   "imperviousness"   = "rast_nlcd_impervious_sum",
-  "canopy_cover"     = "rast_usfs_canopycover_sum",
-  "tree_height"      = "rast_landfire_treeheight_mean",
+  "canopy_usfs"      = "rast_usfs_canopycover_sum",
+  "canopy_gedi"      = "rast_gedi_cover_sum",
+  "height_landfire"  = "rast_landfire_treeheight_mean",
+  "height_gedi"      = "rast_gedi_height_mean",
+  "height_cv_landfire"  = "rast_landfire_treeheight_cv",
+  "height_cv_gedi"     = "rast_gedi_height_cv",
+  "fhd"              = "rast_gedi_fhd_mean",
   # Responses
   "richness" = "richness",
   "richness_invertivore" = "richness_invertivore"
@@ -513,7 +519,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 }
 
 pairwise_collinearity(data)
-data_subset = data %>% select(bibi, imperviousness, canopy_cover)
+data_subset = data %>% select(bibi, imperviousness, canopy_usfs, height_landfire)
 pairwise_collinearity(data_subset)
 
 # VIF analysis for multicollinearity (consider dropping variable(s) with high VIF values (> 10))
@@ -521,10 +527,10 @@ model = lm(rnorm(nrow(data_subset)) ~ ., data = data_subset)
 sort(car::vif(model))
 
 # Fit component regressions
-model_bibi = lm(bibi ~ imperviousness + canopy_cover,
+model_bibi = lm(bibi ~ imperviousness + canopy_usfs,
                 data)
 
-model_alpha_total = glm(richness_invertivore ~ bibi + imperviousness + canopy_cover + tree_height,
+model_alpha_total = glm(richness_invertivore ~ bibi + imperviousness + canopy_usfs + height_landfire,
                         data, family = poisson(link = "log"))
 
 # Create structural equation model
@@ -545,13 +551,11 @@ plot(sem_alpha_total)
 print(summary(sem_alpha_total))
 
 # ALTERNATIVE
-m1 = lm(bibi ~ imperviousness + canopy_cover, data)
-m2 = lm(canopy_cover ~ tree_height + imperviousness, data)
-m3 = glm(richness_invertivore ~ bibi + imperviousness + canopy_cover + tree_height, data, family = poisson(link = "log"))
+m1 = lm(bibi ~ imperviousness + canopy_usfs, data)
+m2 = glm(richness_invertivore ~ bibi + imperviousness + canopy_usfs + height_cv_gedi, data, family = poisson(link = "log"))
 sem_alt = psem(
   m1,
-  m2,
-  m3
+  m2
 )
 plot(sem_alt)
 print(summary(sem_alt))
