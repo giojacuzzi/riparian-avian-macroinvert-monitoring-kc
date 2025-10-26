@@ -122,9 +122,25 @@ mapview(aggregate(rast_data$rast_usfs_canopycover, fact = 10, fun = "mean"), lay
 ggplot(st_simplify(sf_ripfb, dTolerance = 250)) + geom_sf() # ...statically at reduced resolution
 mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...dynamically at reduced resolution
 
-# Calculate geospatial variables for all sites --------------------------------------------
+# Store subsequent data calculated per site in `site_data`
+site_data = sites_aru
+
+# Calculate imperviousness at the basin (landscape) scale ------------------------------------
+message("Calculating imperviousness at the basin scale")
+
+# Load cached basin sf objects and retain only those sampled
+sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
+  clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
+sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
+# mapview(sf_basins12d) + mapview(sites_aru)
+basin_impervious = terra::extract(rast_data$rast_nlcd_impervious, vect(sf_basins12d), fun = mean, na.rm = TRUE)
+sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
+# mapview(sf_basins12d, zcol = "impervious")
+site_data = st_intersection(site_data, sf_basins12d)
+
+# Calculate geospatial variables for all sites at local scale --------------------------------
 buffer_size = 500 # ~500 m insect emergence 90% flux range falloff
-message("Calculating geospatial variables for all sites with buffer size ", buffer_size, " m")
+message("Calculating geospatial variables for all sites at local scale (buffer size ", buffer_size, " m)")
 
 # Load NLCD metadata for cover class codes
 nlcd_metadata = read.csv(in_path_nlcd_metadata)
@@ -170,9 +186,19 @@ for (s in 1:nrow(sites_aru)) {
   site_gedi_cover  = crop_and_mask(rast_data$rast_gedi_cover, site_buffer)
   stats_gedi_cover = rast_stats(site_gedi_cover)
   
-  # NASA GEDI canopy height
+  # NASA GEDI canopy cover
   site_gedi_height  = crop_and_mask(rast_data$rast_gedi_height, site_buffer)
   stats_gedi_height = rast_stats(site_gedi_height)
+  
+  # NASA GEDI proportion of vegetation density (mature upper canopy)
+  site_gedi_pavd20m  = crop_and_mask(rast_data$rast_gedi_pavd20m, site_buffer)
+  stats_gedi_pavd20m = rast_stats(site_gedi_pavd20m)
+  
+  # NASA GEDI proportion of vegetation density
+  site_gedi_pavd5to10m  = crop_and_mask(rast_data$rast_gedi_pavd5to10m, site_buffer)
+  stats_gedi_pavd5to10m = rast_stats(site_gedi_pavd5to10m)
+  
+  # NASA GEDI canopy height
   
   # USFS canopy cover
   site_usfs_canopycover  = crop_and_mask(rast_data$rast_usfs_canopycover, site_buffer)
@@ -232,6 +258,8 @@ for (s in 1:nrow(sites_aru)) {
     site_gedi_fhd,
     site_gedi_cover,
     site_gedi_height,
+    site_gedi_pavd20m,
+    site_gedi_pavd5to10m,
     site_usfs_canopycover,
     site_landfire_treeheight,
     site_nlcd_landcover
@@ -242,6 +270,8 @@ for (s in 1:nrow(sites_aru)) {
     stats_gedi_fhd,
     stats_gedi_cover,
     stats_gedi_height,
+    stats_gedi_pavd20m,
+    stats_gedi_pavd5to10m,
     stats_usfs_canopycover,
     stats_landfire_treeheight
   )) %>% rownames_to_column(var = "name")
@@ -272,7 +302,7 @@ nlcd_summary = nlcd_summary %>%
   janitor::clean_names()
 
 # Join land cover data
-site_data = sites_aru %>% left_join(nlcd_summary, by = "site_id")
+site_data = site_data %>% left_join(nlcd_summary, by = "site_id")
 
 # Extract raster stats for each site in wide format
 stats = lapply(names(geospatial_site_data), function(i) {
@@ -493,11 +523,12 @@ library(piecewiseSEM)
 candidate_vars = c(
   # Predictors
   "bibi" = "bibi",
+  "imperviousness_basin" = "basin_impervious",
+  "imperviousness_local" = "rast_nlcd_impervious_mean",
   "abund_dev_varint" = "nlcd_developed_variable_intensity",
   "abund_dev_opensp" = "nlcd_developed_open_space",
   "abund_forest"     = "nlcd_forest",
   "abund_wetland"    = "nlcd_wetlands",
-  "imperviousness"   = "rast_nlcd_impervious_sum",
   "canopy_usfs"      = "rast_usfs_canopycover_sum",
   "canopy_gedi"      = "rast_gedi_cover_sum",
   "height_landfire"  = "rast_landfire_treeheight_mean",
@@ -511,27 +542,26 @@ candidate_vars = c(
 )
 data = as.data.frame(site_data) %>% select(all_of(candidate_vars))
 
-# Explore pairwise collinearity
+# Explore pairwise collinearity among predictors
 pairwise_collinearity = function(vars, threshold = 0.7) {
   cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
   cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
   return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
 }
 
-pairwise_collinearity(data)
-data_subset = data %>% select(bibi, imperviousness, canopy_usfs, height_landfire)
-pairwise_collinearity(data_subset)
-
-# VIF analysis for multicollinearity (consider dropping variable(s) with high VIF values (> 10))
-model = lm(rnorm(nrow(data_subset)) ~ ., data = data_subset)
-sort(car::vif(model))
+pairwise_collinearity(data %>% select(bibi, imperviousness_basin, canopy_usfs, height_landfire))
 
 # Fit component regressions
-model_bibi = lm(bibi ~ imperviousness + canopy_usfs,
+# TODO: Include random intercepts in component models to account for nested structure of site within basin
+m_bibi = lm(bibi ~ imperviousness_basin + canopy_usfs,
                 data)
 
-model_alpha_total = glm(richness_invertivore ~ bibi + imperviousness + canopy_usfs + height_landfire,
+m_richness_invertivore = glm(richness_invertivore ~ bibi + imperviousness_basin + canopy_usfs + height_landfire,
                         data, family = poisson(link = "log"))
+
+# VIF analyses for multicollinearity
+sort(car::vif(m_bibi))
+sort(car::vif(m_richness_invertivore))
 
 # Create structural equation model
 sem_alpha_total = psem(
@@ -542,21 +572,10 @@ sem_alpha_total = psem(
 # Inspect model structure
 plot(sem_alpha_total)
 
-# Conduct tests of directed separation (for each missing path)
-# Establish the basis set & evaluate independence claims
-# Use `dsep` function to perform the tests automagically dSep(sem_alpha_total)
-# Use `fisherC` function to evaluate claims
-# A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically significantly different than the structure implied by the data, and that alternative pathways or causal links with missing variables warrant further exploration
-# Nagelkerke R2 describes proportion of variance explained by the model
+# Inspect model claims and fit
+# - A significant independence claim from a test of directed separation suggests that the path is missing
+# or misspecified.
+# - A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically
+# significantly different than the structure implied by the data, and that alternative pathways or causal
+# links with missing variables warrant further exploration
 print(summary(sem_alpha_total))
-
-# ALTERNATIVE
-m1 = lm(bibi ~ imperviousness + canopy_usfs, data)
-m2 = glm(richness_invertivore ~ bibi + imperviousness + canopy_usfs + height_cv_gedi, data, family = poisson(link = "log"))
-sem_alt = psem(
-  m1,
-  m2
-)
-plot(sem_alt)
-print(summary(sem_alt))
-
