@@ -180,16 +180,19 @@ plot(rast_landfire_sclass)
 # Load King County DNRP hydrological data --------------------------------------------------
 message("Loading King County DNRP hydrological data")
 
-# basins = st_read(paste0(in_data_geospatial, "/King County DNRP/KC_basins.shp")
-# areas = st_read(paste0(in_data_geospatial, "/NHD_H_1711_HU4_Shape/Shape/NHDArea.shp")
-# flowlines = st_read(paste0(in_data_geospatial, "/NHD_H_1711_HU4_Shape/Shape/NHDFlowline.shp")
-
 # "The riparian delineations we have are for both fixed widths as well as “functionally dynamic” buffers that may be more ecologically relevant."
 # "As Abood and others (2012) describe, the variable-width, or “dynamic,” buffer is likely more ecologically relevant because it accounts for factors that affect how a stream interacts and is influenced by the riparian zone. A recent literature review of riparian buffers done by King County (2019b) highlights the range of widths needed to maintain various functions (e.g., erosion control, shade). The review did not evaluate this concept of dynamic buffers, but the findings illustrate that riparian functions are maintained at different widths depending on a range of factors including but not limited to the size of stream, soil composition, vegetation type and age, etc.
 sf_ripfb = st_read(paste0(in_data_geospatial, "/King County DNRP/RiparianBuffer_basin.shp"), quiet = TRUE)
 sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_area) %>% st_transform(st_crs(sf_ripfb)))) > 0)
 
 # "The pattern, quality, and connectivity of riparian areas can also be really interesting and I’ve wondered how that may affect birds and other wildlife. For instance, in Seattle, the streams can have pretty decent but very narrow riparian areas because they are in canyons. In other suburban watersheds, the riparian areas can be vegetated but lack the tall evergreens or complex structure - they may be wider and even “greener” but not as functional? Maybe birds with small territories can fare OK in urban riparian areas?"
+
+# Load USGS National Hydrography data --------------------------------------------------
+message("Loading USGS NHD data")
+
+# “Changes in macroinvertebrate community composition are best explained by large-scale stressors (e.g., extent of urbanization in the basin)... B-IBI scores are better correlated with basin-scale conditions than site-scale conditions.” (Macneale and Sosik 2019)
+sf_basins12d = st_read(paste0(in_data_geospatial, "/USGS/NHD_WBDHU12/WBDHU12.shp"), quiet = TRUE) %>% st_transform(crs_standard)
+sf_basins12d = sf_basins12d[st_intersects(sf_basins12d, study_area, sparse = FALSE), ]
 
 # Load NASA GEDI-Fusion forest structure data ----------------------------------------------
 #
@@ -218,9 +221,9 @@ rast_gedi_height = mask(crop(height_raw, template), template)
 plot(rast_gedi_height)
 
 # "Plant area vegetation density (PAVD); the proportion of vegetation within the 5-10 m stratum above ground surface (PAVD 5-10 m)""
-pavd55o10m_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_pavd5to10m_2020.tif"))
-template   = project(vect(study_area), crs(pavd55o10m_raw))
-rast_gedi_pavd5to10m = mask(crop(pavd55o10m_raw, template), template)
+pavd5to10m_raw  = rast(paste0(in_data_geospatial, "/NASA/gedifusion_pavd5to10m_2020.tif"))
+template   = project(vect(study_area), crs(pavd5to10m_raw))
+rast_gedi_pavd5to10m = mask(crop(pavd5to10m_raw, template), template)
 
 plot(rast_gedi_pavd5to10m)
 
@@ -282,4 +285,8 @@ for (n in names(rast_data)) {
 
 out_filepath = file.path(out_dir, "sf_ripfb.gpkg")
 st_write(sf_ripfb, out_filepath, append = FALSE)
+message("Cached ", out_filepath)
+
+out_filepath = file.path(out_dir, "sf_basins12d.gpkg")
+st_write(sf_basins12d, out_filepath, append = FALSE)
 message("Cached ", out_filepath)
