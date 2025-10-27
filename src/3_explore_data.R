@@ -45,16 +45,18 @@ sites_pssb = site_metadata %>%
   st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326) %>% st_transform(crs = crs_standard)
 
 # View ARU site points
-# TODO
+mapview(sites_aru)
 
 # Define study area by a geopolitical boundary (e.g. King County)
 study_area = counties(state = "WA", cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
 
 # View study area polygon
-# TODO
+mapview(study_area)
 
 # View study area and sites
-# TODO
+mapview(study_area, alpha.regions = 0, lwd = 2, layer.name = "King County") +
+  mapview(sites_aru, col.region = "green", layer.name = "ARU") +
+  mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
 # Calculate distance between paired ARU and PSSB sites
 summary(site_metadata %>% rowwise() %>%
@@ -76,16 +78,19 @@ sites_aru = sites_aru %>% mutate(year = year(date_start)) %>% rowwise() %>% muta
   ))
 
 # View sites colored by BIBI value
-# TODO
+mapview(sites_aru, zcol = "bibi")
 
 # Also vary point size by value
-# TODO
+mapview(sites_aru, zcol = "bibi", cex = "bibi")
 
 # Classify values into discrete categories
-# TODO
+m = mapview(sites_aru, zcol = "bibi", cex = "bibi", at = c(0, 20, 40, 60, 80, 100),
+        col.regions = c("red", "orange", "yellow", "green", "blue")); m
 
 # Save map as an image file (you may need to call webshot::install_phantomjs())
-# TODO
+temp_png = tempfile(fileext = ".png")
+mapshot2(m, file = temp_png)
+browseURL(temp_png)
 
 # Load and process geospatial data ---------------------------------------------------
 message("Loading geospatial data")
@@ -100,20 +105,22 @@ names(rast_data) = gsub("\\.tif$", "", basename(rast_filepaths))
 sf_ripfb = st_read(paste0(in_cache_geospatial_dir, "/sf_ripfb.gpkg"), quiet = TRUE)
 
 # Statically plot rasters
-# TODO
+plot(rast_data$rast_nlcd_landcover)
+for (r in seq_along(rast_data)) plot(rast_data[[r]], main = names(rast_data)[r])
 
 # If your categorical raster object is very large, plot with reduced resolution...
 # ...statically (automatically downsampled by geom_spatraster)
-# TODO
+ggplot() + geom_spatraster(data = rast_data$rast_nlcd_landcover)
 # ...dynamically (manually aggregated by mode)
-# TODO
+mapview(aggregate(rast_data$rast_nlcd_landcover, fact = 10, fun = "modal"), layer.name = "Cover")
 
 # For a large continuous raster object...
-# TODO
+ggplot() + geom_spatraster(data = rast_data$rast_usfs_canopycover)
+mapview(aggregate(rast_data$rast_usfs_canopycover, fact = 10, fun = "mean"), layer.name = "Canopy")
 
 # If your sf object is very large...
-# TODO # ...statically at reduced resolution
-# TODO # ...dynamically at reduced resolution
+ggplot(st_simplify(sf_ripfb, dTolerance = 250)) + geom_sf() # ...statically at reduced resolution
+mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...dynamically at reduced resolution
 
 # Store subsequent data calculated per site in `site_data`
 site_data = sites_aru
@@ -125,12 +132,12 @@ message("Calculating imperviousness at the basin scale")
 sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
   clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
 sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
-# TODO
+mapview(sf_basins12d) + mapview(sites_aru)
 
 # Calculate mean imperviousness per basin
 basin_impervious = terra::extract(rast_data$rast_nlcd_impervious, vect(sf_basins12d), fun = mean, na.rm = TRUE)
 sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
-# TODO
+mapview(sf_basins12d, zcol = "basin_impervious")
 
 # Store results
 site_data = st_intersection(site_data, sf_basins12d)
@@ -159,13 +166,13 @@ for (s in 1:nrow(sites_aru)) {
   # Create a buffer around the site
   site = st_as_sf(sites_aru[s,])
   site_buffer = st_buffer(site, buffer_size)
-  # TODO
+  # mapview(site) + mapview(site_buffer)
   
   ## Calculate stats for continuous raster data
   
   # Example: manually crop and mask NLCD imperviousness raster to the buffer, then calculate the sum
   site_nlcd_impervious = mask(crop(rast_data$rast_nlcd_impervious, site_buffer), site_buffer)
-  # TODO
+  # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
   sum(values(site_nlcd_impervious), na.rm = TRUE)
   
   # Instead, use helper functions:
@@ -175,7 +182,7 @@ for (s in 1:nrow(sites_aru)) {
   # NASA GEDI foliage height diversity
   site_gedi_fhd  = crop_and_mask(rast_data$rast_gedi_fhd, site_buffer)
   stats_gedi_fhd = rast_stats(site_gedi_fhd)
-  # TODO
+  # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_gedi_fhd)
   
   # NASA GEDI canopy cover
   site_gedi_cover  = crop_and_mask(rast_data$rast_gedi_cover, site_buffer)
@@ -207,12 +214,19 @@ for (s in 1:nrow(sites_aru)) {
   site_nlcd_landcover = crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer)
   
   # Inspect multiple synchronized layers with specific background maps
-  # TODO
+  # m0 = mapview(site_buffer, alpha.regions = 0, lwd = 2, map.types = c("Esri.WorldImagery"), legend = FALSE)
+  # m1 = mapview(site_usfs_canopycover, map.types = c("Esri.WorldImagery"), legend = FALSE)
+  # m2 = mapview(site_nlcd_impervious, map.types = c("OpenStreetMap"), legend = FALSE)
+  # m3 = mapview(site_nlcd_landcover, map.types = c("OpenTopoMap"), legend = FALSE)
+  # sync(m0, m1, m2, m3)
   
   ## Calculate stats for vector (sf) data (King County DNRP)
   
   # Example: manually intersect sf object to the buffer, then calculate the area
-  # TODO
+  # site_ripfb = st_intersection(sf_ripfb, site_buffer)
+  # site_ripfb = st_union(site_ripfb)
+  # ripfb_area = st_area(site_ripfb)
+  # mapview(site_ripfb) + mapview(site_buffer, alpha.regions = 0, lwd = 2)
   
   ## Calculate composition for categorical raster data (NLCD)
 
