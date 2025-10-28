@@ -44,14 +44,8 @@ sites_aru = site_metadata %>%
 sites_pssb = site_metadata %>%
   st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326) %>% st_transform(crs = crs_standard)
 
-# View ARU site points
-mapview(sites_aru)
-
-# Define study area by a geopolitical boundary (e.g. King County)
+# Define study area by King County geopolitical boundary
 study_area = counties(state = "WA", cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
-
-# View study area polygon
-mapview(study_area)
 
 # View study area and sites
 mapview(study_area, alpha.regions = 0, lwd = 2, layer.name = "King County") +
@@ -77,20 +71,12 @@ sites_aru = sites_aru %>% mutate(year = year(date_start)) %>% rowwise() %>% muta
     TRUE ~ bibi
   ))
 
-# View sites colored by BIBI value
+# View sites by BIBI value
 mapview(sites_aru, zcol = "bibi")
-
-# Also vary point size by value
-mapview(sites_aru, zcol = "bibi", cex = "bibi")
 
 # Classify values into discrete categories
 m = mapview(sites_aru, zcol = "bibi", cex = "bibi", at = c(0, 20, 40, 60, 80, 100),
         col.regions = c("red", "orange", "yellow", "green", "blue")); m
-
-# Save map as an image file (you may need to call webshot::install_phantomjs())
-temp_png = tempfile(fileext = ".png")
-mapshot2(m, file = temp_png)
-browseURL(temp_png)
 
 # Load and process geospatial data ---------------------------------------------------
 message("Loading geospatial data")
@@ -104,23 +90,10 @@ names(rast_data) = gsub("\\.tif$", "", basename(rast_filepaths))
 # Load cached vector
 sf_ripfb = st_read(paste0(in_cache_geospatial_dir, "/sf_ripfb.gpkg"), quiet = TRUE)
 
-# Statically plot rasters
-plot(rast_data$rast_nlcd_landcover)
-for (r in seq_along(rast_data)) plot(rast_data[[r]], main = names(rast_data)[r])
-
-# If your categorical raster object is very large, plot with reduced resolution...
-# ...statically (automatically downsampled by geom_spatraster)
-ggplot() + geom_spatraster(data = rast_data$rast_nlcd_landcover)
-# ...dynamically (manually aggregated by mode)
-mapview(aggregate(rast_data$rast_nlcd_landcover, fact = 10, fun = "modal"), layer.name = "Cover")
-
-# For a large continuous raster object...
-ggplot() + geom_spatraster(data = rast_data$rast_usfs_canopycover)
-mapview(aggregate(rast_data$rast_usfs_canopycover, fact = 10, fun = "mean"), layer.name = "Canopy")
-
-# If your sf object is very large...
-ggplot(st_simplify(sf_ripfb, dTolerance = 250)) + geom_sf() # ...statically at reduced resolution
-mapview(st_simplify(sf_ripfb, dTolerance = 250)) # ...dynamically at reduced resolution
+# Load cached basin sf objects and retain only those sampled
+sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
+  clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
+sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
 
 # Store subsequent data calculated per site in `site_data`
 site_data = sites_aru
@@ -128,16 +101,9 @@ site_data = sites_aru
 # Calculate imperviousness at the basin (landscape) scale ------------------------------------
 message("Calculating imperviousness at the basin scale")
 
-# Load cached basin sf objects and retain only those sampled
-sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
-  clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
-sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
-mapview(sf_basins12d) + mapview(sites_aru)
-
 # Calculate mean imperviousness per basin
 basin_impervious = terra::extract(rast_data$rast_nlcd_impervious, vect(sf_basins12d), fun = mean, na.rm = TRUE)
 sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
-mapview(sf_basins12d, zcol = "basin_impervious")
 
 # Store results
 site_data = st_intersection(site_data, sf_basins12d)
@@ -170,14 +136,10 @@ for (s in 1:nrow(sites_aru)) {
   
   ## Calculate stats for continuous raster data
   
-  # Example: manually crop and mask NLCD imperviousness raster to the buffer, then calculate the sum
-  site_nlcd_impervious = mask(crop(rast_data$rast_nlcd_impervious, site_buffer), site_buffer)
-  # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
-  sum(values(site_nlcd_impervious), na.rm = TRUE)
-  
-  # Instead, use helper functions:
+  # NLCD imperviousness
   site_nlcd_impervious  = crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer)
   stats_nlcd_impervious = rast_stats(site_nlcd_impervious)
+  # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
   
   # NASA GEDI foliage height diversity
   site_gedi_fhd  = crop_and_mask(rast_data$rast_gedi_fhd, site_buffer)
@@ -188,7 +150,7 @@ for (s in 1:nrow(sites_aru)) {
   site_gedi_cover  = crop_and_mask(rast_data$rast_gedi_cover, site_buffer)
   stats_gedi_cover = rast_stats(site_gedi_cover)
   
-  # NASA GEDI canopy cover
+  # NASA GEDI canopy height
   site_gedi_height  = crop_and_mask(rast_data$rast_gedi_height, site_buffer)
   stats_gedi_height = rast_stats(site_gedi_height)
   
@@ -200,8 +162,6 @@ for (s in 1:nrow(sites_aru)) {
   site_gedi_pavd5to10m  = crop_and_mask(rast_data$rast_gedi_pavd5to10m, site_buffer)
   stats_gedi_pavd5to10m = rast_stats(site_gedi_pavd5to10m)
   
-  # NASA GEDI canopy height
-  
   # USFS canopy cover
   site_usfs_canopycover  = crop_and_mask(rast_data$rast_usfs_canopycover, site_buffer)
   stats_usfs_canopycover = rast_stats(site_usfs_canopycover)
@@ -210,25 +170,9 @@ for (s in 1:nrow(sites_aru)) {
   site_landfire_treeheight  = crop_and_mask(rast_data$rast_landfire_treeheight, site_buffer)
   stats_landfire_treeheight = rast_stats(site_landfire_treeheight)
   
-  # NLCD land cover
+  ## Calculate composition for categorical NLCD land cover raster data
+  
   site_nlcd_landcover = crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer)
-  
-  # Inspect multiple synchronized layers with specific background maps
-  # m0 = mapview(site_buffer, alpha.regions = 0, lwd = 2, map.types = c("Esri.WorldImagery"), legend = FALSE)
-  # m1 = mapview(site_usfs_canopycover, map.types = c("Esri.WorldImagery"), legend = FALSE)
-  # m2 = mapview(site_nlcd_impervious, map.types = c("OpenStreetMap"), legend = FALSE)
-  # m3 = mapview(site_nlcd_landcover, map.types = c("OpenTopoMap"), legend = FALSE)
-  # sync(m0, m1, m2, m3)
-  
-  ## Calculate stats for vector (sf) data (King County DNRP)
-  
-  # Example: manually intersect sf object to the buffer, then calculate the area
-  # site_ripfb = st_intersection(sf_ripfb, site_buffer)
-  # site_ripfb = st_union(site_ripfb)
-  # ripfb_area = st_area(site_ripfb)
-  # mapview(site_ripfb) + mapview(site_buffer, alpha.regions = 0, lwd = 2)
-  
-  ## Calculate composition for categorical raster data (NLCD)
 
   # Calculate relative abundance of each cover class
   freq_table = freq(site_nlcd_landcover) %>% select(value, count)
@@ -286,7 +230,7 @@ for (s in 1:nrow(sites_aru)) {
       "nlcd_cover_summary" = cover_summary
     )
   )
-  pb$tick() # update the progress bar
+  pb$tick()
 }
 
 # Join land cover data with sites into a single table --------------------------------
@@ -324,12 +268,10 @@ site_data = site_data %>% left_join(stats, by = "site_id")
 # Visualize geospatial data ---------------------------------------------------------------------
 message("Visualizing geospatial data")
 
-# Step 1: Order site_id by nlcd_Developed
+# Order sites by development intensity
 site_order = unique(site_data %>% arrange(desc(nlcd_developed_variable_intensity)) %>% pull(site_id))
 
-# Step 2: Convert to long format (same as before)
 nlcd_cols = grep("^nlcd_", names(site_data), value = TRUE)
-
 nlcd_long = site_data %>% st_drop_geometry() %>% select(site_id, all_of(nlcd_cols)) %>%
   pivot_longer(
     cols = -site_id,
@@ -338,10 +280,9 @@ nlcd_long = site_data %>% st_drop_geometry() %>% select(site_id, all_of(nlcd_col
   ) %>%
   mutate(
     landcover = gsub("^nlcd_", "", landcover),
-    site_id = factor(site_id, levels = site_order)  # reorder sites
+    site_id = factor(site_id, levels = site_order)
   )
 
-# Step 3: Plot
 p = ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
   geom_bar(stat = "identity") +
   labs(
@@ -514,9 +455,6 @@ ggplot(left_join(richness_by_primary_lifestyle, site_data, by = "site_id"),
 ggplot(left_join(presence_absence %>% filter(common_name == "Wilson's Warbler"), site_data, by = "site_id"),
        aes(x = bibi, y = presence)) +
   geom_point() +geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-# Visualize interactively
-mapview(site_data, zcol = "richness_invertivore")
 
 # Structural equation modeling -------------------------------------------------------
 
