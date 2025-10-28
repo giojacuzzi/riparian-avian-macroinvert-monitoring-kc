@@ -58,11 +58,11 @@ rast_nlcd_landcover  = mask(crop(lc_raw, template), template)
 
 # Factor land cover data
 # https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description
-nlcd_metadata = read.csv(in_path_nlcd_metadata)
+# nlcd_metadata = read.csv(in_path_nlcd_metadata)
 
-rast_nlcd_landcover[] = as.integer(factor(rast_nlcd_landcover[], levels = nlcd_metadata$id))
-levels(rast_nlcd_landcover) = data.frame(id = 1:nrow(nlcd_metadata), class = nlcd_metadata$class, color = nlcd_metadata$color)
-levels(rast_nlcd_landcover)[[1]] # verify
+# rast_nlcd_landcover[] = as.integer(factor(rast_nlcd_landcover[], levels = nlcd_metadata$id))
+# levels(rast_nlcd_landcover) = data.frame(id = 1:nrow(nlcd_metadata), class = nlcd_metadata$class, color = nlcd_metadata$color)
+# levels(rast_nlcd_landcover)[[1]] # verify
 
 plot(rast_nlcd_landcover)
 
@@ -93,6 +93,7 @@ plot(rast_usfs_canopycover)
 message("Loading USDA/DOI Landfire geospatial data")
 
 # Vegetation cover
+# https://www.landfire.gov/vegetation/evc
 # "Represents the vertically projected percent cover of the live canopy for a 30-m cell. rast_landfire_vegcover is produced separately for tree, shrub, and herbaceous lifeforms. Training data depicting percentages of canopy cover are obtained from plot-level ground-based visual assessments and lidar observations. These are combined with Landsat imagery (from multiple seasons), to inform models built independently for each lifeform. Tree, shrub, and herbaceous lifeforms each have a potential range from 10% to 100% (cover values less than 10% are binned into the 10% value). The three independent lifeform datasets are merged into a single product based on the dominant lifeform of each pixel. The rast_landfire_vegcover product is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Height (rast_landfire_vegheight)."
 evc_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_EVC_250_CONUS/LC24_EVC_250.tif"))
 template = project(vect(study_area), crs(evc_raw))
@@ -110,6 +111,7 @@ evc_table  = as.data.frame(cats(rast_landfire_vegcover)[[1]]) %>% select(VALUE, 
 plot(rast_landfire_vegcover)
 
 # Vegetation height
+# https://www.landfire.gov/vegetation/evh
 # "Represents the average height of the dominant vegetation for a 30-m cell. rast_landfire_vegheight is produced separately for tree, shrub, and herbaceous lifeforms using training data depicting the weighted average height by species cover and Existing Vegetation Type (rast_landfire_vegtype) lifeform. Decision tree models using field reference data, lidar, and Landsat are developed separately for each lifeform, then lifeform specific height class layers are merged along with land cover into a single rast_landfire_vegheight product based on the dominant lifeform of each pixel. rast_landfire_vegheight ranges are continuous for the herbaceous lifeform category ranging from 0.1 to 1 meter with decimeter increments, 0.1 to 3 meters for shrub lifeform, and 1 to 99 meters for tree lifeform. If the height values of each lifeform exceed the continuous value range, they are binned into the appropriate maximum height class. rast_landfire_vegheight is then reconciled through QA/QC measures to ensure lifeform is synchronized with Existing Vegetation Cover (rast_landfire_vegcover)."
 evh_raw = rast(paste0(in_data_geospatial, "/Landfire/LF2024_EVH_250_CONUS/LC24_EVH_250.tif"))
 template = project(vect(study_area), crs(evh_raw))
@@ -235,9 +237,7 @@ rast_gedi_pavd20m = mask(crop(pavd20m_raw, template), template)
 
 plot(rast_gedi_pavd20m)
 
-# Project all data to same EPSG:32610 coordinate reference system -----------------------------
-message("Projecting data to ", crs_standard)
-study_area       = project(vect(study_area), crs_standard)
+# Standardize raster names -----------------------------
 
 names(rast_nlcd_landcover)       = "rast_nlcd_landcover"
 names(rast_nlcd_impervious)      = "rast_nlcd_impervious"
@@ -256,24 +256,22 @@ names(rast_gedi_pavd5to10m)      = "rast_gedi_pavd5to10m"
 names(rast_gedi_pavd20m)         = "rast_gedi_pavd20m"
 
 rast_data = list(
-  rast_nlcd_landcover       = project(rast_nlcd_landcover,       crs_standard),
-  rast_nlcd_impervious      = project(rast_nlcd_impervious,      crs_standard),
-  rast_usfs_canopycover     = project(rast_usfs_canopycover,     crs_standard),
-  rast_landfire_vegcover    = project(rast_landfire_vegcover,    crs_standard),
-  rast_landfire_vegheight   = project(rast_landfire_vegheight,   crs_standard),
-  rast_landfire_treeheight  = project(rast_landfire_treeheight,  crs_standard),
-  rast_landfire_shrubheight = project(rast_landfire_shrubheight, crs_standard),
-  rast_landfire_herbheight  = project(rast_landfire_herbheight,  crs_standard),
-  rast_landfire_vegtype     = project(rast_landfire_vegtype,     crs_standard),
-  rast_landfire_sclass      = project(rast_landfire_sclass,      crs_standard),
-  rast_gedi_fhd             = project(rast_gedi_fhd,             crs_standard),
-  rast_gedi_cover           = project(rast_gedi_cover,           crs_standard),
-  rast_gedi_height          = project(rast_gedi_height,          crs_standard),
-  rast_gedi_pavd5to10m      = project(rast_gedi_pavd5to10m,      crs_standard),
-  rast_gedi_pavd20m         = project(rast_gedi_pavd20m,         crs_standard)
+  rast_nlcd_landcover       = rast_nlcd_landcover,
+  rast_nlcd_impervious      = rast_nlcd_impervious,
+  rast_usfs_canopycover     = rast_usfs_canopycover,
+  rast_landfire_vegcover    = rast_landfire_vegcover,
+  rast_landfire_vegheight   = rast_landfire_vegheight,
+  rast_landfire_treeheight  = rast_landfire_treeheight,
+  rast_landfire_shrubheight = rast_landfire_shrubheight,
+  rast_landfire_herbheight  = rast_landfire_herbheight,
+  rast_landfire_vegtype     = rast_landfire_vegtype,
+  rast_landfire_sclass      = rast_landfire_sclass,
+  rast_gedi_fhd             = rast_gedi_fhd,
+  rast_gedi_cover           = rast_gedi_cover,
+  rast_gedi_height          = rast_gedi_height,
+  rast_gedi_pavd5to10m      = rast_gedi_pavd5to10m,
+  rast_gedi_pavd20m         = rast_gedi_pavd20m
 )
-
-sf_ripfb = sf_ripfb %>% st_transform(crs = crs_standard)
 
 # Cache data ----------------------------------------------------------------------------
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)

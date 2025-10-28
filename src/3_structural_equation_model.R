@@ -42,12 +42,12 @@ crs_standard = "EPSG:32610" # shared coordinate reference system (metric)
 
 # Create sf points for site locations (reference original crs 4326)
 sites_aru = site_metadata %>%
-  st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326) %>% st_transform(crs = crs_standard)
+  st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
 sites_pssb = site_metadata %>%
-  st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326) %>% st_transform(crs = crs_standard)
+  st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
 
 # Define study area by King County geopolitical boundary
-study_area = counties(state = "WA", cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
+study_area = counties(state = "WA", cb = TRUE) %>% filter(NAME == "King")
 
 # View study area and sites
 mapview(study_area, alpha.regions = 0, lwd = 2, layer.name = "King County") +
@@ -77,7 +77,7 @@ sites_aru = sites_aru %>% mutate(year = year(date_start)) %>% rowwise() %>% muta
 mapview(sites_aru, zcol = "bibi")
 
 # Classify values into discrete categories
-m = mapview(sites_aru, zcol = "bibi", cex = "bibi", at = c(0, 20, 40, 60, 80, 100),
+m = mapview(sites_aru, zcol = "bibi", at = c(0, 20, 40, 60, 80, 100),
         col.regions = c("red", "orange", "yellow", "green", "blue")); m
 
 # Load and process geospatial data ---------------------------------------------------
@@ -95,7 +95,7 @@ sf_ripfb = st_read(paste0(in_cache_geospatial_dir, "/sf_ripfb.gpkg"), quiet = TR
 # Load cached basin sf objects and retain only those sampled
 sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
   clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
-sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., sites_aru)) > 0) # TODO: exclude lakes?
+sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., st_transform(sites_aru, st_crs(sf_basins12d)))) > 0) # TODO: exclude lakes?
 
 # Store subsequent data calculated per site in `site_data`
 site_data = sites_aru
@@ -108,7 +108,7 @@ basin_impervious = terra::extract(rast_data$rast_nlcd_impervious, vect(sf_basins
 sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
 
 # Store results
-site_data = st_intersection(site_data, sf_basins12d)
+site_data = st_intersection(st_transform(site_data, st_crs(sf_basins12d)), sf_basins12d)
 
 # Calculate geospatial variables for all sites at local scale --------------------------------
 buffer_size = 500 # ~500 m insect emergence 90% flux range falloff
@@ -117,8 +117,12 @@ message("Calculating geospatial variables for all sites at local scale (buffer s
 # Load NLCD metadata for cover class codes
 nlcd_metadata = read.csv(in_path_nlcd_metadata)
 
-# Helper function to crop and mask raster to a buffer
-crop_and_mask = function(rast, buff) { mask(crop(rast, buff), buff) }
+# Helper function to project a buffer to a raster's
+# crs and crop and mask the raster to that buffer
+project_crop_and_mask = function(rast, buff) {
+  buff = st_transform(buff, st_crs(rast))
+  mask(crop(rast, buff), buff)
+}
 
 # Helper function to calculate summary statistics for a continuous raster
 rast_stats = function(rast, na.rm = TRUE) {
@@ -133,54 +137,64 @@ for (s in 1:nrow(sites_aru)) {
 
   # Create a buffer around the site
   site = st_as_sf(sites_aru[s,])
-  site_buffer = st_buffer(site, buffer_size)
-  # mapview(site) + mapview(site_buffer)
+  # site_buffer = st_buffer(site, buffer_size)
+  site_buffer_proj = st_buffer(st_transform(site, crs_standard), dist = buffer_size)
+  site_buffer = st_transform(site_buffer_proj, st_crs(site))
+  # mapview(site) + mapview(site_buffer) + mapview(site_buffer_proj)
   
   ## Calculate stats for continuous raster data
   
   # NLCD imperviousness
-  site_nlcd_impervious  = crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer)
+  site_nlcd_impervious  = project_crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer)
   stats_nlcd_impervious = rast_stats(site_nlcd_impervious)
   # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
   
   # NASA GEDI foliage height diversity
-  site_gedi_fhd  = crop_and_mask(rast_data$rast_gedi_fhd, site_buffer)
+  site_gedi_fhd  = project_crop_and_mask(rast_data$rast_gedi_fhd, site_buffer)
   stats_gedi_fhd = rast_stats(site_gedi_fhd)
   # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_gedi_fhd)
   
   # NASA GEDI canopy cover
-  site_gedi_cover  = crop_and_mask(rast_data$rast_gedi_cover, site_buffer)
+  site_gedi_cover  = project_crop_and_mask(rast_data$rast_gedi_cover, site_buffer)
   stats_gedi_cover = rast_stats(site_gedi_cover)
   
   # NASA GEDI canopy height
-  site_gedi_height  = crop_and_mask(rast_data$rast_gedi_height, site_buffer)
+  site_gedi_height  = project_crop_and_mask(rast_data$rast_gedi_height, site_buffer)
   stats_gedi_height = rast_stats(site_gedi_height)
   
   # NASA GEDI proportion of vegetation density (mature upper canopy)
-  site_gedi_pavd20m  = crop_and_mask(rast_data$rast_gedi_pavd20m, site_buffer)
+  site_gedi_pavd20m  = project_crop_and_mask(rast_data$rast_gedi_pavd20m, site_buffer)
   stats_gedi_pavd20m = rast_stats(site_gedi_pavd20m)
   
-  # NASA GEDI proportion of vegetation density
-  site_gedi_pavd5to10m  = crop_and_mask(rast_data$rast_gedi_pavd5to10m, site_buffer)
+  # NASA GEDI proportion of vegetation density (mid canopy)
+  site_gedi_pavd5to10m  = project_crop_and_mask(rast_data$rast_gedi_pavd5to10m, site_buffer)
   stats_gedi_pavd5to10m = rast_stats(site_gedi_pavd5to10m)
   
   # USFS canopy cover
-  site_usfs_canopycover  = crop_and_mask(rast_data$rast_usfs_canopycover, site_buffer)
+  site_usfs_canopycover  = project_crop_and_mask(rast_data$rast_usfs_canopycover, site_buffer)
   stats_usfs_canopycover = rast_stats(site_usfs_canopycover)
   
   # Landfire tree height
-  site_landfire_treeheight  = crop_and_mask(rast_data$rast_landfire_treeheight, site_buffer)
+  site_landfire_treeheight  = project_crop_and_mask(rast_data$rast_landfire_treeheight, site_buffer)
   stats_landfire_treeheight = rast_stats(site_landfire_treeheight)
+  
+  site_landfire_shrubheight  = project_crop_and_mask(rast_data$rast_landfire_shrubheight, site_buffer)
+  stats_landfire_shrubheight = rast_stats(site_landfire_shrubheight)
+  
+  site_landfire_herbheight  = project_crop_and_mask(rast_data$rast_landfire_herbheight, site_buffer)
+  stats_landfire_herbheight = rast_stats(site_landfire_herbheight)
   
   ## Calculate composition for categorical NLCD land cover raster data
   
-  site_nlcd_landcover = crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer)
+  site_nlcd_landcover = project_crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer)
+  
+  # mapview(as.factor(site_nlcd_landcover), col.region = nlcd_metadata %>%
+  #           filter(id %in% unique(values(site_nlcd_landcover))) %>% select(id, class, color) %>% pull(color))
 
   # Calculate relative abundance of each cover class
   freq_table = freq(site_nlcd_landcover) %>% select(value, count)
   freq_table$percent = (freq_table$count / sum(freq_table$count)) 
-  cover_detail = full_join(freq_table %>% rename(class = value),
-                           nlcd_metadata %>% select(class), by = "class")
+  cover_detail = full_join(freq_table %>% rename(id = value), nlcd_metadata %>% select(id, class), by = "id")
   cover_detail = cover_detail %>% mutate(
     count = ifelse(is.na(count), 0, count),
     percent = ifelse(is.na(percent), 0, percent)
@@ -200,6 +214,24 @@ for (s in 1:nrow(sites_aru)) {
       percent = sum(percent)
     ) %>% arrange(desc(percent))
   
+  r = site_nlcd_landcover
+  # Reclassify summary group "Developed, Variable Intensity"
+  r[r == 22] = 2
+  r[r == 23] = 2
+  r[r == 24] = 2
+  # Reclassify summary group "Forest"
+  r[r == 41] = 4
+  r[r == 42] = 4
+  r[r == 43] = 4
+  # Reclassify summary group "Wetlands"
+  r[r == 90] = 9
+  r[r == 95] = 9
+  # Reclassify summary group "Agriculture"
+  r[r == 81] = 8
+  r[r == 82] = 8
+  r[] = as.integer(r[])
+  site_nlcd_landcover_major = r
+  
   # Store all data for the site
   rasters = list(
     site_nlcd_impervious,
@@ -210,7 +242,8 @@ for (s in 1:nrow(sites_aru)) {
     site_gedi_pavd5to10m,
     site_usfs_canopycover,
     site_landfire_treeheight,
-    site_nlcd_landcover
+    site_nlcd_landcover,
+    site_nlcd_landcover_major
   )
   names(rasters) = unlist(lapply(rasters, names))
   raster_stats = do.call(rbind, list(
@@ -234,16 +267,6 @@ for (s in 1:nrow(sites_aru)) {
   )
   pb$tick()
 }
-
-###
-# Explore landfire vs gedi height
-debug_buffers = st_buffer(sites_aru, buffer_size)
-debug_landfire = crop_and_mask(rast_data$rast_landfire_treeheight, debug_buffers)
-debug_gedi = crop_and_mask(rast_data$rast_gedi_height, debug_buffers)
-debug_forest = crop_and_mask(rast_data$rast_nlcd_landcover, debug_buffers)
-debug_canopy = crop_and_mask(rast_data$rast_usfs_canopycover, debug_buffers)
-mapview(debug_landfire) + mapview(debug_gedi) + mapview(debug_canopy) + mapview(debug_forest)
-###
 
 # Join land cover data with sites into a single table --------------------------------
 message("Joining data for all sites")
@@ -321,23 +344,24 @@ ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
 
 sites_lc_df = bind_rows(
   lapply(names(geospatial_site_data), function(site_id) {
-    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$class, xy = TRUE)
+    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover, xy = TRUE)
     value_col = names(df)[3]
     df = df %>% rename(value = all_of(value_col))  # rename for ggplot
     df$site <- site_id
+    df$class = nlcd_metadata[match(df$value, nlcd_metadata$id), "class"]
     return(df)
   })
 )
-present_levels = nlcd_metadata %>% filter(class %in% unique(sites_lc_df$value))
+present_levels = nlcd_metadata %>% filter(id %in% unique(sites_lc_df$value))
 
 # Order sites by decreasing amount of development
 site_order = sites_lc_df %>% group_by(site) %>%
-  summarise(developed_n = sum(grepl("^Developed", value)), .groups = "drop") %>%
+  summarise(developed_n = sum(grepl("^Developed", class)), .groups = "drop") %>%
   arrange(desc(developed_n)) %>% pull(site)
 sites_lc_df = sites_lc_df %>%
   mutate(site = factor(site, levels = site_order))
 
-ggplot(sites_lc_df, aes(x = x, y = y, fill = value)) + geom_tile() +
+ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_tile() +
   scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
   facet_wrap(~site, scales = "free") +
   theme_minimal() + theme(
@@ -381,7 +405,7 @@ sites_tcc_df = bind_rows(
 
 ggplot(sites_tcc_df, aes(x = x, y = y, fill = class)) + geom_tile() +
   facet_wrap(~ site, scales = "free") +
-  scale_fill_gradient(low = "white", high = "darkgreen") +
+  scale_fill_gradient(low = "lightgray", high = "darkgreen") +
   theme_minimal() + theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
@@ -517,26 +541,36 @@ ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"),
 
 candidate_vars = c(
   # Predictors
-  "bibi" = "bibi",
+  "bibi"                 = "bibi",
+  "site"                 = "site_id",
+  "basin"                = "basin_name",
   "imperviousness_basin" = "basin_impervious",
   "imperviousness_local" = "rast_nlcd_impervious_mean",
-  "abund_dev_varint" = "nlcd_developed_variable_intensity",
-  "abund_dev_opensp" = "nlcd_developed_open_space",
-  "abund_forest"     = "nlcd_forest",
-  "abund_wetland"    = "nlcd_wetlands",
-  "canopy_usfs"      = "rast_usfs_canopycover_sum",
-  "canopy_gedi"      = "rast_gedi_cover_sum",
-  "height_landfire"  = "rast_landfire_treeheight_mean",
-  "height_gedi"      = "rast_gedi_height_mean",
-  "height_cv_landfire"  = "rast_landfire_treeheight_cv",
-  "height_cv_gedi"     = "rast_gedi_height_cv",
-  "fhd"              = "rast_gedi_fhd_mean",
+  "abund_dev_varint"     = "nlcd_developed_variable_intensity",
+  "abund_dev_opensp"     = "nlcd_developed_open_space",
+  "abund_forest"         = "nlcd_forest",
+  "abund_wetland"        = "nlcd_wetlands",
+  "canopy_usfs"          = "rast_usfs_canopycover_sum",
+  "canopy_gedi"          = "rast_gedi_cover_sum",
+  "height_landfire"      = "rast_landfire_treeheight_mean",
+  "height_gedi"          = "rast_gedi_height_mean",
+  "height_cv_landfire"   = "rast_landfire_treeheight_cv",
+  "height_cv_gedi"       = "rast_gedi_height_cv",
+  "fhd"                  = "rast_gedi_fhd_mean",
+  "pavd20m"              = "rast_gedi_pavd20m_mean",
+  "pavd5to10m"           = "rast_gedi_pavd5to10m_mean",
   # Responses
-  "richness" = "richness",
-  "richness_invert_et" = "richness_invert_et",
-  "richness_invert_avo" = "richness_invert_avo"
+  "richness"             = "richness",
+  "richness_invert_et"   = "richness_invert_et",
+  "richness_invert_avo"  = "richness_invert_avo"
 )
 data = as.data.frame(site_data) %>% select(all_of(candidate_vars))
+
+# TODO: Explore promising common vegetation vars:
+# - canopy cover (USFS canopy cover seems more accurate than GEDI)
+# - canopy height
+#    - canopy height classes (e.g. average cover height class 4-9m, average cover height class 0-4m)
+# - foliage height diversity
 
 # Explore pairwise collinearity among predictors
 pairwise_collinearity = function(vars, threshold = 0.7) {
@@ -545,14 +579,15 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
 }
 
-pairwise_collinearity(data %>% select(bibi, imperviousness_basin, canopy_usfs, height_landfire))
+pairwise_collinearity(data %>% select(
+  bibi, imperviousness_basin, canopy_usfs, canopy_gedi, height_cv_gedi, pavd20m, pavd5to10m
+))
 
 # Fit component regressions
-# TODO: Include random intercepts in component models to account for nested structure of site within basin
 m_bibi = lm(bibi ~ imperviousness_basin + canopy_usfs,
                 data)
 
-m_richness_invert = glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + height_landfire,
+m_richness_invert = glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + height_cv_gedi,
                         data, family = poisson(link = "log"))
 
 # VIF analyses for multicollinearity
@@ -560,13 +595,13 @@ sort(car::vif(m_bibi))
 sort(car::vif(m_richness_invert))
 
 # Create structural equation model
-sem_alpha_total = psem(
+sem = psem(
   m_bibi,
   m_richness_invert
 )
 
 # Inspect model structure
-plot(sem_alpha_total)
+plot(sem)
 
 # Inspect model claims and fit
 # - A significant independence claim from a test of directed separation suggests that the path is missing
@@ -574,4 +609,25 @@ plot(sem_alpha_total)
 # - A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically
 # significantly different than the structure implied by the data, and that alternative pathways or causal
 # links with missing variables warrant further exploration
-print(summary(sem_alpha_total))
+print(summary(sem))
+
+# Workshop --------------------------------------------------------------------
+
+# NOTE: There are not enough observations per basin to support inclusion of a random effect to account for the nested structure of site within basin
+table(data$basin)
+
+plot(psem(
+  lm(bibi ~ imperviousness_basin + canopy_usfs,
+     data),
+  lm(imperviousness_local ~ imperviousness_basin,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_local + canopy_usfs + height_cv_gedi,
+      data, family = poisson(link = "log"))
+))
+
+plot(psem(
+  lm(bibi ~ abund_dev_varint + abund_forest,
+     data),
+  glm(richness_invert_avo ~ bibi + abund_dev_varint + abund_forest + abund_dev_opensp,
+      data, family = poisson(link = "log"))
+))
