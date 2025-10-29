@@ -27,6 +27,7 @@ pkgs = c(
   "leafsync",    # synchronized mapview panels
   "progress",    # dynamic progress bar
   "ggrepel",     # plot annotations
+  "landscapemetrics", # landscape metrics
   "piecewiseSEM" # structural equation modeling
 )
 sapply(pkgs, function(pkg) {
@@ -102,6 +103,9 @@ sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., st_transform(sit
 # Store subsequent data calculated per site in `site_data`
 site_data = sites_aru
 
+# Calculate elevation
+site_data = elevatr::get_elev_point(site_data)
+
 # Calculate imperviousness at the basin (landscape) scale ------------------------------------
 message("Calculating imperviousness at the basin scale")
 
@@ -111,6 +115,9 @@ sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
 
 # Store results
 site_data = st_intersection(st_transform(site_data, st_crs(sf_basins12d)), sf_basins12d)
+
+basin_canopy = terra::extract(rast_data$rast_usfs_canopycover, vect(sf_basins12d), fun = mean, na.rm = TRUE)
+sf_basins12d = sf_basins12d %>% mutate(basin_canopy = basin_canopy[[2]])
 
 # Calculate geospatial variables for all sites at local scale --------------------------------
 message("Calculating geospatial variables for all sites at local scale (buffer size ", buffer_size, " m)")
@@ -185,6 +192,35 @@ for (s in 1:nrow(sites_aru)) {
   site_landfire_herbheight  = project_crop_and_mask(rast_data$rast_landfire_herbheight, site_buffer)
   stats_landfire_herbheight = rast_stats(site_landfire_herbheight)
   
+  # LEMMA forest structure
+  site_lemma_age  = project_crop_and_mask(rast_data$rast_lemma_age, site_buffer)
+  site_lemma_age[site_lemma_age < 0] = NA
+  stats_lemma_age = rast_stats(site_lemma_age)
+  
+  site_lemma_ba  = project_crop_and_mask(rast_data$rast_lemma_ba, site_buffer)
+  site_lemma_ba[site_lemma_ba < 0] = NA
+  stats_lemma_ba = rast_stats(site_lemma_ba)
+
+  site_lemma_qmd  = project_crop_and_mask(rast_data$rast_lemma_qmd, site_buffer)
+  site_lemma_qmd[site_lemma_qmd < 0] = NA
+  stats_lemma_qmd = rast_stats(site_lemma_qmd)
+  
+  site_lemma_denall  = project_crop_and_mask(rast_data$rast_lemma_denall, site_buffer)
+  site_lemma_denall[site_lemma_denall < 0] = NA
+  stats_lemma_denall = rast_stats(site_lemma_denall)
+  
+  site_lemma_dencon  = project_crop_and_mask(rast_data$rast_lemma_dencon, site_buffer)
+  site_lemma_dencon[site_lemma_dencon < 0] = NA
+  stats_lemma_dencon = rast_stats(site_lemma_dencon)
+  
+  site_lemma_denhw  = project_crop_and_mask(rast_data$rast_lemma_denhw, site_buffer)
+  site_lemma_denhw[site_lemma_denhw < 0] = NA
+  stats_lemma_denhw = rast_stats(site_lemma_denhw)
+  
+  site_lemma_domts = project_crop_and_mask(rast_data$rast_lemma_domts, site_buffer)
+  site_lemma_domts[site_lemma_domts < 0] = NA
+  tree_species_richness = length(na.omit(unique(values(site_lemma_domts))))
+  
   # Explore masking structural vars to non-urban areas
   site_gedi_height_impmask = mask(project(site_gedi_height, site_nlcd_impervious), site_nlcd_impervious <= 20, maskvalues = TRUE, inverse = TRUE)
   names(site_gedi_height_impmask) = "rast_gedi_height_impmask"
@@ -220,6 +256,7 @@ for (s in 1:nrow(sites_aru)) {
       percent = sum(percent)
     ) %>% arrange(desc(percent))
   
+  # Major landcover classes
   r = site_nlcd_landcover
   # Reclassify summary group "Developed, Variable Intensity"
   r[r == 22] = 2
@@ -238,6 +275,20 @@ for (s in 1:nrow(sites_aru)) {
   r[] = as.integer(r[])
   site_nlcd_landcover_major = r
   
+  # Simple landcover classes for edge density
+  r = site_nlcd_landcover
+  # Reclassify specific values
+  r[r == 11] <- 1 # Open water
+  r[r %in% c(21, 22, 23, 24)] <- 2 # Developed 
+  r[r %in% c(41, 42, 43, 90)] <- 3 # Forested
+  # Set all other values to 0
+  r[!r %in% c(1, 2, 3, NA)] <- 4 # Other
+  
+  # Landscape level edge density
+  edge_density = lsm_l_ed(r)$value
+  # contagion = lsm_l_contag(r)$value
+  aggregation = lsm_l_ai(r)$value
+  
   # Store all data for the site
   rasters = list(
     site_nlcd_impervious,
@@ -250,7 +301,14 @@ for (s in 1:nrow(sites_aru)) {
     site_landfire_treeheight,
     site_gedi_height_impmask,
     site_nlcd_landcover,
-    site_nlcd_landcover_major
+    site_nlcd_landcover_major,
+    site_lemma_age,
+    site_lemma_ba,
+    site_lemma_denall,
+    site_lemma_dencon,
+    site_lemma_denhw,
+    site_lemma_domts,
+    site_lemma_qmd
   )
   names(rasters) = unlist(lapply(rasters, names))
   raster_stats = do.call(rbind, list(
@@ -262,7 +320,13 @@ for (s in 1:nrow(sites_aru)) {
     stats_gedi_pavd5to10m,
     stats_usfs_canopycover,
     stats_landfire_treeheight,
-    stats_gedi_height_impmask
+    stats_gedi_height_impmask,
+    stats_lemma_age,
+    stats_lemma_ba,
+    stats_lemma_denall,
+    stats_lemma_dencon,
+    stats_lemma_denhw,
+    stats_lemma_qmd
   )) %>% rownames_to_column(var = "name")
   
   geospatial_site_data[[as.character(site$site_id)]] = list(
@@ -271,7 +335,10 @@ for (s in 1:nrow(sites_aru)) {
     nlcd_cover = list(
       "nlcd_cover_detail" = cover_detail,
       "nlcd_cover_summary" = cover_summary
-    )
+    ),
+    edge_density = edge_density,
+    aggregation = aggregation,
+    tree_species_richness = tree_species_richness
   )
   pb$tick()
 }
@@ -290,8 +357,16 @@ nlcd_summary = nlcd_summary %>%
   pivot_wider(names_from = group, values_from = percent, names_prefix = "nlcd_") %>%
   janitor::clean_names()
 
+landscape_metrics = data.frame(
+  site_id = names(geospatial_site_data),
+  edge_density = sapply(names(geospatial_site_data), function(id) { geospatial_site_data[[id]]$edge_density }),
+  aggregation = sapply(names(geospatial_site_data), function(id) { geospatial_site_data[[id]]$aggregation }),
+  tree_species_richness = sapply(names(geospatial_site_data), function(id) { geospatial_site_data[[id]]$tree_species_richness })
+)
+
 # Join land cover data
 site_data = site_data %>% left_join(nlcd_summary, by = "site_id")
+site_data = site_data %>% left_join(landscape_metrics, by = "site_id")
 
 # Extract raster stats for each site in wide format
 stats = lapply(names(geospatial_site_data), function(i) {
@@ -445,6 +520,8 @@ species_names = read_lines(in_path_species_list) %>% as_tibble() %>%
     common_name = tolower(common_name), scientific_name = tolower(scientific_name)
   ) %>% filter(common_name %in% sort(unique(detections$long$common_name)))
 
+# TODO: Assess adequacy of  sampling effort to detect total species richness via sample size-based rarefaction and extrapolation sampling curves for species richness (iNEXT)? Quantify sample completeness to determine the estimated proportion of species detected from the predicted species pool by plotting sample coverage with respect to the number of sampling units.
+
 # Load AVONET species trait metadata
 avonet = readxl::read_xlsx(in_path_avonet_traits, sheet = "AVONET2_eBird") %>%
   janitor::clean_names() %>%
@@ -492,6 +569,13 @@ invertivores_eltontraits = species_metadata %>% filter(diet_5cat == "Invertebrat
 setdiff(invertivores_eltontraits, invertivores_avonet)
 setdiff(invertivores_avonet, invertivores_eltontraits)
 
+# Load Stevan riparian dependent/obligate list
+riparian_dep = read_csv("data/processed/Species_Habitat_List.csv") %>% clean_names() %>%
+  rename(common_name = species) %>% mutate(common_name = tolower(common_name))
+rip_deps = riparian_dep %>% filter(riparian_dependent_breeding == "Yes" | riparian_obligate_breeding == "Yes") %>% pull(common_name)
+
+setdiff(rip_deps, species_names$common_name)
+
 # Exclude certain sites from analysis ------------------------------------------------
 
 # Exclude sites 257 and 259 that are dominated by agriculture
@@ -516,11 +600,30 @@ richness_invert_et = presence_absence %>% filter(common_name %in% invertivores_e
   group_by(site_id) %>% summarise(richness_invert_et = sum(presence))
 richness_invert_avo = presence_absence %>% filter(common_name %in% invertivores_avonet) %>%
   group_by(site_id) %>% summarise(richness_invert_avo = sum(presence))
+richness_ripdep = presence_absence %>% filter(common_name %in% rip_deps) %>%
+  group_by(site_id) %>% summarise(richness_ripdep = sum(presence))
+
+## NMDS visualization
+library(vegan)
+nmds = metaMDS(presence_absence %>%
+          pivot_wider(names_from = common_name, values_from = presence, values_fill = 0) %>%
+          column_to_rownames("site_id"), distance = "bray", k = 3, trymax = 100)
+nmds$stress # stress > 0.2 suggests weak fit
+nmds_scores = as.data.frame(scores(nmds, display = "sites"))
+nmds_scores$site_id = rownames(nmds_scores)
+nmds_plot_data = nmds_scores %>% left_join(site_metadata, by = "site_id")
+species_scores = as.data.frame(scores(nmds, display = "species"))
+species_scores$species = rownames(species_scores)
+ggplot(nmds_plot_data %>% left_join(site_data, by = "site_id"), aes(NMDS1, NMDS2, color = nlcd_forest)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species),
+            color = "black", size = 3, check_overlap = TRUE)
 
 # Join with site data
 site_data = left_join(site_data, richness, by = "site_id")
 site_data = left_join(site_data, richness_invert_et, by = "site_id")
 site_data = left_join(site_data, richness_invert_avo, by = "site_id")
+site_data = left_join(site_data, richness_ripdep, by = "site_id")
 
 # Richness across AVONET guilds per site
 richness_by_trophic_niche = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
@@ -558,16 +661,18 @@ ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"),
 # Structural equation modeling -------------------------------------------------------
 
 candidate_vars = c(
-  # Predictors
+  ## Predictors
   "bibi"                 = "bibi",
   "site"                 = "site_id",
   "basin"                = "basin_name",
+  "elevation"            = "elevation",
   "imperviousness_basin" = "basin_impervious",
   "imperviousness_local" = "rast_nlcd_impervious_mean",
   "abund_dev_varint"     = "nlcd_developed_variable_intensity",
   "abund_dev_opensp"     = "nlcd_developed_open_space",
   "abund_forest"         = "nlcd_forest",
   "abund_wetland"        = "nlcd_wetlands",
+  "abund_openwater"      = "nlcd_open_water",
   "canopy_usfs"          = "rast_usfs_canopycover_sum",
   "canopy_gedi"          = "rast_gedi_cover_sum",
   "height_landfire"      = "rast_landfire_treeheight_mean",
@@ -578,10 +683,21 @@ candidate_vars = c(
   "fhd"                  = "rast_gedi_fhd_mean",
   "pavd20m"              = "rast_gedi_pavd20m_mean",
   "pavd5to10m"           = "rast_gedi_pavd5to10m_mean",
-  # Responses
+  "edge_density"         = "edge_density",
+  "aggregation"          = "aggregation",
+  "tree_richness"        = "tree_species_richness",
+  "stand_age_mean"       = "rast_lemma_age_mean",
+  "stand_age_cv"         = "rast_lemma_age_cv",
+  "stand_ba"             = "rast_lemma_ba_mean",
+  "stand_denall"         = "rast_lemma_denall_mean",
+  "stand_dencon"         = "rast_lemma_dencon_mean",
+  "stand_denhw"          = "rast_lemma_denhw_mean",
+  "stand_qmd"            = "rast_lemma_qmd_mean",
+  ## Responses
   "richness"             = "richness",
   "richness_invert_et"   = "richness_invert_et",
-  "richness_invert_avo"  = "richness_invert_avo"
+  "richness_invert_avo"  = "richness_invert_avo",
+  "richness_ripdep"      = "richness_ripdep"
 )
 data = as.data.frame(site_data) %>% select(all_of(candidate_vars))
 
@@ -593,48 +709,129 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 }
 
 pairwise_collinearity(data %>% select(
-  bibi, imperviousness_basin, canopy_usfs, canopy_gedi, height_cv_gedi, pavd20m, pavd5to10m, height_cv_gedi_mask
+  bibi,
+  imperviousness_basin,
+  canopy_usfs, abund_forest,
+  height_gedi,
+  fhd, height_cv_gedi, height_cv_gedi_mask,
+  pavd20m, pavd5to10m,
+  elevation,
+  edge_density, aggregation,
+  stand_age_mean, stand_age_cv, stand_ba, stand_denall, stand_dencon, stand_denhw, stand_qmd, tree_richness
 ))
 
-# Fit component regressions
-m_bibi = lm(bibi ~ imperviousness_basin + canopy_usfs,
-                data)
+# TODO: VIF analyses for multicollinearity, e.g. sort(car::vif(m_bibi))
 
-m_richness_invert = glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + height_cv_gedi,
-                        data, family = poisson(link = "log"))
-
-# VIF analyses for multicollinearity
-sort(car::vif(m_bibi))
-sort(car::vif(m_richness_invert))
-
-# Create structural equation model
+# Create and inspect structural equation model claims and fit
 sem = psem(
-  m_bibi,
-  m_richness_invert
-)
-
-# Inspect model structure
-plot(sem)
-
-# Inspect model claims and fit
+  # Fit component regressions
+  lm(bibi ~ imperviousness_basin + canopy_usfs,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + height_cv_gedi_mask,
+      data, family = poisson(link = "log"))
+); plot(sem); print(summary(sem))
 # - A significant independence claim from a test of directed separation suggests that the path is missing
 # or misspecified.
 # - A significant global Fisher’s C p-value (< 0.05) suggests that the modeled structure is statistically
 # significantly different than the structure implied by the data, and that alternative pathways or causal
 # links with missing variables warrant further exploration
-print(summary(sem))
 
 # Workshop --------------------------------------------------------------------
+
+# Local ripdep
+sem_local = psem(
+  lm(bibi ~ imperviousness_local + canopy_usfs,
+     data),
+  glm(richness_ripdep ~ bibi + imperviousness_local + canopy_usfs + height_cv_gedi_mask,
+      data, family = poisson(link = "log"))
+); plot(sem_local); print(summary(sem_local))
+
+# Comparison with overall richness
+plot(psem(
+  lm(bibi ~ imperviousness_basin + canopy_usfs,
+     data),
+  glm(richness ~ bibi + imperviousness_basin + canopy_usfs + height_cv_gedi_mask,
+      data, family = poisson(link = "log"))
+))
+
+# Explore local stand and landscape structure (Gradient Nearest Neighbor vegetation maps from USFS and OSU)
+# NOTE: OVERPARAMETRIZED
+alt = psem( # using stand structure
+  lm(bibi ~ imperviousness_basin + canopy_usfs + stand_qmd + stand_denall + tree_richness,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + stand_qmd + stand_denall + height_cv_gedi_mask + elevation + tree_richness,
+      data, family = poisson(link = "log"))
+); plot(alt); summary(alt)
+pairwise_collinearity(data %>% select(
+  bibi, imperviousness_basin, canopy_usfs, stand_qmd, stand_denall, tree_richness, richness_invert_avo, height_cv_gedi_mask, elevation, tree_richness
+))
+
+alt = psem( # parsimonious
+  lm(bibi ~ imperviousness_basin + canopy_usfs + stand_qmd,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + stand_qmd + height_cv_gedi_mask,
+      data, family = poisson(link = "log"))
+); plot(alt); summary(alt)
+
+# TODO:
+# - riparian buffer width?
+# - woody debris? snags? understory vegetation?
+# - proximity to forest on landscape (basin) level?
+
+stop("Arrived at workshop")
+
+plot(psem( # using stand age
+  lm(bibi ~ imperviousness_basin + canopy_usfs + stand_age_mean,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + stand_age_mean + height_cv_gedi_mask + elevation,
+      data, family = poisson(link = "log"))
+))
 
 # NOTE: There are not enough observations per basin to support inclusion of a random effect to account for the nested structure of site within basin
 table(data$basin)
 
 # TODO: Explore promising common vegetation vars from literature:
-# - canopy cover (USFS canopy cover seems more accurate than GEDI)
-# - canopy height
+# - Canopy cover (USFS canopy cover seems more accurate than GEDI)
+# - Canopy height (gedi_height_mean)
 #    - canopy height classes (e.g. average cover height class 4-9m, average cover height class 0-4m)
-# - foliage height diversity
+# - Foliage height diversity / gedi_height_cv
+# Other vars:
+# - pattern / quality / connectivity of riparian areas (mean patch size, connectivity, edge density)
+# - stream network connectivity
+# - geomorphology
+# - elevation
+# Other responses:
+# - occupancy probability
+# - native vs nonnative species
 
+# - Effects of urbanization at multiple spatial scales?
+
+# - Interactions?
+
+# TESTING
+plot(psem(
+  lm(bibi ~ imperviousness_basin + canopy_usfs,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + height_cv_gedi + elevation + edge_density,
+      data, family = poisson(link = "log"))
+))
+
+plot(psem(
+  lm(bibi ~ imperviousness_basin + abund_forest,
+     data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + abund_forest + height_cv_gedi,
+      data, family = poisson(link = "log"))
+))
+
+# Interaction
+plot(psem(
+  lm(bibi ~ imperviousness_basin + canopy_usfs,
+              data),
+  glm(richness_invert_avo ~ bibi + imperviousness_basin + canopy_usfs + (height_cv_gedi * canopy_usfs),
+      data, family = poisson(link = "log"))
+))
+
+# Multi-scale imperviousness
 plot(psem(
   lm(bibi ~ imperviousness_basin + canopy_usfs,
      data),

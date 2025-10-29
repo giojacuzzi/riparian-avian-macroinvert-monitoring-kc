@@ -48,6 +48,70 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
   mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
+# Load LEMMA GNN data ------------------------------------------------
+# The gradient nearest neighbor (GNN) data are multivariate, imputed maps of forest attributes based on 30-m Landsat imagery, Forest Inventory and Analysis data, and other geospatial data products, such as climate and topography.
+# https://lemma.forestry.oregonstate.edu/data
+# https://lemma.forestry.oregonstate.edu/data/structure-maps
+message("Loading LEMMA GNN data")
+
+# Basal area of live trees >= 2.5 cm dbf
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/ba_ge_3_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_ba = mask(crop(r_raw, template), template)
+
+# Density of live trees >= 2.5 cm dbh
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/tph_ge_3_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_denall = mask(crop(r_raw, template), template)
+
+# Density of live conifers >= 2.5 cm dbh
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/tphc_ge_3_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_dencon = mask(crop(r_raw, template), template)
+
+# Density of live hardwoods >= 2.5 cm dbh
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/tphh_ge_3_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_denhw = mask(crop(r_raw, template), template)
+
+# Quadratic mean diameter of all dominant and codominant trees
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/qmd_dom_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_qmd = mask(crop(r_raw, template), template)
+
+# Diameter diversity index
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/ddi_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_ddi = mask(crop(r_raw, template), template)
+
+# Tree species with plurality of basal area (alphanumeric PLANTS code)
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/treeplba_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_domts = mask(crop(r_raw, template), template)
+
+# Basal area weighted stand age based on field recorded or modeled ages of dom/codom trees
+r_raw = rast(paste0(in_data_geospatial, "/LEMMA GNN.2023.1/rasters/gnn.2023.1/age_dom_2021.tif"))
+template = project(vect(study_area), crs(r_raw))
+rast_lemma_age = mask(crop(r_raw, template), template)
+
+# OTHERS:...
+# BA_GE_3: Basal area of live trees >= 2.5 cm dbf
+# TPHC_GE_3: Density of live trees
+# CANCOV: Canopy cover of all live trees
+# CANCOV_LAYERS: Number of tree canopy layers present
+# MNDBHBA: Basal-area weighted mean diameter of all live trees
+# QMD_DOM: Quadratic mean diameter of all dominant and codominant trees
+# DDI: Dimaeter diversity index
+# COVCL: Cover class
+# Sizecl: Size class
+# Struccond: Structural condition
+# Vegclass: Vegetation class
+# Stndhgt: Stand height
+# SDI_Reineke: Reinecke's stand density index
+# STPH_GE_25: Density of snags >= 25cm duh and >= 2m tall
+# Forty: Forest type, dominant tree species
+# Treeplba: Tree species with plurality of basal area
+
 # Load land cover and impervious surface data ------------------------------------------------
 message("Loading USGS NLCD land cover data")
 
@@ -254,6 +318,14 @@ names(rast_gedi_cover)           = "rast_gedi_cover"
 names(rast_gedi_height)          = "rast_gedi_height"
 names(rast_gedi_pavd5to10m)      = "rast_gedi_pavd5to10m"
 names(rast_gedi_pavd20m)         = "rast_gedi_pavd20m"
+names(rast_lemma_ba)     = "rast_lemma_ba"
+names(rast_lemma_denall) = "rast_lemma_denall"
+names(rast_lemma_dencon) = "rast_lemma_dencon"
+names(rast_lemma_denhw)  = "rast_lemma_denhw"
+names(rast_lemma_qmd)    = "rast_lemma_qmd"
+names(rast_lemma_ddi)    = "rast_lemma_ddi"
+names(rast_lemma_domts)  = "rast_lemma_domts"
+names(rast_lemma_age)    = "rast_lemma_age"
 
 rast_data = list(
   rast_nlcd_landcover       = rast_nlcd_landcover,
@@ -270,7 +342,15 @@ rast_data = list(
   rast_gedi_cover           = rast_gedi_cover,
   rast_gedi_height          = rast_gedi_height,
   rast_gedi_pavd5to10m      = rast_gedi_pavd5to10m,
-  rast_gedi_pavd20m         = rast_gedi_pavd20m
+  rast_gedi_pavd20m         = rast_gedi_pavd20m,
+  rast_lemma_ba = rast_lemma_ba,
+  rast_lemma_denall = rast_lemma_denall,
+  rast_lemma_dencon = rast_lemma_dencon,
+  rast_lemma_denhw = rast_lemma_denhw,
+  rast_lemma_qmd = rast_lemma_qmd,
+  rast_lemma_ddi = rast_lemma_ddi,
+  rast_lemma_domts = rast_lemma_domts,
+  rast_lemma_age = rast_lemma_age
 )
 
 # Cache data ----------------------------------------------------------------------------
