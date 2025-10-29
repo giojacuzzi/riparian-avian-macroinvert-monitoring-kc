@@ -12,6 +12,8 @@ in_path_species_list    = "data/pam/species_list.txt"
 in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
 in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
 
+buffer_size = 500 # ~500 m insect emergence 90% flux range falloff
+
 # Load required packages (automatically install any missing) -------------------------
 pkgs = c(
   "tidyverse",   # data manipulation
@@ -111,7 +113,6 @@ sf_basins12d = sf_basins12d %>% mutate(basin_impervious = basin_impervious[[2]])
 site_data = st_intersection(st_transform(site_data, st_crs(sf_basins12d)), sf_basins12d)
 
 # Calculate geospatial variables for all sites at local scale --------------------------------
-buffer_size = 500 # ~500 m insect emergence 90% flux range falloff
 message("Calculating geospatial variables for all sites at local scale (buffer size ", buffer_size, " m)")
 
 # Load NLCD metadata for cover class codes
@@ -184,6 +185,11 @@ for (s in 1:nrow(sites_aru)) {
   site_landfire_herbheight  = project_crop_and_mask(rast_data$rast_landfire_herbheight, site_buffer)
   stats_landfire_herbheight = rast_stats(site_landfire_herbheight)
   
+  # Explore masking structural vars to non-urban areas
+  site_gedi_height_impmask = mask(project(site_gedi_height, site_nlcd_impervious), site_nlcd_impervious <= 20, maskvalues = TRUE, inverse = TRUE)
+  names(site_gedi_height_impmask) = "rast_gedi_height_impmask"
+  stats_gedi_height_impmask = rast_stats(site_gedi_height_impmask)
+  
   ## Calculate composition for categorical NLCD land cover raster data
   
   site_nlcd_landcover = project_crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer)
@@ -242,6 +248,7 @@ for (s in 1:nrow(sites_aru)) {
     site_gedi_pavd5to10m,
     site_usfs_canopycover,
     site_landfire_treeheight,
+    site_gedi_height_impmask,
     site_nlcd_landcover,
     site_nlcd_landcover_major
   )
@@ -254,7 +261,8 @@ for (s in 1:nrow(sites_aru)) {
     stats_gedi_pavd20m,
     stats_gedi_pavd5to10m,
     stats_usfs_canopycover,
-    stats_landfire_treeheight
+    stats_landfire_treeheight,
+    stats_gedi_height_impmask
   )) %>% rownames_to_column(var = "name")
   
   geospatial_site_data[[as.character(site$site_id)]] = list(
@@ -523,6 +531,16 @@ richness_by_primary_lifestyle = presence_absence %>% left_join(species_metadata,
 ggplot(richness_by_trophic_niche, aes(x = count, y = reorder(site_id, count), fill = trophic_niche)) + geom_col()
 ggplot(richness_by_primary_lifestyle, aes(x = count, y = reorder(site_id, count), fill = primary_lifestyle)) + geom_col()
 
+# Richness as a function of different predictors
+ggplot(presence_absence %>% group_by(site_id) %>% summarise(count = sum(presence), .groups = "drop") %>%
+         left_join(site_data, by = "site_id"), aes(x = rast_usfs_canopycover_sum, y = count)) + geom_point()
+
+ggplot(presence_absence %>% group_by(site_id) %>% summarise(count = sum(presence), .groups = "drop") %>%
+         left_join(site_data, by = "site_id"), aes(x = rast_nlcd_impervious_sum, y = count)) + geom_point()
+
+ggplot(presence_absence %>% group_by(site_id) %>% summarise(count = sum(presence), .groups = "drop") %>%
+         left_join(site_data, by = "site_id"), aes(x = bibi, y = count)) + geom_point()
+
 # Richness of guilds as a function of BIBI
 ggplot(left_join(richness_by_trophic_niche, site_data, by = "site_id"),
        aes(x = bibi, y = count, color = trophic_niche, fill = trophic_niche)) +
@@ -556,6 +574,7 @@ candidate_vars = c(
   "height_gedi"          = "rast_gedi_height_mean",
   "height_cv_landfire"   = "rast_landfire_treeheight_cv",
   "height_cv_gedi"       = "rast_gedi_height_cv",
+  "height_cv_gedi_mask"  = "rast_gedi_height_impmask_cv",
   "fhd"                  = "rast_gedi_fhd_mean",
   "pavd20m"              = "rast_gedi_pavd20m_mean",
   "pavd5to10m"           = "rast_gedi_pavd5to10m_mean",
@@ -566,13 +585,7 @@ candidate_vars = c(
 )
 data = as.data.frame(site_data) %>% select(all_of(candidate_vars))
 
-# TODO: Explore promising common vegetation vars:
-# - canopy cover (USFS canopy cover seems more accurate than GEDI)
-# - canopy height
-#    - canopy height classes (e.g. average cover height class 4-9m, average cover height class 0-4m)
-# - foliage height diversity
-
-# Explore pairwise collinearity among predictors
+# Calculate pairwise collinearity among predictors
 pairwise_collinearity = function(vars, threshold = 0.7) {
   cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
   cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
@@ -580,7 +593,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 }
 
 pairwise_collinearity(data %>% select(
-  bibi, imperviousness_basin, canopy_usfs, canopy_gedi, height_cv_gedi, pavd20m, pavd5to10m
+  bibi, imperviousness_basin, canopy_usfs, canopy_gedi, height_cv_gedi, pavd20m, pavd5to10m, height_cv_gedi_mask
 ))
 
 # Fit component regressions
@@ -615,6 +628,12 @@ print(summary(sem))
 
 # NOTE: There are not enough observations per basin to support inclusion of a random effect to account for the nested structure of site within basin
 table(data$basin)
+
+# TODO: Explore promising common vegetation vars from literature:
+# - canopy cover (USFS canopy cover seems more accurate than GEDI)
+# - canopy height
+#    - canopy height classes (e.g. average cover height class 4-9m, average cover height class 0-4m)
+# - foliage height diversity
 
 plot(psem(
   lm(bibi ~ imperviousness_basin + canopy_usfs,
