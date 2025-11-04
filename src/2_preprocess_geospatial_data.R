@@ -42,11 +42,37 @@ site_metadata = site_metadata %>% rowwise() %>%
 
 sites_aru = site_metadata %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
 sites_pssb = site_metadata %>% st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
-study_area = counties(state = "WA", year = 2024, cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
+
+# Define study area by King County geopolitical boundary with 5km buffer
+county = counties(state = "WA", year = 2024, cb = TRUE) %>% filter(NAME == "King") %>% st_transform(crs = crs_standard)
+study_area = st_as_sfc(st_bbox(county)) %>% st_buffer(5000)
 
 mapview(study_area, alpha.regions = 0, lwd = 2) +
+  mapview(county, alpha.regions = 0, lwd = 1) +
   mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
+
+# Load USFS Riparian Areas map ------------------------------------------------
+# https://www.fs.usda.gov/rds/archive/catalog/RDS-2019-0030
+message("Loading USFS Riparian Areas")
+
+riparian_raw = rast(paste0(in_data_geospatial, "/USFS_riparian_WA/usfs_riparian_areas_wa.tif"))
+template = project(vect(study_area), crs(riparian_raw))
+rast_riparian = mask(crop(riparian_raw, template), template)
+values(rast_riparian) = ifelse(values(rast_riparian) == 1, 1, NA)
+plot(rast_riparian, col = "forestgreen")
+
+# Load National Hydrography Dataset ------------------------------------------------
+# https://www.sciencebase.gov/catalog/item/66f4485fd34e791ae5dfc58c
+message("Loading National Hydrography Dataset")
+
+nhd_gpkg = paste0(in_data_geospatial, "/NHDPLUS_H_1711_HU4_GPKG/NHDPLUS_H_1711_HU4_GPKG.gpkg")
+
+nhd_flowline = st_read(nhd_gpkg, "NHDFlowline")
+nhd_flowline = st_crop(nhd_flowline, st_transform(study_area, st_crs(nhd_flowline)))
+
+nhd_waterbody = st_read(nhd_gpkg, "NHDWaterbody")
+nhd_waterbody = st_crop(nhd_waterbody, st_transform(study_area, st_crs(nhd_waterbody)))
 
 # Load LEMMA GNN data ------------------------------------------------
 # The gradient nearest neighbor (GNN) data are multivariate, imputed maps of forest attributes based on 30-m Landsat imagery, Forest Inventory and Analysis data, and other geospatial data products, such as climate and topography.
@@ -250,6 +276,7 @@ message("Loading King County DNRP hydrological data")
 # "As Abood and others (2012) describe, the variable-width, or “dynamic,” buffer is likely more ecologically relevant because it accounts for factors that affect how a stream interacts and is influenced by the riparian zone. A recent literature review of riparian buffers done by King County (2019b) highlights the range of widths needed to maintain various functions (e.g., erosion control, shade). The review did not evaluate this concept of dynamic buffers, but the findings illustrate that riparian functions are maintained at different widths depending on a range of factors including but not limited to the size of stream, soil composition, vegetation type and age, etc.
 sf_ripfb = st_read(paste0(in_data_geospatial, "/King County DNRP/RiparianBuffer_basin.shp"), quiet = TRUE)
 sf_ripfb = sf_ripfb %>% filter(lengths(st_intersects(geometry, st_as_sf(study_area) %>% st_transform(st_crs(sf_ripfb)))) > 0)
+sf_ripfb = st_make_valid(sf_ripfb)
 
 # "The pattern, quality, and connectivity of riparian areas can also be really interesting and I’ve wondered how that may affect birds and other wildlife. For instance, in Seattle, the streams can have pretty decent but very narrow riparian areas because they are in canyons. In other suburban watersheds, the riparian areas can be vegetated but lack the tall evergreens or complex structure - they may be wider and even “greener” but not as functional? Maybe birds with small territories can fare OK in urban riparian areas?"
 
@@ -303,6 +330,7 @@ plot(rast_gedi_pavd20m)
 
 # Standardize raster names -----------------------------
 
+names(rast_riparian)             = "rast_riparian"
 names(rast_nlcd_landcover)       = "rast_nlcd_landcover"
 names(rast_nlcd_impervious)      = "rast_nlcd_impervious"
 names(rast_usfs_canopycover)     = "rast_usfs_canopycover"
@@ -318,16 +346,17 @@ names(rast_gedi_cover)           = "rast_gedi_cover"
 names(rast_gedi_height)          = "rast_gedi_height"
 names(rast_gedi_pavd5to10m)      = "rast_gedi_pavd5to10m"
 names(rast_gedi_pavd20m)         = "rast_gedi_pavd20m"
-names(rast_lemma_ba)     = "rast_lemma_ba"
-names(rast_lemma_denall) = "rast_lemma_denall"
-names(rast_lemma_dencon) = "rast_lemma_dencon"
-names(rast_lemma_denhw)  = "rast_lemma_denhw"
-names(rast_lemma_qmd)    = "rast_lemma_qmd"
-names(rast_lemma_ddi)    = "rast_lemma_ddi"
-names(rast_lemma_domts)  = "rast_lemma_domts"
-names(rast_lemma_age)    = "rast_lemma_age"
+names(rast_lemma_ba)             = "rast_lemma_ba"
+names(rast_lemma_denall)         = "rast_lemma_denall"
+names(rast_lemma_dencon)         = "rast_lemma_dencon"
+names(rast_lemma_denhw)          = "rast_lemma_denhw"
+names(rast_lemma_qmd)            = "rast_lemma_qmd"
+names(rast_lemma_ddi)            = "rast_lemma_ddi"
+names(rast_lemma_domts)          = "rast_lemma_domts"
+names(rast_lemma_age)            = "rast_lemma_age"
 
 rast_data = list(
+  rast_riparian             = rast_riparian,
   rast_nlcd_landcover       = rast_nlcd_landcover,
   rast_nlcd_impervious      = rast_nlcd_impervious,
   rast_usfs_canopycover     = rast_usfs_canopycover,
@@ -358,13 +387,25 @@ if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 for (n in names(rast_data)) {
   out_filepath = file.path(out_dir, paste0(n, ".tif"))
   writeRaster(rast_data[[n]], out_filepath, overwrite = TRUE)
-  message("Cached ", out_filepath)
+  message(crayon::green("Cached", out_filepath))
 }
 
 out_filepath = file.path(out_dir, "sf_ripfb.gpkg")
 st_write(sf_ripfb, out_filepath, append = FALSE)
-message("Cached ", out_filepath)
+message(crayon::green("Cached", out_filepath))
+
+out_filepath = file.path(out_dir, "sf_flowline.gpkg")
+st_write(nhd_flowline, out_filepath, append = FALSE)
+message(crayon::green("Cached", out_filepath))
+
+out_filepath = file.path(out_dir, "sf_waterbody.gpkg")
+st_write(nhd_waterbody, out_filepath, append = FALSE)
+message(crayon::green("Cached", out_filepath))
 
 out_filepath = file.path(out_dir, "sf_basins12d.gpkg")
 st_write(sf_basins12d, out_filepath, append = FALSE)
-message("Cached ", out_filepath)
+message(crayon::green("Cached", out_filepath))
+
+out_filepath = file.path(out_dir, "sf_studyarea.gpkg")
+st_write(study_area, out_filepath, append = FALSE)
+message(crayon::green("Cached", out_filepath))
