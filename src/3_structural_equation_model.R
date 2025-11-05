@@ -38,7 +38,7 @@ sapply(pkgs, function(pkg) {
   as.character(packageVersion(pkg))
 })
 
-buffer_radius = set_units(1000, m) # 5km site buffer (alternative: ~500 m insect emergence 90% flux range falloff)
+buffer_radius = set_units(150, m) # 5km site buffer (alternative: ~500 m insect emergence 90% flux range falloff)
 
 theme_set(theme_minimal())
 
@@ -234,21 +234,28 @@ if (overwrite_geospatial_site_data) {
     
     # 2. Buffer 50 m core emergence zone minimum from flowlines
     # TODO: Buffer 100m to include adjacent edge habitats, as below?
-    emergence_zone = st_make_valid(st_union(st_buffer(flowlines %>% st_transform(crs_standard), 50)))
+    emergence_zone = st_make_valid(st_union(st_buffer(flowlines %>% st_transform(crs_standard), 100)))
     
     # Remove waterbodies from emergence zone
     emergence_zone = st_difference(emergence_zone, st_union(waterbodies) %>% st_transform(st_crs(emergence_zone)))
     
-    # 3. Merge with USFS riparian areas buffered by 100 m to include adjacent edge habitats
+    interaction_zone = emergence_zone
+    
+    # 3. Merge with USFS riparian areas (if they exist) buffered by 100 m to include adjacent edge habitats
     site_riparian_usfs = transform_crop_and_mask(rast_data$rast_riparian, site_buffer, site_buffer)
     riparian_zone = as.polygons(site_riparian_usfs == 1, dissolve = TRUE)
-    area_usfs_riparian_zone = st_area(st_as_sf(riparian_zone))
-    riparian_zone_buffered = st_buffer(st_as_sf(riparian_zone), 100) 
     
-    # Remove waterbodies from riparian zone
-    riparian_zone_no_waterbodies = st_difference(riparian_zone_buffered, st_union(waterbodies) %>% st_transform(st_crs(riparian_zone)))
+    if (nrow(riparian_zone) > 0) {
+      area_usfs_riparian_zone = st_area(st_as_sf(riparian_zone))
+      riparian_zone_buffered = st_buffer(st_as_sf(riparian_zone), 100)
+      # Remove waterbodies from riparian zone
+      riparian_zone_no_waterbodies = st_difference(riparian_zone_buffered, st_union(waterbodies) %>% st_transform(st_crs(riparian_zone)))
+      # Merge with interaction zone
+      interaction_zone = st_union(interaction_zone, st_transform(riparian_zone_no_waterbodies, crs_standard))
+    } else {
+      area_usfs_riparian_zone = 0
+    }
     
-    interaction_zone = st_union(emergence_zone, st_transform(riparian_zone_no_waterbodies, crs_standard))
     interaction_zone = st_union(interaction_zone, waterbodies_buffer)
     
     # Only select nearest interaction zone
@@ -260,22 +267,23 @@ if (overwrite_geospatial_site_data) {
     max_dispersal_zone = st_union(st_buffer(flowlines, 550))
     interaction_zone = st_intersection(interaction_zone, st_transform(max_dispersal_zone, crs_standard))
     
-    # 5. Clip interaction zone by 5 km site buffer
+    # 5. Clip interaction zone by site buffer
     interaction_zone = st_intersection(interaction_zone, st_transform(site_buffer, crs_standard))
-    interaction_zone = st_union(st_cast(st_union(interaction_zone), "POLYGON"))
+    interaction_zone = st_cast(st_union(interaction_zone), "POLYGON")
+    interaction_zone = interaction_zone[which.max(st_area(interaction_zone))] # clean up small fragments
     area_interaction_zone = st_area(interaction_zone)
     
     # Inspect interaction zone and component layers
-    # mapview(site, col.regions = "purple", layer.name = paste0("site_", s_id)) +
-    #   mapview(site_pssb, col.regions = "orange") +
-    #   mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer") +
-    #   mapview(waterbodies, col.regions = "red") +
-    #   mapview(waterbodies_buffer, col.regions = "pink") +
-    #   mapview(flowlines, zcol = "f_code") +
-    #   mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
-    #   mapview(riparian_zone, col.regions = "yellow") +
-    #   mapview(emergence_zone, col.regions = "blue") +
-    #   mapview(interaction_zone, col.regions = "green")
+    mapview(site, col.regions = "purple", layer.name = paste0("site_", s_id)) +
+      mapview(site_pssb, col.regions = "orange") +
+      mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer") +
+      # mapview(waterbodies, col.regions = "red") +
+      # mapview(waterbodies_buffer, col.regions = "pink") +
+      mapview(flowlines, zcol = "f_code") +
+      mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
+      # mapview(riparian_zone, col.regions = "yellow") +
+      mapview(emergence_zone, col.regions = "blue") +
+      mapview(interaction_zone, col.regions = "green")
     
     # Roads
     # S1100 - Primary road 
@@ -301,6 +309,7 @@ if (overwrite_geospatial_site_data) {
     #   mapview(site_roads_paved, zcol = "mtfcc")
     
     # Density (m per square km) = total road length / buffer area (in m2) / 1e6
+    # TODO: THIS ASSUMES A CIRCULAR AREA, NOT THE VARIABLE INTERACTION ZONE!
     density_roads_paved = as.numeric(sum(st_length(site_roads_paved)) / ((pi * buffer_radius^2) / set_units(1, km^2)))
     density_roads_major = as.numeric(sum(st_length(site_roads_major)) / ((pi * buffer_radius^2) / set_units(1, km^2)))
     units(density_roads_paved) <- "m/km^2"
@@ -384,6 +393,8 @@ if (overwrite_geospatial_site_data) {
     
     ## Calculate composition for categorical NLCD land cover raster data
     
+    site_nlcd_landcover_site_buffer = transform_crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer, site_buffer)
+    names(site_nlcd_landcover_site_buffer) = "rast_nlcd_landcover_site_buffer"
     site_nlcd_landcover = transform_crop_and_mask(rast_data$rast_nlcd_landcover, site_buffer, interaction_zone)
     
     # mapview(as.factor(site_nlcd_landcover), col.region = nlcd_metadata %>%
@@ -460,6 +471,7 @@ if (overwrite_geospatial_site_data) {
       site_gedi_height_impmask,
       site_nlcd_landcover,
       site_nlcd_landcover_major,
+      site_nlcd_landcover_site_buffer,
       site_lemma_age,
       site_lemma_ba,
       site_lemma_denall,
@@ -536,8 +548,6 @@ if (overwrite_geospatial_site_data) {
 # Join land cover data with sites into a single table --------------------------------
 message("Joining data for all sites")
 
-stop()
-
 # Convert geospatial_site_data into a single table and pivot wider
 nlcd_summary = lapply(names(geospatial_site_data), function(id) {
   df = geospatial_site_data[[id]]$nlcd_cover$nlcd_cover_summary
@@ -560,7 +570,7 @@ additional_metrics = do.call(rbind, lapply(names(geospatial_site_data), function
     # dist_road_paved       = geospatial_site_data[[i]]$dist_road_paved,
     density_roads_paved   = geospatial_site_data[[i]]$density_roads_paved,
     density_roads_major   = geospatial_site_data[[i]]$density_roads_major,
-    # area_riparian_usfs    = geospatial_site_data[[i]]$area_riparian_usfs,
+    area_riparian_usfs    = geospatial_site_data[[i]]$area_riparian_usfs,
     area_interaction_zone = geospatial_site_data[[i]]$area_interaction_zone,
     stringsAsFactors = FALSE
   )
@@ -588,31 +598,6 @@ site_data = site_data %>% left_join(stats, by = "site_id")
 # Visualize geospatial data ---------------------------------------------------------------------
 message("Visualizing geospatial data")
 
-stop()
-
-# # Riparian zones
-# ggplot(site_data, aes(x = area_riparian_usfs / 1e6, y = area_riparian_kc / 1e6)) + geom_point() + labs(title = "Riparian area (thousands of sq m)")
-
-s = 5
-mapview(geospatial_site_data[[s]]$rasters$rast_riparian, col.regions = "forestgreen") +
-  # mapview(geospatial_site_data[[s]]$vectors$site_riparian_kc, col.regions = "cyan") +
-  mapview(geospatial_site_data[[s]]$vectors$flowlines)
-
-v_flow = geospatial_site_data[[s]]$vectors$flowlines[1]
-r_usfs = geospatial_site_data[[s]]$rasters$rast_riparian
-# v_kc = geospatial_site_data[[s]]$vectors$site_riparian_kc
-
-# r_usfs <- as.data.frame(r_usfs, xy = TRUE)
-# colnames(r_usfs) <- c("x", "y", "value")
-# 
-# ggplot() +
-#   # geom_raster(data = r_usfs, aes(x = x, y = y, fill = value)) +
-#   scale_fill_manual(values = "forestgreen", na.value = NA) +
-#   geom_sf(data = v_kc, fill = "cyan", color = NA) +
-#   geom_sf(data = v_flow, color = "blue") +
-#   coord_sf() +
-#   ggtitle(paste("Site", s))
-
 # Order sites by development intensity
 site_order = unique(site_data %>% arrange(desc(nlcd_developed_variable_intensity)) %>% pull(site_id))
 
@@ -637,23 +622,23 @@ ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
     title = paste0("NLCD land cover composition (", buffer_radius, " m buffer)")
   ) +
   scale_fill_manual(values = c(
-    "developed_variable_intensity"             = "#eb0000",
-    "developed_open_space"             = "#eb9999",
-    "forest"                = "#1c5f2c",
-    "wetlands"              = "#6c9fb8",
-    "agriculture"           = "#ead963",
-    "barren_land"           = "#b3ac9f",
-    "grassland_herbaceous"  = "#dde9af",
-    "open_water"            = "#466b9f",
-    "perennial_ice_snow"    = "#d1defa",
-    "shrub_scrub"           = "#af963c"
+    "developed_variable_intensity" = "#eb0000",
+    "developed_open_space"         = "#eb9999",
+    "forest"                       = "#1c5f2c",
+    "wetlands"                     = "#6c9fb8",
+    "agriculture"                  = "#ead963",
+    "barren_land"                  = "#b3ac9f",
+    "grassland_herbaceous"         = "#dde9af",
+    "open_water"                   = "#466b9f",
+    "perennial_ice_snow"           = "#d1defa",
+    "shrub_scrub"                  = "#af963c"
   )) +
   theme_minimal()
 
 # Visualize land cover for all sites
 
 sites_lc_df = bind_rows(
-  lapply(names(geospatial_site_data), function(site_id) {
+  lapply(names(geospatial_site_data), function(site_id) { # OR rast_nlcd_landcover (interaction zone only)
     df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover, xy = TRUE)
     value_col = names(df)[3]
     df = df %>% rename(value = all_of(value_col))  # rename for ggplot
@@ -661,7 +646,7 @@ sites_lc_df = bind_rows(
     df$class = nlcd_metadata[match(df$value, nlcd_metadata$id), "class"]
     return(df)
   })
-)
+) %>% mutate(site = factor(site, levels = site_order))
 present_levels = nlcd_metadata %>% filter(id %in% unique(sites_lc_df$value))
 
 # Order sites by decreasing amount of development
@@ -723,10 +708,18 @@ ggplot(sites_tcc_df, aes(x = x, y = y, fill = class)) + geom_tile() +
   ) +
   labs(title = paste0("USFS tree canopy cover (", buffer_radius, " m buffer)"), x = "", y = "", fill = "Cover %")
 
+# Area of interaction zones
+ggplot(site_data, aes(x = reorder(site_id, area_interaction_zone), y = area_interaction_zone)) + geom_col()
+hist(site_data$area_interaction_zone, breaks = 20)
+
+# Area of USFS riparian zones
+ggplot(site_data, aes(x = reorder(site_id, area_riparian_usfs), y = area_riparian_usfs)) + geom_col()
+hist(site_data$area_riparian_usfs, breaks = 20)
+
 ## Visualize relationships between raster summary stats
 
 # Site attributes (e.g. BIBI)
-ggplot(site_data, aes(x = rast_nlcd_impervious_sum, y = bibi)) +
+ggplot(site_data, aes(x = rast_nlcd_impervious_sum_proportion, y = bibi)) +
   geom_point() + geom_smooth(method = "lm") + geom_text_repel(aes(label = site_id)) 
 
 # # Comparing different rasters
@@ -833,15 +826,26 @@ setdiff(rip_deps, species_names$common_name)
 
 # Exclude certain sites from analysis ------------------------------------------------
 
+# Inspect total detections per site
+# total_detections_by_site = detections$long %>% group_by(site_id) %>%
+#   summarise(total_detections = sum(n_detections, na.rm = TRUE)) %>%
+#   arrange(desc(total_detections))
+# ggplot(total_detections_by_site, aes(x = reorder(site_id, total_detections), y = total_detections)) + geom_col()
+
 # Exclude sites 257 and 259 that are dominated by agriculture
-sites_to_exclude = c(257, 259)
+sites_to_exclude = c("257", "259")
 message("Excluding agricultural site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
 site_data = site_data %>% filter(!site_id %in% sites_to_exclude)
 detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
+
+# Exclude sites with incomplete surveys
 sites_to_exclude = setdiff(unique(site_data$site_id), unique(detections$long$site_id))
+sites_to_exclude = c(sites_to_exclude, "150") # ARU at site 150 destroyed by water damage
 message("Excluding incomplete survey site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
 site_data = site_data %>% filter(!site_id %in% sites_to_exclude)
 detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
+
+message("Retaining ", length(unique(site_data$site_id)), " sites")
 
 # Visualize joint data ----------------------------------------------------------------
 message("Visualizing joint data")
@@ -849,7 +853,7 @@ message("Visualizing joint data")
 presence_absence = detections$long %>% group_by(site_id, common_name) %>%
   summarise(presence = if_else(sum(n_detections, na.rm = TRUE) > 0, 1, 0), .groups = "drop")
 
-# Calculate richness of different groups
+# Calculate richness of different groups per site
 richness = presence_absence %>% group_by(site_id) %>% summarise(richness = sum(presence))
 richness_invert_et = presence_absence %>% filter(common_name %in% invertivores_eltontraits) %>%
   group_by(site_id) %>% summarise(richness_invert_et = sum(presence))
@@ -869,10 +873,25 @@ nmds_scores$site_id = rownames(nmds_scores)
 nmds_plot_data = nmds_scores %>% left_join(site_metadata, by = "site_id")
 species_scores = as.data.frame(scores(nmds, display = "species"))
 species_scores$species = rownames(species_scores)
-ggplot(nmds_plot_data %>% left_join(site_data, by = "site_id"), aes(NMDS1, NMDS2, color = nlcd_forest)) +
+
+ggplot(nmds_plot_data %>% left_join(site_data, by = "site_id"), aes(NMDS1, NMDS2, color = bibi)) +
+  geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species), color = "gray", size = 3, vjust = -0.5, check_overlap = TRUE) +
   geom_point(size = 3, alpha = 0.8) +
-  geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species),
-            color = "black", size = 3, check_overlap = TRUE)
+  geom_text(aes(label = site_id), vjust = -0.5, size = 3, color = "black") +
+  scale_color_continuous(type = "viridis") +
+  labs(color = "Impervious %")
+
+ggplot(species_scores, aes(x = 0, y = 0)) +
+  geom_segment(aes(xend = NMDS1, yend = NMDS2),
+               arrow = arrow(length = unit(0.25, "cm")),
+               color = "darkgray", alpha = 0.8) +
+  geom_text(aes(x = NMDS1, y = NMDS2, label = species),
+            color = "black", size = 3, vjust = -0.5, check_overlap = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray70") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray70") +
+  scale_x_continuous(limits = c(-2, 2)) +
+  scale_y_continuous(limits = c(-2, 2)) +
+  labs(title = "Species vectors")
 
 # Join with site data
 site_data = left_join(site_data, richness, by = "site_id")
@@ -881,9 +900,6 @@ site_data = left_join(site_data, richness_invert_avo, by = "site_id")
 site_data = left_join(site_data, richness_ripdep, by = "site_id")
 
 # Richness across AVONET guilds per site
-richness = presence_absence %>% group_by(site_id) %>% summarise(count = sum(presence), .groups = "drop")
-richness_invertivore = presence_absence %>% filter(common_name %in% invertivores_avonet) %>% group_by(site_id) %>%
-  summarise(count = sum(presence), .groups = "drop")
 richness_by_trophic_niche = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
   group_by(site_id, trophic_niche) %>% summarise(count = sum(presence), .groups = "drop")
 richness_by_primary_lifestyle = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
@@ -895,23 +911,57 @@ ggplot(richness_by_primary_lifestyle, aes(x = count, y = reorder(site_id, count)
 ggplot(richness_by_ripdep, aes(x = count, y = reorder(site_id, count), fill = ripdep)) + geom_col()
 
 # Richness as a function of different predictors
-ggplot(richness_invertivore %>% left_join(site_data, by = "site_id"), aes(x = rast_usfs_canopycover_sum, y = count)) + geom_point() + geom_smooth() +
-  labs(title = "Canopy cover")
+ggplot(site_data, aes(x = rast_usfs_canopycover_sum_proportion, y = richness_invert_avo)) + geom_point() + geom_smooth() +
+  labs(title = "Canopy cover") + geom_text_repel(aes(label = site_id)) 
 
-ggplot(richness_invertivore %>% left_join(site_data, by = "site_id"), aes(x = rast_nlcd_impervious_sum, y = count)) + geom_point() + geom_smooth() +
-  labs(title = "Local imperviousness")
+ggplot(site_data, aes(x = rast_nlcd_impervious_sum_proportion, y = richness_invert_avo)) + geom_point() + geom_smooth() +
+  labs(title = "Local imperviousness") + geom_text_repel(aes(label = site_id)) 
 
-ggplot(richness_invertivore %>% left_join(site_data, by = "site_id"), aes(x = basin_impervious, y = count)) + geom_point() + geom_smooth() +
-  labs(title = "Basin imperviousness")
+ggplot(site_data, aes(x = basin_impervious, y = richness_invert_avo)) + geom_point() + geom_smooth() +
+  labs(title = "Basin imperviousness") + geom_text_repel(aes(label = site_id))
 
-ggplot(richness_invertivore %>% left_join(site_data, by = "site_id"), aes(x = bibi, y = count)) + geom_point() + geom_smooth() +
-  labs(title = "BIBI")
+ggplot(site_data, aes(x = bibi, y = richness_invert_avo)) + geom_point() + geom_smooth() +
+  labs(title = "BIBI") + geom_text_repel(aes(label = site_id)) 
 
-ggplot(richness_invertivore %>% left_join(site_data, by = "site_id"), aes(x = (density_roads_paved), y = count)) + geom_point() + geom_smooth() +
-  labs(title = "Distance to road")
+ggplot(site_data, aes(x = (density_roads_paved), y = richness_invert_avo)) + geom_point() + geom_smooth() +
+  labs(title = "Density paved roads") + geom_text_repel(aes(label = site_id)) 
 
 mapview(site_data %>% select(site_id, richness_invert_avo), zcol = "richness_invert_avo")
 
+# Land cover visualization ordered by richness
+site_order = site_data %>% arrange(desc(richness_invert_avo)) %>% pull(site_id)
+
+sites_lc_df = bind_rows(
+  lapply(names(geospatial_site_data), function(site_id) {
+    # rast_nlcd_landcover (interaction zone only) OR rast_nlcd_landcover_site_buffer
+    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover, xy = TRUE)
+    value_col = names(df)[3]
+    df = df %>% rename(value = all_of(value_col))  # rename for ggplot
+    df$site <- site_id
+    df$class = nlcd_metadata[match(df$value, nlcd_metadata$id), "class"]
+    return(df)
+  })
+) %>% mutate(site = factor(site, levels = site_order))
+present_levels = nlcd_metadata %>% filter(id %in% unique(sites_lc_df$value))
+
+p = ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_tile() +
+  scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
+  facet_wrap(~site, scales = "free") +
+  theme_minimal() + theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank()) +
+  labs(title = paste0("Land cover by invert richness (descending)"), x = "", y = ""); print(p)
+
+sites_imp_df = bind_rows(
+  lapply(seq_along(geospatial_site_data), function(i) {
+    raster_to_df(geospatial_site_data[[i]]$rasters$rast_nlcd_impervious, names(geospatial_site_data)[i])
+  })
+) %>% mutate(site = factor(site, levels = site_order))
+
+p = ggplot(sites_imp_df, aes(x = x, y = y, fill = class)) + geom_tile() +
+  facet_wrap(~ site, scales = "free") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank()) +
+  labs(title = paste0("Imperviousness by invert richness (descending)"), x = "", y = ""); print(p)
+  
 # Richness of guilds as a function of...
 ggplot(left_join(richness_by_trophic_niche, site_data, by = "site_id"),
        aes(x = bibi, y = count, color = trophic_niche, fill = trophic_niche)) +
@@ -922,7 +972,7 @@ ggplot(left_join(richness_by_primary_lifestyle, site_data, by = "site_id"),
   geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
 
 ggplot(left_join(richness_by_primary_lifestyle, site_data, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
+       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
   geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
 
 ggplot(left_join(richness_by_ripdep, site_data, by = "site_id"),
@@ -930,13 +980,25 @@ ggplot(left_join(richness_by_ripdep, site_data, by = "site_id"),
   geom_point() + geom_smooth(aes(group = ripdep), method = "lm", se = FALSE)
 
 ggplot(left_join(richness_by_ripdep, site_data, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum, y = count, color = ripdep, fill = ripdep)) +
+       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = ripdep, fill = ripdep)) +
   geom_point() + geom_smooth(aes(group = ripdep), method = "lm", se = FALSE)
 
 # Wilson's Warbler presence/absence as a function of BIBI
 ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"), site_data, by = "site_id"),
        aes(x = bibi, y = presence)) +
   geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
+# Cache site data --------------------------------------------------------------------
+
+if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+out_filepath = file.path(out_cache_dir, paste0(
+  "site_data_", buffer_radius, "m_",
+  detections$threshold_classifier_score, "t_", 
+  detections$threshold_detected_days, "d.rds"))
+saveRDS(site_data, out_filepath)
+message(crayon::green("Cached", out_filepath))
+
+stop("Finished!")
 
 # Structural equation modeling -------------------------------------------------------
 
@@ -947,13 +1009,13 @@ candidate_vars = c(
   "basin"                = "basin_name",
   # "elevation"            = "elevation",
   "imperviousness_basin" = "basin_impervious",
-  "imperviousness_local" = "rast_nlcd_impervious_mean",
+  "imperviousness_local" = "rast_nlcd_impervious_sum_proportion",
   "abund_dev_varint"     = "nlcd_developed_variable_intensity",
   "abund_dev_opensp"     = "nlcd_developed_open_space",
   "abund_forest"         = "nlcd_forest",
   "abund_wetland"        = "nlcd_wetlands",
   "abund_openwater"      = "nlcd_open_water",
-  "canopy_usfs"          = "rast_usfs_canopycover_sum",
+  "canopy_usfs"          = "rast_usfs_canopycover_sum_proportion",
   "canopy_gedi"          = "rast_gedi_cover_sum",
   "height_landfire"      = "rast_landfire_treeheight_mean",
   "height_gedi"          = "rast_gedi_height_mean",
@@ -1079,9 +1141,11 @@ alt = psem( # parsimonious
 ); plot(alt); summary(alt)
 
 # TODO:
-# - riparian buffer width?
-# - woody debris? snags? understory vegetation?
+# - riparian zone area? floodplain (lateral) connectivity?
+# - tree density? woody debris? snags? understory vegetation?
 # - proximity to forest on landscape (basin) level?
+# - type of stream (perennial, intermittent)?
+# - year?
 
 stop("Arrived at workshop")
 

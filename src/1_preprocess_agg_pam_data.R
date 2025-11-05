@@ -7,8 +7,8 @@ path_prediction_data = "data/cache/0_aggregate_raw_pam_data/prediction_data.feat
 path_species_list = "data/pam/species_list.txt"
 path_avonet_traits = "data/traits/AVONET Supplementary dataset 1.xlsx"
 # Naive thresholds
-threshold_classifier_score = 0.75 # Naive classifier minumum confidence score threshold to assume binary presence/absence
-threshold_detected_days = 7 # Minimum number of unique days detected to retain species detections at a site
+threshold_classifier_score = 0.95 # Naive classifier minumum confidence score threshold to assume binary presence/absence
+threshold_detected_days = 5 # Minimum number of unique days detected to retain species detections at a site
 # Outputs:
 out_detect_hist_data = "data/cache/1_preprocess_agg_pam_data/detections.rds"
 
@@ -157,4 +157,4 @@ detect_hist_data = list(
 
 if (!dir.exists(dirname(out_detect_hist_data))) dir.create(dirname(out_detect_hist_data), recursive = TRUE)
 saveRDS(detect_hist_data, out_detect_hist_data)
-message("Cached ", out_detect_hist_data)
+message(crayon::green("Cached ", out_detect_hist_data))
