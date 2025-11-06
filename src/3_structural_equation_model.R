@@ -38,7 +38,7 @@ sapply(pkgs, function(pkg) {
   as.character(packageVersion(pkg))
 })
 
-buffer_radius = set_units(150, m) # 5km site buffer (alternative: ~500 m insect emergence 90% flux range falloff)
+buffer_radius = set_units(550, m) # 5km site buffer (alternative: ~500 m insect emergence 90% flux range falloff)
 
 theme_set(theme_minimal())
 
@@ -216,6 +216,8 @@ if (overwrite_geospatial_site_data) {
     
     # mapview(flowlines, zcol = "f_code")
     
+    f_code = flowlines$f_code[st_nearest_feature(site, flowlines)]
+    
     # NOTE: Intermittent streams (46003) are sampled
     
     # Buffer waterbodies by 100m
@@ -258,6 +260,11 @@ if (overwrite_geospatial_site_data) {
     
     interaction_zone = st_union(interaction_zone, waterbodies_buffer)
     
+    # EDIT: Buffer the flowlines by 550, not 50 or 100
+    # buffy = st_make_valid(st_union(st_buffer(flowlines %>% st_transform(crs_standard), 550)))
+    # interaction_zone = st_union(interaction_zone, buffy)
+    # interaction_zone = st_difference(interaction_zone, st_union(waterbodies) %>% st_transform(st_crs(interaction_zone)))
+    
     # Only select nearest interaction zone
     interaction_zone = st_cast(interaction_zone, "POLYGON")
     nearest_interaction_zone = st_nearest_feature(st_transform(site, crs_standard), interaction_zone)
@@ -266,6 +273,8 @@ if (overwrite_geospatial_site_data) {
     # 4. Clip interaction zone by 550m buffer from flowline (90% dispersal distance)
     max_dispersal_zone = st_union(st_buffer(flowlines, 550))
     interaction_zone = st_intersection(interaction_zone, st_transform(max_dispersal_zone, crs_standard))
+    # EDIT: Retain the full riparian zone
+    interaction_zone = st_union(interaction_zone, st_transform(riparian_zone_no_waterbodies, crs_standard))
     
     # 5. Clip interaction zone by site buffer
     interaction_zone = st_intersection(interaction_zone, st_transform(site_buffer, crs_standard))
@@ -274,16 +283,16 @@ if (overwrite_geospatial_site_data) {
     area_interaction_zone = st_area(interaction_zone)
     
     # Inspect interaction zone and component layers
-    mapview(site, col.regions = "purple", layer.name = paste0("site_", s_id)) +
-      mapview(site_pssb, col.regions = "orange") +
-      mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer") +
-      # mapview(waterbodies, col.regions = "red") +
-      # mapview(waterbodies_buffer, col.regions = "pink") +
-      mapview(flowlines, zcol = "f_code") +
-      mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
-      # mapview(riparian_zone, col.regions = "yellow") +
-      mapview(emergence_zone, col.regions = "blue") +
-      mapview(interaction_zone, col.regions = "green")
+    # mapview(site, col.regions = "purple", layer.name = paste0("site_", s_id)) +
+    #   mapview(site_pssb, col.regions = "orange") +
+    #   mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer") +
+    #   mapview(waterbodies, col.regions = "red") +
+    #   mapview(waterbodies_buffer, col.regions = "pink") +
+    #   mapview(flowlines, zcol = "f_code") +
+    #   mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
+    #   mapview(riparian_zone, col.regions = "yellow") +
+    #   mapview(emergence_zone, col.regions = "blue") +
+    #   mapview(interaction_zone, col.regions = "green")
     
     # Roads
     # S1100 - Primary road 
@@ -309,11 +318,10 @@ if (overwrite_geospatial_site_data) {
     #   mapview(site_roads_paved, zcol = "mtfcc")
     
     # Density (m per square km) = total road length / buffer area (in m2) / 1e6
-    # TODO: THIS ASSUMES A CIRCULAR AREA, NOT THE VARIABLE INTERACTION ZONE!
-    density_roads_paved = as.numeric(sum(st_length(site_roads_paved)) / ((pi * buffer_radius^2) / set_units(1, km^2)))
-    density_roads_major = as.numeric(sum(st_length(site_roads_major)) / ((pi * buffer_radius^2) / set_units(1, km^2)))
-    units(density_roads_paved) <- "m/km^2"
-    units(density_roads_major) <- "m/km^2"
+    density_roads_paved = sum(st_length(site_roads_paved)) / area_interaction_zone
+    density_roads_major = sum(st_length(site_roads_major)) / area_interaction_zone
+    density_roads_paved = set_units(density_roads_paved, "m/km^2")
+    density_roads_major = set_units(density_roads_major, "m/km^2")
     
     ## Calculate stats for continuous raster data
     
@@ -518,6 +526,7 @@ if (overwrite_geospatial_site_data) {
         "nlcd_cover_summary" = cover_summary
       ),
       vectors = vectors,
+      f_code = f_code,
       edge_density = edge_density,
       aggregation = aggregation,
       tree_species_richness = tree_species_richness,
@@ -563,6 +572,7 @@ additional_metrics = do.call(rbind, lapply(names(geospatial_site_data), function
   print(i)
   data.frame(
     site_id               = i,
+    f_code                = geospatial_site_data[[i]]$f_code,
     edge_density          = geospatial_site_data[[i]]$edge_density,
     aggregation           = geospatial_site_data[[i]]$aggregation,
     tree_species_richness = geospatial_site_data[[i]]$tree_species_richness,
@@ -852,6 +862,8 @@ message("Visualizing joint data")
 
 presence_absence = detections$long %>% group_by(site_id, common_name) %>%
   summarise(presence = if_else(sum(n_detections, na.rm = TRUE) > 0, 1, 0), .groups = "drop")
+
+# TODO: Rarefied species richness?
 
 # Calculate richness of different groups per site
 richness = presence_absence %>% group_by(site_id) %>% summarise(richness = sum(presence))
