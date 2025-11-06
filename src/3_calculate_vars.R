@@ -12,7 +12,7 @@ in_path_species_list    = "data/pam/species_list.txt"
 in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
 in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
 # Outputs:
-out_cache_dir = "data/cache/3_structural_equation_model"
+out_cache_dir = "data/cache/3_calculate_vars"
 
 # Load required packages (automatically install any missing) -------------------------
 pkgs = c(
@@ -537,12 +537,6 @@ for (s in 1:nrow(sites_aru)) {
   )
   pb$tick()
 }
-
-# Cache results
-if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
-out_filepath = file.path(out_cache_dir, "geospatial_site_data.rds")
-saveRDS(geospatial_site_data, out_filepath)
-message(crayon::green("Cached", out_filepath))
 
 # Join land cover data with sites into a single table --------------------------------
 message("Joining data for all sites")
