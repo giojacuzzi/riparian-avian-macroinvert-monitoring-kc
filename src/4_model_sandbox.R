@@ -7,7 +7,7 @@ library(mapview)
 library(piecewiseSEM)
 theme_set(theme_minimal())
 
-in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.75.rds" # detections_calibrated_0.75.rds
+in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 in_path_species_list    = "data/pam/species_list.txt"
 in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
 in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
@@ -196,7 +196,8 @@ sp_apriori = c(
   "violet-green swallow",
   "western tanager",
   "yellow-rumped warbler",
-  # "merlin",
+  "merlin",
+  "swainson's thrush",
   # TODO: https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.3148
   "black-headed grosbeak"
   # "song sparrow"
@@ -408,6 +409,9 @@ ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
 ggplot(left_join(presence_absence %>% filter(common_name == "violet-green swallow"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
+ggplot(left_join(presence_absence %>% filter(common_name == "pacific wren"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
 ggplot(left_join(presence_absence %>% filter(common_name == "swainson's thrush"), site_data_reach, by = "site_id"),

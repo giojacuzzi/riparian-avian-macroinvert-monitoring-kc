@@ -7,7 +7,7 @@ path_prediction_data = "data/cache/0_aggregate_raw_pam_data/prediction_data.feat
 path_species_list = "data/pam/species_list.txt"
 path_avonet_traits = "data/traits/AVONET Supplementary dataset 1.xlsx"
 # Naive thresholds
-threshold_min_classifier_score = 0.75 # Naive classifier minimum confidence score threshold to assume binary presence/absence. # "For most false-positive models in our study, using a mid-range threshold of 0.50 or above generally yielded stable estimates." (Katsis et al. 2025)
+threshold_min_classifier_score = 0.5 # Naive classifier minimum confidence score threshold to assume binary presence/absence. # "For most false-positive models in our study, using a mid-range threshold of 0.50 or above generally yielded stable estimates." (Katsis et al. 2025)
 threshold_min_detected_days = 2 # Minimum number of unique days detected to retain species detections at a site
 # Classifier calibration (Platt scaling)
 path_validation_data = "/Users/giojacuzzi/Library/CloudStorage/GoogleDrive-giojacuzzi@gmail.com/My Drive/Research/Projects/C5 - Riparian avian macroinvert monitoring/validations" # annotated Raven Pro selection tables organized by [common_name]/[file].selections.txt
@@ -100,7 +100,7 @@ if (use_platt_scaling) {
     message("  PR-AUC ", round(auc_pr,3), ", ROC-AUC ", round(auc_roc,3))
     
     # Perform Platt scaling to determine threshold for desired probability of true positive
-    threshold = Inf # default threshold is infinitie (i.e. do not retain detections unless a species is validated)
+    threshold = Inf # default threshold is infinite (i.e. do not retain detections unless a species is validated)
     precision_threshold <- recall_threshold <- precision_tmin <- recall_tmin <- NA
     model_warning = FALSE
     tryCatch(
@@ -188,6 +188,20 @@ if (use_platt_scaling) {
         stop(crayon::red("ERROR", conditionMessage(e)))
       }
     )
+    
+    # Enforce minimum threshold for classes with no negatives in validation data
+    if (label %in% c(
+      "swainson's thrush",
+      "black-throated gray warbler",
+      "hammond's flycatcher",
+      "hutton's vireo",
+      "northern flicker",
+      "pacific wren",
+      "pacific-slope flycatcher",
+      "violet-green swallow"
+    )) {
+      threshold = threshold_min_classifier_score
+    }
     
     calibration_results = rbind(calibration_results, data.frame(
       common_name   = label,
