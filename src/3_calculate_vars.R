@@ -2,15 +2,11 @@
 # Load ARU and PSSB site locations, calculate all site covariates from land cover data
 #
 # Inputs:
-overwrite_geospatial_site_data = TRUE
+overwrite_geospatial_site_data = FALSE
 in_path_site_metadata   = "data/site_metadata.csv"
 in_path_pssb_data       = "data/raw/pssb/ScoresByYear.csv"
 in_path_nlcd_metadata   = "data/raw/nlcd_metadata.csv"
-in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections.rds"
 in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"
-in_path_species_list    = "data/pam/species_list.txt"
-in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
-in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
 # Outputs:
 out_cache_dir = "data/cache/3_calculate_vars"
 
@@ -37,7 +33,7 @@ sapply(pkgs, function(pkg) {
   as.character(packageVersion(pkg))
 })
 
-buffer_radius = set_units(550, m) # 5km site buffer (alternative: ~500 m insect emergence 90% flux range falloff)
+buffer_radius = set_units(5000, m) # 5km site buffer (alternative: ~550 m insect emergence 90% flux range falloff)
 
 theme_set(theme_minimal())
 
@@ -721,275 +717,10 @@ ggplot(site_data, aes(x = rast_nlcd_impervious_sum_proportion, y = bibi)) +
 #   geom_point() + geom_abline(intercept = 0, slope = 1) +
 #   geom_smooth(method = "lm") + geom_text_repel(aes(label = site_id))
 
-# Load species detection history data ------------------------------------------------
-message("Loading species detection history data")
-
-# Load species detection history data
-detections = readRDS(in_cache_detections)
-detections$long$common_name = tolower(detections$long$common_name)
-detections$wide$common_name = tolower(detections$wide$common_name)
-
-species_names = read_lines(in_path_species_list) %>% as_tibble() %>%
-  separate(value, into = c("scientific_name", "common_name"), sep = "_") %>% mutate(
-    common_name = tolower(common_name), scientific_name = tolower(scientific_name)
-  ) %>% filter(common_name %in% sort(unique(detections$long$common_name)))
-
-# TODO: assess adequacy of sampling effort to detect total species richness via sample size-based rarefaction and extrapolation sampling curves for species richness (iNEXT)? Quantify sample completeness to determine the estimated proportion of species detected from the predicted species pool by plotting sample coverage with respect to the number of sampling units.
-if (FALSE) {
-  library(iNEXT)
-  
-  zero_detections <- detections$long %>%
-    group_by(common_name) %>%
-    summarise(total_detections = sum(n_detections, na.rm = TRUE)) %>%
-    filter(total_detections == 0) %>%
-    pull(common_name)
-  
-  detections_list <- detections$wide %>%
-    group_split(site_id) %>%                                 # Split by site
-    set_names(unique(detections$wide$site_id)) %>%            # Name list elements by site_id
-    map(~ {
-      df <- .x %>%
-        select(-site_id) %>%                                  # Remove site_id column
-        tibble::column_to_rownames("common_name")             # Set rownames as common_name
-      return(df)
-    })
-  detections_incidence <- detections_list %>%
-    map(~ as.data.frame((.x > 0) * 1))
-  
-  out.raw <- iNEXT(detections_incidence, q = 0, datatype="incidence_raw", endpoint=100)
-  out.raw
-  ggiNEXT(out.raw, type = 1) # sample size-based rarefaction/extrapolation curve
-  ggiNEXT(out.raw, type = 2) # sample completeness curve
-  ggiNEXT(out.raw, type = 3) # coverage-based rarefaction/extrapolation curve
-  
-}
-
-# Load AVONET species trait metadata
-avonet = readxl::read_xlsx(in_path_avonet_traits, sheet = "AVONET2_eBird") %>%
-  janitor::clean_names() %>%
-  rename(scientific_name = species2, family = family2, order = order2) %>%
-  mutate(scientific_name = tolower(scientific_name)) %>%
-  filter(scientific_name %in% species_names$scientific_name) %>%
-  select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
-
-# Load EltonTraits 1.0 species trait metadata
-eltontraits = read_csv(in_path_elton_traits) %>% clean_names() %>% rename(scientific_name = scientific, common_name = english) %>%
-  mutate(
-    common_name = str_to_lower(common_name), scientific_name = str_to_lower(scientific_name)
-  ) %>% mutate(
-    common_name = case_when(
-      common_name == "american treecreeper" ~ "brown creeper",
-      common_name == "winter wren"          ~ "pacific wren",
-      common_name == "black-throated grey warbler" ~ "black-throated gray warbler",
-      common_name == "common teal" ~ "green-winged teal",
-      TRUE ~ common_name   # keep all others unchanged
-    )
-  ) %>% filter(common_name %in% species_names$common_name) %>%
-  select(common_name, diet_inv, diet_5cat, starts_with("for_strat"), body_mass_value)
-
-setdiff(species_names$common_name, eltontraits %>% filter(common_name %in% species_names$common_name) %>% pull(common_name))
-
-# Add both trait data sources to species metadata
-species_metadata = left_join(species_names, avonet, by = "scientific_name")
-species_metadata = left_join(species_metadata, eltontraits, by = "common_name")
-
-# NOTE: Very few aerial specialist foragers
-eltontraits %>% filter(for_strat_aerial >= 10) %>% pull(common_name)
-
-# Get AVONET invertivore community subset
-# "Invertivore = species obtaining at least 60% of food resources from invertebrates in terrestrial systems, including insects, worms, arachnids, etc."
-invertivores_avonet = species_metadata %>% filter(trophic_niche == "Invertivore") %>% pull(common_name)
-# "Aquatic Predator = species obtaining at least 60% of food resources from vertebrate and invertebrate animals in aquatic systems, including fish, crustacea, molluscs, etc."
-species_metadata %>% filter(trophic_niche == "Aquatic predator") %>% pull(common_name)
-
-# Get Eltontraits invertivore community subset
-# "Percent use of: Invertebrates-general, aquatic invertebrates, shrimp, krill, squid, crustacaeans, molluscs, cephalapod, polychaetes, gastropods, orthoptera, terrestrial Invertebrates, ground insects, insect larvae, worms, orthopterans, flying insects"
-invertivores_eltontraits_dietGt10 = species_metadata %>% filter(diet_inv >= 10) %>% pull(common_name) # nearly all species
-# "Assignment to the dominant among five diet categories based on the summed scores of constituent individual diets."
-invertivores_eltontraits = species_metadata %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name)
-
-setdiff(invertivores_eltontraits, invertivores_avonet)
-setdiff(invertivores_avonet, invertivores_eltontraits)
-
-# Load Stevan riparian dependent/obligate list
-riparian_dep = read_csv("data/processed/Species_Habitat_List.csv") %>% clean_names() %>%
-  rename(common_name = species) %>% mutate(common_name = tolower(common_name))
-rip_deps = riparian_dep %>% filter(riparian_dependent_breeding == "Yes" | riparian_obligate_breeding == "Yes") %>% pull(common_name)
-
-setdiff(rip_deps, species_names$common_name)
-
-# Exclude certain sites from analysis ------------------------------------------------
-
-# Inspect total detections per site
-# total_detections_by_site = detections$long %>% group_by(site_id) %>%
-#   summarise(total_detections = sum(n_detections, na.rm = TRUE)) %>%
-#   arrange(desc(total_detections))
-# ggplot(total_detections_by_site, aes(x = reorder(site_id, total_detections), y = total_detections)) + geom_col()
-
-# Exclude sites 257 and 259 that are dominated by agriculture
-sites_to_exclude = c("257", "259")
-message("Excluding agricultural site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
-site_data = site_data %>% filter(!site_id %in% sites_to_exclude)
-detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
-
-# Exclude sites with incomplete surveys
-sites_to_exclude = setdiff(unique(site_data$site_id), unique(detections$long$site_id))
-sites_to_exclude = c(sites_to_exclude, "150") # ARU at site 150 destroyed by water damage
-message("Excluding incomplete survey site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
-site_data = site_data %>% filter(!site_id %in% sites_to_exclude)
-detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
-
-message("Retaining ", length(unique(site_data$site_id)), " sites")
-
-# Visualize joint data ----------------------------------------------------------------
-message("Visualizing joint data")
-
-presence_absence = detections$long %>% group_by(site_id, common_name) %>%
-  summarise(presence = if_else(sum(n_detections, na.rm = TRUE) > 0, 1, 0), .groups = "drop")
-
-# TODO: Rarefied species richness?
-
-# Calculate richness of different groups per site
-richness = presence_absence %>% group_by(site_id) %>% summarise(richness = sum(presence))
-richness_invert_et = presence_absence %>% filter(common_name %in% invertivores_eltontraits) %>%
-  group_by(site_id) %>% summarise(richness_invert_et = sum(presence))
-richness_invert_avo = presence_absence %>% filter(common_name %in% invertivores_avonet) %>%
-  group_by(site_id) %>% summarise(richness_invert_avo = sum(presence))
-richness_ripdep = presence_absence %>% filter(common_name %in% rip_deps) %>%
-  group_by(site_id) %>% summarise(richness_ripdep = sum(presence))
-
-## NMDS visualization
-library(vegan)
-nmds = metaMDS(presence_absence %>%
-          pivot_wider(names_from = common_name, values_from = presence, values_fill = 0) %>%
-          column_to_rownames("site_id"), distance = "bray", k = 3, trymax = 100)
-nmds$stress # stress > 0.2 suggests weak fit
-nmds_scores = as.data.frame(scores(nmds, display = "sites"))
-nmds_scores$site_id = rownames(nmds_scores)
-nmds_plot_data = nmds_scores %>% left_join(site_metadata, by = "site_id")
-species_scores = as.data.frame(scores(nmds, display = "species"))
-species_scores$species = rownames(species_scores)
-
-ggplot(nmds_plot_data %>% left_join(site_data, by = "site_id"), aes(NMDS1, NMDS2, color = bibi)) +
-  geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species), color = "gray", size = 3, vjust = -0.5, check_overlap = TRUE) +
-  geom_point(size = 3, alpha = 0.8) +
-  geom_text(aes(label = site_id), vjust = -0.5, size = 3, color = "black") +
-  scale_color_continuous(type = "viridis") +
-  labs(color = "Impervious %")
-
-ggplot(species_scores, aes(x = 0, y = 0)) +
-  geom_segment(aes(xend = NMDS1, yend = NMDS2),
-               arrow = arrow(length = unit(0.25, "cm")),
-               color = "darkgray", alpha = 0.8) +
-  geom_text(aes(x = NMDS1, y = NMDS2, label = species),
-            color = "black", size = 3, vjust = -0.5, check_overlap = TRUE) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray70") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray70") +
-  scale_x_continuous(limits = c(-2, 2)) +
-  scale_y_continuous(limits = c(-2, 2)) +
-  labs(title = "Species vectors")
-
-# Join with site data
-site_data = left_join(site_data, richness, by = "site_id")
-site_data = left_join(site_data, richness_invert_et, by = "site_id")
-site_data = left_join(site_data, richness_invert_avo, by = "site_id")
-site_data = left_join(site_data, richness_ripdep, by = "site_id")
-
-# Richness across AVONET guilds per site
-richness_by_trophic_niche = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
-  group_by(site_id, trophic_niche) %>% summarise(count = sum(presence), .groups = "drop")
-richness_by_primary_lifestyle = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
-  group_by(site_id, primary_lifestyle) %>% summarise(count = sum(presence), .groups = "drop")
-richness_by_ripdep = presence_absence %>% mutate(ripdep = common_name %in% c(rip_deps)) %>% group_by(site_id, ripdep) %>% summarize(count = sum(presence))
-
-ggplot(richness_by_trophic_niche, aes(x = count, y = reorder(site_id, count), fill = trophic_niche)) + geom_col()
-ggplot(richness_by_primary_lifestyle, aes(x = count, y = reorder(site_id, count), fill = primary_lifestyle)) + geom_col()
-ggplot(richness_by_ripdep, aes(x = count, y = reorder(site_id, count), fill = ripdep)) + geom_col()
-
-# Richness as a function of different predictors
-ggplot(site_data, aes(x = rast_usfs_canopycover_sum_proportion, y = richness_invert_avo)) + geom_point() + geom_smooth() +
-  labs(title = "Canopy cover") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data, aes(x = rast_nlcd_impervious_sum_proportion, y = richness_invert_avo)) + geom_point() + geom_smooth() +
-  labs(title = "Local imperviousness") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data, aes(x = basin_impervious, y = richness_invert_avo)) + geom_point() + geom_smooth() +
-  labs(title = "Basin imperviousness") + geom_text_repel(aes(label = site_id))
-
-ggplot(site_data, aes(x = bibi, y = richness_invert_avo)) + geom_point() + geom_smooth() +
-  labs(title = "BIBI") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data, aes(x = (density_roads_paved), y = richness_invert_avo)) + geom_point() + geom_smooth() +
-  labs(title = "Density paved roads") + geom_text_repel(aes(label = site_id)) 
-
-mapview(site_data %>% select(site_id, richness_invert_avo), zcol = "richness_invert_avo")
-
-# Land cover visualization ordered by richness
-site_order = site_data %>% arrange(desc(richness_invert_avo)) %>% pull(site_id)
-
-sites_lc_df = bind_rows(
-  lapply(names(geospatial_site_data), function(site_id) {
-    # rast_nlcd_landcover (interaction zone only) OR rast_nlcd_landcover_site_buffer
-    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover, xy = TRUE)
-    value_col = names(df)[3]
-    df = df %>% rename(value = all_of(value_col))  # rename for ggplot
-    df$site <- site_id
-    df$class = nlcd_metadata[match(df$value, nlcd_metadata$id), "class"]
-    return(df)
-  })
-) %>% mutate(site = factor(site, levels = site_order))
-present_levels = nlcd_metadata %>% filter(id %in% unique(sites_lc_df$value))
-
-p = ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_tile() +
-  scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
-  facet_wrap(~site, scales = "free") +
-  theme_minimal() + theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank()) +
-  labs(title = paste0("Land cover by invert richness (descending)"), x = "", y = ""); print(p)
-
-sites_imp_df = bind_rows(
-  lapply(seq_along(geospatial_site_data), function(i) {
-    raster_to_df(geospatial_site_data[[i]]$rasters$rast_nlcd_impervious, names(geospatial_site_data)[i])
-  })
-) %>% mutate(site = factor(site, levels = site_order))
-
-p = ggplot(sites_imp_df, aes(x = x, y = y, fill = class)) + geom_tile() +
-  facet_wrap(~ site, scales = "free") +
-  scale_fill_viridis_c(option = "inferno") +
-  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank()) +
-  labs(title = paste0("Imperviousness by invert richness (descending)"), x = "", y = ""); print(p)
-  
-# Richness of guilds as a function of...
-ggplot(left_join(richness_by_trophic_niche, site_data, by = "site_id"),
-       aes(x = bibi, y = count, color = trophic_niche, fill = trophic_niche)) +
-  geom_point() + geom_smooth(aes(group = trophic_niche), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_primary_lifestyle, site_data, by = "site_id"),
-       aes(x = bibi, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
-  geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_primary_lifestyle, site_data, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
-  geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_ripdep, site_data, by = "site_id"),
-       aes(x = bibi, y = count, color = ripdep, fill = ripdep)) +
-  geom_point() + geom_smooth(aes(group = ripdep), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_ripdep, site_data, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = ripdep, fill = ripdep)) +
-  geom_point() + geom_smooth(aes(group = ripdep), method = "lm", se = FALSE)
-
-# Wilson's Warbler presence/absence as a function of BIBI
-ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"), site_data, by = "site_id"),
-       aes(x = bibi, y = presence)) +
-  geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
 # Cache site data --------------------------------------------------------------------
 
 if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
 out_filepath = file.path(out_cache_dir, paste0(
-  "site_data_", buffer_radius, "m_",
-  detections$threshold_classifier_score, "t_", 
-  detections$threshold_detected_days, "d.rds"))
+  "NEW_site_data_", buffer_radius, "m.rds"))
 saveRDS(site_data, out_filepath)
 message(crayon::green("Cached", out_filepath))
