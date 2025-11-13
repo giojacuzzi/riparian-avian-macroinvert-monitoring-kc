@@ -169,7 +169,10 @@ sp_ripasso = species_guilds %>% filter(rip_asso_rich2002 == "X") %>% pull(common
 # Riparian obligats
 sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common_name) %>% sort()
 
-sp_apriori = c( # A priori aquatic insect predators
+# A priori aquatic insect foragers (either primary or opportunistically)
+# - Birds of the World
+# - 
+sp_apriori = c(
   "american dipper",
   "belted kingfisher",
   "common yellowthroat",
@@ -192,7 +195,11 @@ sp_apriori = c( # A priori aquatic insect predators
   "vaux's swift",
   "violet-green swallow",
   "western tanager",
-  "yellow-rumped warbler"
+  "yellow-rumped warbler",
+  # "merlin",
+  # TODO: https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.3148
+  "black-headed grosbeak"
+  # "song sparrow"
 ) %>% sort()
 
 # Invertivores that are reported to forage on aquatic insects / NOT bark foragers
@@ -406,6 +413,12 @@ ggplot(left_join(presence_absence %>% filter(common_name == "violet-green swallo
 ggplot(left_join(presence_absence %>% filter(common_name == "swainson's thrush"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
+ggplot(left_join(presence_absence %>% filter(common_name == "black-headed grosbeak"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
+ggplot(left_join(presence_absence %>% filter(common_name == "song sparrow"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
 # Structural equation modeling -----------------------------------------------------------------------------
 
 # Calculate pairwise collinearity among predictors
@@ -495,9 +508,12 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   m_aqinv = glm(rich_aqinv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
   sem = psem(m_bibi, m_aqinv); plot(sem); print(summary(sem))
   
+  # Use forest cover in lieu of canopy
   {
-    m_aerialfoliage = glm(rich_aerialfoliage ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_aerialfoliage); plot(sem); print(summary(sem))
+    # m_aerialfoliage = glm(rich_aerialfoliage ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(
+      lm(bibi ~ forest_reach + imp_basin, d), 
+      glm(rich_apriori ~ bibi + forest_reach + imp_reach, d, family = poisson)); plot(sem); print(summary(sem))
   }
   
   # Check overdispersion -- if overdispersed, fit negative binomial
