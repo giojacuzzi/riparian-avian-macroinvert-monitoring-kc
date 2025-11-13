@@ -1,7 +1,13 @@
+library(tidyverse)
+library(ggrepel)
+library(janitor)
+library(sf)
 library(DHARMa)
+library(mapview)
+library(piecewiseSEM)
 theme_set(theme_minimal())
 
-in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
+in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.75.rds" # detections_calibrated_0.75.rds
 in_path_species_list    = "data/pam/species_list.txt"
 in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
 in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
@@ -140,6 +146,9 @@ sp_invert_primary = species_metadata %>% filter(diet_5cat == "Invertebrate") %>%
 sp_g_aerial_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
   filter(common_name %in% sp_invert) %>% pull(common_name)
 
+sp_g_aerial_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
+  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
+
 # Foraging guild: Foliage gleaners (e.g. warblers, vireos)
 # typically capture insects located on vegetation or woody substrate
 sp_g_foliage_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
@@ -192,6 +201,8 @@ sp_aqinv = c(sp_invert_primary[!sp_invert_primary %in% c(sp_g_bark_invert)],
              "belted kingfisher"
 ) %>% sort()
 
+sp_aerialfoliage = sp_invert_primary[!sp_invert_primary %in% c(sp_g_bark_invert, sp_g_ground_invert)] %>% sort()
+
 # Riparian associate invertivores
 sp_ripasso_inv = c(sp_invert[sp_invert %in% c(sp_ripasso)])
 sp_ripobl_inv  = c(sp_invert[sp_invert %in% c(sp_ripobl)])
@@ -238,11 +249,13 @@ site_group_richness =  presence_absence %>%
     rich_inv_primary  = sum(presence[common_name %in% sp_invert_primary]),
     # Foraging guilds
     rich_aerial_inv  = sum(presence[common_name %in% sp_g_aerial_invert]),
+    rich_aerial_inv_primary  = sum(presence[common_name %in% sp_g_aerial_invert_primary]),
     rich_foliage_inv = sum(presence[common_name %in% sp_g_foliage_invert]),
     rich_ground_inv  = sum(presence[common_name %in% sp_g_ground_invert]),
     rich_bark_inv    = sum(presence[common_name %in% sp_g_bark_invert]),
     rich_apriori        = sum(presence[common_name %in% sp_apriori]),
     rich_aqinv       = sum(presence[common_name %in% sp_aqinv]),
+    rich_aerialfoliage = sum(presence[common_name %in% sp_aerialfoliage]),
     # Riparian habitat association
     rich_ripasso_inv     = sum(presence[common_name %in% sp_ripasso_inv]),
     rich_ripasso     = sum(presence[common_name %in% sp_ripasso]),
@@ -335,8 +348,11 @@ ggplot(site_data_reach, aes(x = rast_nlcd_impervious_sum_proportion, y = rich_in
 ggplot(site_data_basin, aes(x = rast_nlcd_impervious_sum_proportion, y = rich_inv)) + geom_point() + geom_smooth() +
   labs(title = "Basin imperviousness") + geom_text_repel(aes(label = site_id))
 
-ggplot(site_data_reach, aes(x = bibi, y = rich_inv)) + geom_point() + geom_smooth() +
+ggplot(site_data_reach, aes(x = bibi, y = rich_inv)) + geom_point() + geom_smooth(method = "lm") +
   labs(title = "BIBI") + geom_text_repel(aes(label = site_id)) 
+
+ggplot(site_data_reach, aes(x = bibi, y = rich_aerial_inv)) + geom_point() + geom_smooth(method = "lm") +
+  labs(title = "BIBI") + geom_text_repel(aes(label = site_id))
 
 ggplot(site_data_reach, aes(x = (density_roads_paved), y = rich_inv)) + geom_point() + geom_smooth() +
   labs(title = "Density paved roads") + geom_text_repel(aes(label = site_id)) 
@@ -410,6 +426,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "rich_inv"         = data_reach$rich_inv,
     "rich_inv_primary" = data_reach$rich_inv_primary,
     "rich_aerial_inv"  = data_reach$rich_aerial_inv,
+    "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
     "rich_foliage_inv" = data_reach$rich_foliage_inv,
     "rich_ground_inv"  = data_reach$rich_ground_inv,
     "rich_bark_inv"    = data_reach$rich_bark_inv,
@@ -419,6 +436,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "rich_ripasso_inv"     = data_reach$rich_ripasso_inv,
     "rich_ripobl_inv"      = data_reach$rich_ripobl_inv,
     "rich_aqinv"       = data_reach$rich_aqinv,
+    "rich_aerialfoliage"       = data_reach$rich_aerialfoliage,
     "bibi"          = data_reach$bibi,
     "imp_reach"     = data_reach$rast_nlcd_impervious_sum_proportion,
     "imp_basin"     = data_basin$rast_nlcd_impervious_sum_proportion,
@@ -457,6 +475,10 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   # Invertivorous foraging guilds
   m_aerial_inv = glm(rich_aerial_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
   sem = psem(m_bibi, m_aerial_inv); plot(sem); print(summary(sem))
+  {
+    m_aerial_inv_primary = glm(rich_aerial_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_aerial_inv_primary); plot(sem); print(summary(sem))
+  }
   
   m_foliage_inv = glm(rich_foliage_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
   sem = psem(m_bibi, m_foliage_inv); plot(sem); print(summary(sem))
@@ -472,6 +494,11 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   m_aqinv = glm(rich_aqinv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
   sem = psem(m_bibi, m_aqinv); plot(sem); print(summary(sem))
+  
+  {
+    m_aerialfoliage = glm(rich_aerialfoliage ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_aerialfoliage); plot(sem); print(summary(sem))
+  }
   
   # Check overdispersion -- if overdispersed, fit negative binomial
   # simres_pois = simulateResiduals(m_apriori, n = 1000) # plot(simres_pois)

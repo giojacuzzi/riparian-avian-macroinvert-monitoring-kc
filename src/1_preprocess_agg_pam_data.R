@@ -7,12 +7,12 @@ path_prediction_data = "data/cache/0_aggregate_raw_pam_data/prediction_data.feat
 path_species_list = "data/pam/species_list.txt"
 path_avonet_traits = "data/traits/AVONET Supplementary dataset 1.xlsx"
 # Naive thresholds
-threshold_min_classifier_score = 0.5 # Naive classifier minimum confidence score threshold to assume binary presence/absence. # "For most false-positive models in our study, using a mid-range threshold of 0.50 or above generally yielded stable estimates." (Katsis et al. 2025)
+threshold_min_classifier_score = 0.75 # Naive classifier minimum confidence score threshold to assume binary presence/absence. # "For most false-positive models in our study, using a mid-range threshold of 0.50 or above generally yielded stable estimates." (Katsis et al. 2025)
 threshold_min_detected_days = 2 # Minimum number of unique days detected to retain species detections at a site
 # Classifier calibration (Platt scaling)
 path_validation_data = "/Users/giojacuzzi/Library/CloudStorage/GoogleDrive-giojacuzzi@gmail.com/My Drive/Research/Projects/C5 - Riparian avian macroinvert monitoring/validations" # annotated Raven Pro selection tables organized by [common_name]/[file].selections.txt
 use_platt_scaling = TRUE
-display_plots = FALSE
+display_plots = TRUE
 tp_min_prob = 0.95 # Desired minimum probability of true positive
 
 # OUTPUTS:
@@ -279,13 +279,11 @@ if (use_platt_scaling) {
   
 }
 
-# Add detections for which we have ground-truth validation data
-v = validation_data %>% filter(!label_truth %in% c("unknown", "not_focal", "not_target")) %>%
-  # Separate begin_file into its components
-  separate(begin_file,
-           into = c("confidence_str", "x2", "site_id", "date_str", "time_start", "time_start_s", "time_end_s"),
-           sep = "_",
-           remove = FALSE) %>%
+# Remove putative detections for which we have ground-truth validation data
+validation_data = validation_data %>% separate(begin_file,
+                                               into = c("confidence_str", "x2", "site_id", "date_str", "time_start", "time_start_s", "time_end_s"),
+                                               sep = "_",
+                                               remove = FALSE) %>%
   mutate(
     confidence = as.numeric(confidence_str),
     site_id = as.character(site_id),
@@ -295,14 +293,19 @@ v = validation_data %>% filter(!label_truth %in% c("unknown", "not_focal", "not_
     time_start_s = as.numeric(str_remove(time_start_s, "s")),
     time = time_start_dt + seconds(time_start_s)
   ) %>%
-  select(label_truth, confidence, begin_file, time, season, date, site_id) %>%
-  rename(common_name = label_truth, file = begin_file)
+  select(label_truth, label_predicted, confidence, begin_file, time, season, date, site_id) %>%
+  rename(common_name = label_predicted, file = begin_file) %>% arrange(desc(confidence))
+
+detections = detections %>% anti_join(validation_data, by = c("site_id", "common_name", "time"))
+
+# Add presence detections for which we have ground-truth validation data
+v = validation_data %>% filter(!label_truth %in% c("unknown", "not_focal", "not_target"), label_truth == common_name)
 v$confidence = 2.0 # 2.0 confidence value indicates manual validation
 
 detections = detections %>%
   bind_rows(v %>%
       mutate(
-        yday_start = NA_real_  # ensures numeric NA column for consistency
+        yday_start = NA_real_
       ) %>%
       select(common_name, confidence, file, time, season, yday_start, date, site_id)
   )
