@@ -169,38 +169,55 @@ sp_ripasso = species_guilds %>% filter(rip_asso_rich2002 == "X") %>% pull(common
 # Riparian obligats
 sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common_name) %>% sort()
 
-# A priori aquatic insect foragers (either primary or opportunistically)
-# - Birds of the World
-# - 
+# A priori list of species that:
+# - Are primarily insectivorous
+# - Are reported to forage on aquatic insects
+#
+# B-IBI is calculated from stream site samples of primarily EPT species...
+# - Ephemeroptera, mayflies
+# - Plecoptera, stoneflies
+# - Trichoptera, caddisflies
+#
+# ...but also:
+# - Diptera, true flies and midges (with aquatic larvae e.g. Chironomidae, Simuliidae, Tipulidae)
+# - Bivalvia, freshwater clams (e.g. Unionidae, Sphaeriidae)
+# - Gastropoda, freshwater snails (e.g. Lymnaeidae, Planorbidae)
+# - aquatic worms
 sp_apriori = c(
+  # TODO: Birds of the World does not indicate aquatic prey beyond (possibly) "Diptera"
+  # "macgillivray's warbler",      # TODO
+  # "orange-crowned warbler",      # TODO
+  # "black-throated gray warbler", # TODO
+  # "cassin's vireo",              # TODO
+  # "hammond's flycatcher",        # TODO
+  # "hutton's vireo",              # TODO
+  # "pacific wren",                # TODO
+  # "pacific-slope flycatcher",    # TODO
+  # "violet-green swallow",        # TODO
+  # "swainson's thrush",           # TODO
+  # Birds of the World (and other sources)
   "american dipper",
-  "belted kingfisher",
-  "common yellowthroat",
-  "macgillivray's warbler",
-  "orange-crowned warbler",
+  # "belted kingfisher", # NOTE: primary piscivore diet
+  # "merlin", # NOTE: primary piscivore diet
+  "olive-sided flycatcher",
+  "common yellowthroat", # https://www.jstor.org/stable/2426510?seq=1
   "red-eyed vireo",
-  "warbling vireo",
   "western wood-pewee",
   "willow flycatcher",
   "wilson's warbler",
-  "yellow warbler",
   "american pipit",
-  "black-throated gray warbler",
-  "cassin's vireo",
-  "hammond's flycatcher",
-  "hutton's vireo",
-  "olive-sided flycatcher",
-  "pacific wren",
-  "pacific-slope flycatcher",
   "vaux's swift",
-  "violet-green swallow",
   "western tanager",
   "yellow-rumped warbler",
-  "merlin",
-  "swainson's thrush",
-  # TODO: https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.3148
+  # https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.3148
+  # Birds sampled in this study derived greater than 50% of their energetic needs on average from aquatic food webs during our sampling period, irrespective of river regulation. This suggests that emergent aquatic insect abundance in both systems must be high enough that birds exploit the subsidy despite generalist feeding preferences and limited mobility
+  "warbling vireo",
+  "yellow warbler", # https://cdnsciencepub.com/doi/abs/10.1139/z79-218
   "black-headed grosbeak"
-  # "song sparrow"
+  # "song sparrow" # NOTE: primary omnivore diet
+  
+  # TODO: more?
+  # black-capped chickadee # https://www.jstor.org/stable/2426510?seq=1
 ) %>% sort()
 
 # Invertivores that are reported to forage on aquatic insects / NOT bark foragers
@@ -408,6 +425,12 @@ ggplot(site_group_richness_long, aes(x = bibi, y = richness_value, color = richn
 ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
+ggplot(left_join(presence_absence %>% filter(common_name == "black-throated gray warbler"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
+ggplot(left_join(presence_absence %>% filter(common_name == "western wood-pewee"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
+
 ggplot(left_join(presence_absence %>% filter(common_name == "violet-green swallow"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
@@ -420,8 +443,12 @@ ggplot(left_join(presence_absence %>% filter(common_name == "swainson's thrush")
 ggplot(left_join(presence_absence %>% filter(common_name == "black-headed grosbeak"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
+# Urban adapted species
+ggplot(left_join(presence_absence %>% filter(common_name == "bewick's wren"), site_data_reach, by = "site_id"),
+       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
+
 ggplot(left_join(presence_absence %>% filter(common_name == "song sparrow"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
 
 # Structural equation modeling -----------------------------------------------------------------------------
 
