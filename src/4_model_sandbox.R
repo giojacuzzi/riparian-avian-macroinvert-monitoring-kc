@@ -173,6 +173,7 @@ sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common
 # - Are primarily insectivorous
 # - Are reported to forage on aquatic insects
 #
+# https://pugetsoundstreambenthos.org/About-BIBI.aspx
 # B-IBI is calculated from stream site samples of primarily EPT species...
 # - Ephemeroptera, mayflies
 # - Plecoptera, stoneflies
@@ -217,6 +218,11 @@ sp_apriori = c(
   # "song sparrow" # NOTE: primary omnivore diet
   
   # TODO: more?
+  # spotted sandpiper
+  # killdeer
+  # bufflehead (and other aquatic species like Pied-billed Grebe, Ruddy Duck, Shoveler)
+  
+  # any remaining in "sp_invert_primary"
   # black-capped chickadee # https://www.jstor.org/stable/2426510?seq=1
 ) %>% sort()
 

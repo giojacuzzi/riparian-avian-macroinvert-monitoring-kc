@@ -248,7 +248,8 @@ detections = prediction_data %>% filter(!common_name %in% c(
   "tree swallow",
   "western meadowlark",
   # "brewer's blackbird", # TODO
-  "marbled murrelet"
+  "marbled murrelet",
+  "american pipit"
 ))
 
 species_names = species_names %>% filter(common_name %in% detections$common_name)
