@@ -247,8 +247,11 @@ detections = prediction_data %>% filter(!common_name %in% c(
   "townsend's warbler",
   "tree swallow",
   "western meadowlark",
-  # "brewer's blackbird", # TODO
+  "brewer's blackbird",
   "marbled murrelet",
+  "pied-billed grebe",
+  "ruddy duck",
+  "bufflehead",
   "american pipit"
 ))
 
@@ -277,7 +280,8 @@ if (use_platt_scaling) {
     "cassin's vireo",
     "red-breasted sapsucker",
     "vaux's swift",
-    "merlin"
+    "merlin",
+    "spotted sandpiper"
   ), "threshold"] = Inf
   
   # Enforce the minimum threshold

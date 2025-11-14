@@ -184,46 +184,139 @@ sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common
 # - Bivalvia, freshwater clams (e.g. Unionidae, Sphaeriidae)
 # - Gastropoda, freshwater snails (e.g. Lymnaeidae, Planorbidae)
 # - aquatic worms
+#
+# Diets for each species obtained from Birds of the World, unless otherwise commented
 sp_apriori = c(
-  # TODO: Birds of the World does not indicate aquatic prey beyond (possibly) "Diptera"
-  # "macgillivray's warbler",      # TODO
-  # "orange-crowned warbler",      # TODO
-  # "black-throated gray warbler", # TODO
-  # "cassin's vireo",              # TODO
-  # "hammond's flycatcher",        # TODO
-  # "hutton's vireo",              # TODO
-  # "pacific wren",                # TODO
-  # "pacific-slope flycatcher",    # TODO
-  # "violet-green swallow",        # TODO
-  # "swainson's thrush",           # TODO
-  # Birds of the World (and other sources)
-  "american dipper",
-  # "belted kingfisher", # NOTE: primary piscivore diet
-  # "merlin", # NOTE: primary piscivore diet
-  "olive-sided flycatcher",
-  "common yellowthroat", # https://www.jstor.org/stable/2426510?seq=1
-  "red-eyed vireo",
-  "western wood-pewee",
-  "willow flycatcher",
-  "wilson's warbler",
-  "american pipit",
-  "vaux's swift",
-  "western tanager",
-  "yellow-rumped warbler",
-  # https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.3148
-  # Birds sampled in this study derived greater than 50% of their energetic needs on average from aquatic food webs during our sampling period, irrespective of river regulation. This suggests that emergent aquatic insect abundance in both systems must be high enough that birds exploit the subsidy despite generalist feeding preferences and limited mobility
-  "warbling vireo",
-  "yellow warbler", # https://cdnsciencepub.com/doi/abs/10.1139/z79-218
-  "black-headed grosbeak"
-  # "song sparrow" # NOTE: primary omnivore diet
+  ## Primary invertebrate diet (Eltontraits Diet-5cat) -----------------------------------------------
   
-  # TODO: more?
-  # spotted sandpiper
-  # killdeer
-  # bufflehead (and other aquatic species like Pied-billed Grebe, Ruddy Duck, Shoveler)
+  # Emergent aquatic invertebrate (EPT) consumers:
+  "american dipper",             # Ephemeroptera, Plecoptera, Trichoptera, Diptera (Chironomidae, Simuliidae, Tipulidae)
+  "american pipit",              # Ephemeroptera, Plecoptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
+  "bufflehead",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Chaoborinae), Odonata, Hemiptera (Corixidae)
+  "cliff swallow",               # Ephemeroptera, Diptera (Chironomidae, Simuliidae), Odonata
+  "common yellowthroat",         # Ephemeroptera, Trichoptera, Diptera, https://www.jstor.org/stable/2426510?seq=1
+  "golden-crowned kinglet",      # Plecoptera, Trichoptera, Diptera (Chironomus, Tipulidae, Culicidae)
+  # "hermit thrush",             # marginal evidence of mayfly predation, https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=osu1236799366&disposition=inline            
+  # "house wren",                # marginal evidence of mayfly predation
+  "purple martin",               # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
+  "ruddy duck",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Culicidae), Odonata, Corixidae
+  "spotted sandpiper",           # Ephemeroptera, Diptera
+  "tree swallow",                # Ephemeroptera, Plecoptera, Trichoptera, Diptera, Bivalvia, Odonata
+  "vaux's swift",                # Ephemeroptera, Diptera
+  "western wood-pewee",          # Ephemeroptera, Diptera, Odonata
+  "wilson's warbler",            # Ephemeroptera, Plecoptera, Trichoptera, Diptera
+  "yellow-rumped warbler",       # Trichoptera, Diptera (Tipulidae, Muscidae)
+
+  # Potential aquatic invertebrate consumers (Diptera and/or Odonata):
+  # "american kestrel",              # Odonata
+  # "barn swallow"                   # Diptera (Tipulidae), Odonata
+  # "black-capped chickadee"         # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
+  "black-headed grosbeak",           # Unspecified, https://doi.org/10.1002/ecs2.3148
+  # "brewer's blackbird",            # Diptera
+  # "chestnut-backed chickadee",     # Diptera (potential aquatic larvae Syrphidae, Tabanidae, Tipulidae)
+  # "hammond's flycatcher",          # Diptera (Tipulidae)
+  # "killdeer",                      # Diptera, Odonata, Hemiptera (Corixidae)
+  # "marsh wren",                    # Diptera (Tipulidae), Odonata, Coleoptera (Dytiscidae)
+  # "northern pygmy-owl",            # Odonata
+  # "northern rough-winged swallow", # Diptera
+  # "northern shoveler",             # Diptera (Chironomidae)
+  "olive-sided flycatcher",          # Diptera, Odonata, https://doi.org/10.3389/fevo.2021.633160
+  # "pacific wren",                  # Diptera (Stratiomyidae)
+  # "pacific-slope flycatcher",      # Diptera
+  # "pied-billed grebe",             # Odonata, Bivalvia, Gastropoda
+  "red-eyed vireo",                  # Diptera, Odonata
+  # "ruby-crowned kinglet",          # Diptera
+  # "swainson's thrush",             # Diptera (Tipulidae, Bibionidae)
+  # "violet-green swallow",          # Diptera
+  "warbling vireo",                  # Unspecified, https://doi.org/10.1002/ecs2.3148
+  "western tanager",                 # Diptera (Tipulidae), Odonata
+  "willow flycatcher",               # Diptera (Tabanidae, Syrphidae), Odonata
+  "yellow warbler"                  # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
   
-  # any remaining in "sp_invert_primary"
-  # black-capped chickadee # https://www.jstor.org/stable/2426510?seq=1
+  # Terrestrial or Marine invertebrate consumers (no evidence of freshwater aquatic invert prey):
+  
+  # "bewick's wren",
+  # "black-throated gray warbler",
+  # "brown creeper",             # Tricoptera (only one study with sample size of 1, very likely incidental)
+  # "bushtit",
+  # "cassin's vireo",
+  # "downy woodpecker",
+  # "hairy woodpecker",
+  # "hutton's vireo",
+  # "macgillivray's warbler",
+  # "marbled murrelet",
+  # "northern flicker",
+  # "orange-crowned warbler",
+  # "pileated woodpecker",
+  # "red-breasted sapsucker",
+  # "townsend's warbler",
+  
+  
+  ## Invertebrate diet (Eltontraits >= 10%) -----------------------------------------------
+  
+  # TODO: Emergent aquatic invertebrate (EPT) consumers:
+
+  # ## Primary VertFishScav
+  # american bittern
+  # barn owl
+  # barred owl
+  # belted kingfisher         # NOTE: Secondary aquatic invert consumer
+  # common merganser
+  # common raven
+  # glaucous-winged gull
+  # great blue heron
+  # great horned owl
+  # green heron
+  # merlin                    # NOTE: Secondary aquatic invert consumer
+  # northern harrier
+  # red-tailed hawk
+  # ring-billed gull
+
+  # ## Primary omnivore
+  # american crow
+  # american robin
+  # california gull
+  # fox sparrow
+  # hooded merganser
+  # lincoln's sparrow
+  # mallard
+  # red-breasted nuthatch
+  # red-winged blackbird
+  # savannah sparrow
+  # song sparrow              # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
+  # spotted towhee
+  # steller's jay
+  # virginia rail
+  # western meadowlark
+  # western screech-owl
+
+  # ## Primary frugivore, granivore
+  # anna's hummingbird
+  # cedar waxwing
+  # rufous hummingbird
+  # varied thrush
+  # american coot
+  # american goldfinch
+  # blue-winged teal
+  # brown-headed cowbird
+  # chipping sparrow
+  # cinnamon teal
+  # dark-eyed junco
+  # eurasian collared-dove
+  # evening grosbeak
+  # golden-crowned sparrow
+  # green-winged teal
+  # house finch
+  # house sparrow
+  # lesser scaup
+  # pine siskin
+  # purple finch
+  # red crossbill
+  # ring-necked duck
+  # rock pigeon
+  # white-crowned sparrow
+  # white-throated sparrow
+  
 ) %>% sort()
 
 # Invertivores that are reported to forage on aquatic insects / NOT bark foragers
@@ -449,6 +542,9 @@ ggplot(left_join(presence_absence %>% filter(common_name == "swainson's thrush")
 ggplot(left_join(presence_absence %>% filter(common_name == "black-headed grosbeak"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
+ggplot(left_join(presence_absence %>% filter(common_name == "golden-crowned kinglet"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
+
 # Urban adapted species
 ggplot(left_join(presence_absence %>% filter(common_name == "bewick's wren"), site_data_reach, by = "site_id"),
        aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
@@ -559,3 +655,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 }
 
 print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_aqinv), n = 100)
+
+species_metadata %>% filter(common_name %in% c(
+  "green-winged teal", "mallard", "gadwall", "wood duck", "common merganser", "blue-winged teal", "cackling goose", "caspian tern", "great blue heron", "red-winged blackbird", "american bittern", "green heron"
+)) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)
