@@ -6,6 +6,7 @@ library(DHARMa)
 library(mapview)
 library(piecewiseSEM)
 library(patchwork)
+library(ggeffects)
 theme_set(theme_minimal())
 
 in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
@@ -150,6 +151,15 @@ sp_g_aerial_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("ae
 sp_g_aerial_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
   filter(common_name %in% sp_invert_primary) %>% pull(common_name)
 
+sp_g_foliage_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
+  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
+
+sp_g_ground_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
+  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
+
+sp_g_bark_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
+  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
+
 # Foraging guild: Foliage gleaners (e.g. warblers, vireos)
 # typically capture insects located on vegetation or woody substrate
 sp_g_foliage_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
@@ -195,10 +205,12 @@ sp_apriori = c(
   "american pipit",              # Ephemeroptera, Plecoptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
   "bufflehead",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Chaoborinae), Odonata, Hemiptera (Corixidae)
   "cliff swallow",               # Ephemeroptera, Diptera (Chironomidae, Simuliidae), Odonata
+  # TODO: "common nighthawk"     # Ephemeroptera, Trichopetera, Diptera
   "common yellowthroat",         # Ephemeroptera, Trichoptera, Diptera, https://www.jstor.org/stable/2426510?seq=1
   "golden-crowned kinglet",      # Plecoptera, Trichoptera, Diptera (Chironomus, Tipulidae, Culicidae)
-  "hermit thrush",             # marginal evidence of mayfly predation, https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=osu1236799366&disposition=inline
-  "house wren",                # marginal evidence of mayfly predation
+  "hermit thrush",               # marginal evidence of mayfly predation, https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=osu1236799366&disposition=inline
+  # TODO: "hermit warbler" # UNLIKELY
+  "house wren",                  # marginal evidence of mayfly predation
   "purple martin",               # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
   "ruddy duck",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Culicidae), Odonata, Corixidae
   "spotted sandpiper",           # Ephemeroptera, Diptera
@@ -209,16 +221,16 @@ sp_apriori = c(
   "yellow-rumped warbler",       # Trichoptera, Diptera (Tipulidae, Muscidae)
 
   # Potential aquatic invertebrate consumers (Diptera and/or Odonata):
-  "american kestrel",              # Odonata
+  # "american kestrel",            # Odonata
   "barn swallow",                  # Diptera (Tipulidae), Odonata
-  "black-capped chickadee",        # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
+  # "black-capped chickadee",      # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
   "black-headed grosbeak",         # Unspecified, https://doi.org/10.1002/ecs2.3148
   "brewer's blackbird",            # Diptera
   "chestnut-backed chickadee",     # Diptera (potential aquatic larvae Syrphidae, Tabanidae, Tipulidae)
   "hammond's flycatcher",          # Diptera (Tipulidae)
   "killdeer",                      # Diptera, Odonata, Hemiptera (Corixidae)
   "marsh wren",                    # Diptera (Tipulidae), Odonata, Coleoptera (Dytiscidae)
-  "northern pygmy-owl",            # Odonata
+  # "northern pygmy-owl",          # Odonata
   "northern rough-winged swallow", # Diptera
   "northern shoveler",             # Diptera (Chironomidae)
   "olive-sided flycatcher",        # Diptera, Odonata, https://doi.org/10.3389/fevo.2021.633160
@@ -232,91 +244,91 @@ sp_apriori = c(
   "warbling vireo",                # Unspecified, https://doi.org/10.1002/ecs2.3148
   "western tanager",               # Diptera (Tipulidae), Odonata
   "willow flycatcher",             # Diptera (Tabanidae, Syrphidae), Odonata
-  "yellow warbler",                 # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
+  "yellow warbler",                # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
+  # TODO: veery # Diptera
 
-  # Terrestrial or Marine invertebrate consumers (no evidence of freshwater aquatic invert prey):
+  # Terrestrial or Marine primary invertebrate consumers (no evidence of freshwater aquatic invert prey):
   
-  # "bewick's wren",
-  # "black-throated gray warbler",
-  # "brown creeper"             # Tricoptera (only one study with sample size of 1, very likely incidental)
-  # "bushtit",
-  # "cassin's vireo",
-  # "downy woodpecker",
-  # "hairy woodpecker",
-  # "hutton's vireo",
-  # "macgillivray's warbler",
-  # "marbled murrelet",
-  # "northern flicker",
-  # "orange-crowned warbler",
-  # "pileated woodpecker",
-  # "red-breasted sapsucker",
-  # "townsend's warbler",
-  
+  # "bewick's wren",               #
+  # "black-throated gray warbler", #
+  # "brown creeper"                # Tricoptera (only one study with sample size of 1, very likely incidental)
+  # "bushtit",                     #
+  # "cassin's vireo",              #
+  # "downy woodpecker",            #
+  # "hairy woodpecker",            #
+  # "hutton's vireo",              #
+  # "macgillivray's warbler",      #
+  # "marbled murrelet",            #
+  # "northern flicker",            #
+  # "orange-crowned warbler",      #
+  # "pileated woodpecker",         #
+  # "red-breasted sapsucker",      #
+  # "townsend's warbler",          #
   
   ## Invertebrate diet (Eltontraits >= 10%) -----------------------------------------------
   
   # TODO: Emergent aquatic invertebrate (EPT) consumers:
 
-  # ## Primary VertFishScav
-  # american bittern
-  # barn owl
-  # barred owl
-  "belted kingfisher"         # NOTE: Secondary aquatic invert consumer
-  # common merganser
-  # common raven
-  # glaucous-winged gull
-  # great blue heron
-  # great horned owl
-  # green heron
-  # "merlin"                    # NOTE: Secondary aquatic invert consumer
-  # northern harrier
-  # red-tailed hawk
-  # ring-billed gull
+  ## Primary VertFishScav
+  # american bittern          # Odonata, Belastomatidae (giant waterbugs), Nepidae (water scorpions), Dytiscidae (water beetles) 
+  # barn owl                  #
+  # barred owl                #
+  "belted kingfisher"         # Ephemeroptera # Prose BL 1985 "Habitat Suitability Index Models: Belted Kingfisher; Hamas MJ 1975 "Ecological and physiological..."
+  # common merganser          # Ephemeroptera, Trichoptera, Diptera, Odonata
+  # common raven              # OMNIVORE CANDIDATE, Diptera (Tipulidae)
+  # glaucous-winged gull      # Bivalvia (very rarely freshwater)
+  # great blue heron          # Odonata
+  # great horned owl          #
+  # green heron               # Odonata, Ephemeroptera
+  # "merlin"                    # Odonata
+  # northern harrier          #
+  # red-tailed hawk           #
+  # ring-billed gull          # Ephemeroptera, Trichoptera, Odonata, Diptera
+  
+  ## Primary omnivore
+  # american crow             #
+  # "american robin"          # Odonata
+  # california gull           # Ephemeroptera, Diptera, Odonata
+  # fox sparrow               # Diptera, Bivalvia, Gastropoda
+  # hooded merganser          # Trichoptera, Odonata, Bivalvia
+  # lincoln's sparrow         # Ephemeroptera, Diptera
+  # mallard                   # Trichoptera, Diptera (Chironomidae), Gastropoda
+  # red-breasted nuthatch     # Diptera (but almost exclusively arboreal)
+  # red-winged blackbird      # Odonata, Diptera (Stratiomyidae)
+  # savannah sparrow          # Odonata, Diptera (Chironomidae, Coelopidae)
+  # "song sparrow"            # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
+  # spotted towhee            # Diptera (limited aquatic evidence)
+  # steller's jay             #
+  # virginia rail             # Odonata, Diptera, Gastropoda
+  # western meadowlark        #
+  # western screech-owl       #
 
-  # ## Primary omnivore
-  # american crow
-  # american robin
-  # california gull
-  # fox sparrow
-  # hooded merganser
-  # lincoln's sparrow
-  # mallard
-  # red-breasted nuthatch
-  # red-winged blackbird
-  # savannah sparrow
-  # "song sparrow"              # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
-  # spotted towhee
-  # steller's jay
-  # virginia rail
-  # western meadowlark
-  # western screech-owl
-
-  # ## Primary frugivore, granivore
-  # anna's hummingbird
-  # cedar waxwing
-  # rufous hummingbird
-  # varied thrush
-  # american coot
-  # american goldfinch
-  # blue-winged teal
-  # brown-headed cowbird
-  # chipping sparrow
-  # cinnamon teal
-  # dark-eyed junco
-  # eurasian collared-dove
-  # evening grosbeak
-  # golden-crowned sparrow
-  # green-winged teal
-  # house finch
-  # house sparrow
-  # lesser scaup
-  # pine siskin
-  # purple finch
-  # red crossbill
-  # ring-necked duck
-  # rock pigeon
-  # white-crowned sparrow
-  # white-throated sparrow
+  ## Primary frugivore, granivore
+  # anna's hummingbird        # Diptera (Chironomidae)
+  # cedar waxwing             # Ephemeroptera, Plecoptera, Odonata
+  # rufous hummingbird        # Diptera (Chironomidae)
+  # varied thrush             # 
+  # american coot             # Odonata, Diptera, Gastropoda
+  # american goldfinch        #
+  # blue-winged teal          # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # "brown-headed cowbird"    #
+  # chipping sparrow          #
+  # cinnamon teal             # Diptera (Chironomidae), Odonata, Gastropoda
+  # dark-eyed junco           # Diptera (little evidence for aquatic)
+  # eurasian collared-dove    # Diptera (little evidence for aquatic)
+  # evening grosbeak          #
+  # golden-crowned sparrow    # Diptera (Tipulidae, indefinite evidence for aquatic)
+  # green-winged teal         # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # house finch               # 
+  # house sparrow             # Diptera (little evidence for aquatic) 
+  # lesser scaup              # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # pine siskin               #
+  # purple finch              #
+  # red crossbill             #
+  # ring-necked duck          # Trichoptera, Diptera (Chironomidae), Odonata, Bivaliva, Gastropoda
+  # rock pigeon               #
+  # white-crowned sparrow     #
+  # white-throated sparrow    # Odonata, Diptera
   
 ) %>% sort()
 
@@ -373,10 +385,13 @@ site_group_richness =  presence_absence %>%
     rich_inv_primary = sum(presence[common_name %in% sp_invert_primary]),
     # Foraging guilds
     rich_aerial_inv  = sum(presence[common_name %in% sp_g_aerial_invert]),
-    rich_aerial_inv_primary  = sum(presence[common_name %in% sp_g_aerial_invert_primary]),
     rich_foliage_inv = sum(presence[common_name %in% sp_g_foliage_invert]),
     rich_ground_inv  = sum(presence[common_name %in% sp_g_ground_invert]),
     rich_bark_inv    = sum(presence[common_name %in% sp_g_bark_invert]),
+    rich_aerial_inv_primary  = sum(presence[common_name %in% sp_g_aerial_invert_primary]),
+    rich_foliage_inv_primary  = sum(presence[common_name %in% sp_g_foliage_invert_primary]),
+    rich_ground_inv_primary  = sum(presence[common_name %in% sp_g_ground_invert_primary]),
+    rich_bark_inv_primary  = sum(presence[common_name %in% sp_g_bark_invert_primary]),
     rich_apriori     = sum(presence[common_name %in% sp_apriori]),
     # Riparian habitat association
     rich_ripasso_inv = sum(presence[common_name %in% sp_ripasso_inv]),
@@ -556,10 +571,13 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "rich_inv"         = data_reach$rich_inv,
     "rich_inv_primary" = data_reach$rich_inv_primary,
     "rich_aerial_inv"  = data_reach$rich_aerial_inv,
-    "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
     "rich_foliage_inv" = data_reach$rich_foliage_inv,
     "rich_ground_inv"  = data_reach$rich_ground_inv,
     "rich_bark_inv"    = data_reach$rich_bark_inv,
+    "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
+    "rich_foliage_inv_primary"  = data_reach$rich_foliage_inv_primary,
+    "rich_ground_inv_primary"  = data_reach$rich_ground_inv_primary,
+    "rich_bark_inv_primary"  = data_reach$rich_bark_inv_primary,
     "rich_apriori"        = data_reach$rich_apriori,
     "rich_ripasso"     = data_reach$rich_ripasso,
     "rich_ripobl"      = data_reach$rich_ripobl,
@@ -604,9 +622,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # Invertivorous foraging guilds
   {
-    m_aerial_inv_primary = glm(rich_aerial_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_aerial_inv_primary); plot(sem); print(summary(sem))
-    
+    # >= 10% invertivores
     m_aerial_inv = glm(rich_aerial_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
     sem = psem(m_bibi, m_aerial_inv); plot(sem); print(summary(sem))
   
@@ -618,6 +634,19 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     
     m_bark_inv = glm(rich_bark_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
     sem = psem(m_bibi, m_bark_inv); plot(sem); print(summary(sem))
+    
+    # Primary invertivores
+    m_aerial_inv_primary = glm(rich_aerial_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_aerial_inv_primary); plot(sem); print(summary(sem))
+    
+    m_foliage_inv_primary = glm(rich_foliage_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_foliage_inv_primary); plot(sem); print(summary(sem))
+    
+    m_ground_inv_primary = glm(rich_ground_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_ground_inv_primary); plot(sem); print(summary(sem))
+    
+    m_bark_inv_primary = glm(rich_bark_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_bark_inv_primary); plot(sem); print(summary(sem))
   }
   
   # A priori list of species that:
