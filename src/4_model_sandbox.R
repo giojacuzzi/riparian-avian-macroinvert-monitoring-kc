@@ -197,7 +197,7 @@ sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common
 # - aquatic worms
 #
 # Diets for each species obtained from Birds of the World, unless otherwise commented
-sp_apriori = c(
+sp_predator = c(
   ## Primary invertebrate diet (Eltontraits Diet-5cat) -----------------------------------------------
   
   # Emergent aquatic invertebrate (EPT) consumers:
@@ -221,16 +221,16 @@ sp_apriori = c(
   "yellow-rumped warbler",       # Trichoptera, Diptera (Tipulidae, Muscidae)
 
   # Potential aquatic invertebrate consumers (Diptera and/or Odonata):
-  # "american kestrel",            # Odonata
+  "american kestrel",              # Odonata
   "barn swallow",                  # Diptera (Tipulidae), Odonata
-  # "black-capped chickadee",      # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
+  # "black-capped chickadee",        # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
   "black-headed grosbeak",         # Unspecified, https://doi.org/10.1002/ecs2.3148
   "brewer's blackbird",            # Diptera
-  "chestnut-backed chickadee",     # Diptera (potential aquatic larvae Syrphidae, Tabanidae, Tipulidae)
+  # "chestnut-backed chickadee",     # Diptera (potential aquatic larvae Syrphidae, Tabanidae, Tipulidae)
   "hammond's flycatcher",          # Diptera (Tipulidae)
   "killdeer",                      # Diptera, Odonata, Hemiptera (Corixidae)
   "marsh wren",                    # Diptera (Tipulidae), Odonata, Coleoptera (Dytiscidae)
-  # "northern pygmy-owl",          # Odonata
+  "northern pygmy-owl",            # Odonata
   "northern rough-winged swallow", # Diptera
   "northern shoveler",             # Diptera (Chironomidae)
   "olive-sided flycatcher",        # Diptera, Odonata, https://doi.org/10.3389/fevo.2021.633160
@@ -244,7 +244,7 @@ sp_apriori = c(
   "warbling vireo",                # Unspecified, https://doi.org/10.1002/ecs2.3148
   "western tanager",               # Diptera (Tipulidae), Odonata
   "willow flycatcher",             # Diptera (Tabanidae, Syrphidae), Odonata
-  "yellow warbler",                # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
+  "yellow warbler"                # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
   # TODO: veery # Diptera
 
   # Terrestrial or Marine primary invertebrate consumers (no evidence of freshwater aquatic invert prey):
@@ -270,65 +270,65 @@ sp_apriori = c(
   # TODO: Emergent aquatic invertebrate (EPT) consumers:
 
   ## Primary VertFishScav
-  # american bittern          # Odonata, Belastomatidae (giant waterbugs), Nepidae (water scorpions), Dytiscidae (water beetles) 
+  # "american bittern",          # Odonata, Belastomatidae (giant waterbugs), Nepidae (water scorpions), Dytiscidae (water beetles)
   # barn owl                  #
   # barred owl                #
-  "belted kingfisher"         # Ephemeroptera # Prose BL 1985 "Habitat Suitability Index Models: Belted Kingfisher; Hamas MJ 1975 "Ecological and physiological..."
-  # common merganser          # Ephemeroptera, Trichoptera, Diptera, Odonata
-  # common raven              # OMNIVORE CANDIDATE, Diptera (Tipulidae)
-  # glaucous-winged gull      # Bivalvia (very rarely freshwater)
-  # great blue heron          # Odonata
-  # great horned owl          #
-  # green heron               # Odonata, Ephemeroptera
-  # "merlin"                    # Odonata
+  # "belted kingfisher"         # Ephemeroptera [Prose BL 1985 "Habitat Suitability Index Models: Belted Kingfisher; Hamas MJ 1975 "Ecological and physiological..."
+  # "common merganser",          # Ephemeroptera, Trichoptera, Diptera, Odonata
+  # "common raven",              # OMNIVORE CANDIDATE, Diptera (Tipulidae)
+  # "glaucous-winged gull",      # Bivalvia (very rarely freshwater)
+  # "great blue heron",          # Odonata
+  # "great horned owl",          #
+  # "green heron",               # Odonata, Ephemeroptera
+  # "merlin",                    # Odonata
   # northern harrier          #
   # red-tailed hawk           #
-  # ring-billed gull          # Ephemeroptera, Trichoptera, Odonata, Diptera
+  # "ring-billed gull",          # Ephemeroptera, Trichoptera, Odonata, Diptera
   
   ## Primary omnivore
   # american crow             #
-  # "american robin"          # Odonata
-  # california gull           # Ephemeroptera, Diptera, Odonata
-  # fox sparrow               # Diptera, Bivalvia, Gastropoda
-  # hooded merganser          # Trichoptera, Odonata, Bivalvia
-  # lincoln's sparrow         # Ephemeroptera, Diptera
-  # mallard                   # Trichoptera, Diptera (Chironomidae), Gastropoda
-  # red-breasted nuthatch     # Diptera (but almost exclusively arboreal)
-  # red-winged blackbird      # Odonata, Diptera (Stratiomyidae)
-  # savannah sparrow          # Odonata, Diptera (Chironomidae, Coelopidae)
-  # "song sparrow"            # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
-  # spotted towhee            # Diptera (limited aquatic evidence)
+  # "american robin",          # Odonata
+  # "california gull",           # Ephemeroptera, Diptera, Odonata
+  # "fox sparrow",               # Diptera, Bivalvia, Gastropoda
+  # "hooded merganser",          # Trichoptera, Odonata, Bivalvia
+  # "lincoln's sparrow",         # Ephemeroptera, Diptera
+  # "mallard",                   # Trichoptera, Diptera (Chironomidae), Gastropoda
+  # "red-breasted nuthatch",     # Diptera (but almost exclusively arboreal)
+  # "red-winged blackbird",      # Odonata, Diptera (Stratiomyidae)
+  # "savannah sparrow",          # Odonata, Diptera (Chironomidae, Coelopidae)
+  # "song sparrow",            # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
+  # "spotted towhee",            # Diptera (limited aquatic evidence)
   # steller's jay             #
-  # virginia rail             # Odonata, Diptera, Gastropoda
+  # "virginia rail",             # Odonata, Diptera, Gastropoda
   # western meadowlark        #
   # western screech-owl       #
 
   ## Primary frugivore, granivore
-  # anna's hummingbird        # Diptera (Chironomidae)
-  # cedar waxwing             # Ephemeroptera, Plecoptera, Odonata
-  # rufous hummingbird        # Diptera (Chironomidae)
+  # "anna's hummingbird",        # Diptera (Chironomidae)
+  # "cedar waxwing",             # Ephemeroptera, Plecoptera, Odonata
+  # "rufous hummingbird",        # Diptera (Chironomidae)
   # varied thrush             # 
-  # american coot             # Odonata, Diptera, Gastropoda
+  # "american coot",             # Odonata, Diptera, Gastropoda
   # american goldfinch        #
-  # blue-winged teal          # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # "blue-winged teal",          # Diptera (Chironomidae), Bivalvia, Gastropoda
   # "brown-headed cowbird"    #
   # chipping sparrow          #
-  # cinnamon teal             # Diptera (Chironomidae), Odonata, Gastropoda
-  # dark-eyed junco           # Diptera (little evidence for aquatic)
-  # eurasian collared-dove    # Diptera (little evidence for aquatic)
+  # "cinnamon teal",             # Diptera (Chironomidae), Odonata, Gastropoda
+  # "dark-eyed junco",           # Diptera (little evidence for aquatic)
+  # "eurasian collared-dove",    # Diptera (little evidence for aquatic)
   # evening grosbeak          #
-  # golden-crowned sparrow    # Diptera (Tipulidae, indefinite evidence for aquatic)
-  # green-winged teal         # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # "golden-crowned sparrow",    # Diptera (Tipulidae, indefinite evidence for aquatic)
+  # "green-winged teal",         # Diptera (Chironomidae), Bivalvia, Gastropoda
   # house finch               # 
-  # house sparrow             # Diptera (little evidence for aquatic) 
-  # lesser scaup              # Diptera (Chironomidae), Bivalvia, Gastropoda
+  # "house sparrow",             # Diptera (little evidence for aquatic) 
+  # "lesser scaup",              # Diptera (Chironomidae), Bivalvia, Gastropoda
   # pine siskin               #
   # purple finch              #
   # red crossbill             #
-  # ring-necked duck          # Trichoptera, Diptera (Chironomidae), Odonata, Bivaliva, Gastropoda
+  # "ring-necked duck",          # Trichoptera, Diptera (Chironomidae), Odonata, Bivaliva, Gastropoda
   # rock pigeon               #
   # white-crowned sparrow     #
-  # white-throated sparrow    # Odonata, Diptera
+  # "white-throated sparrow"    # Odonata, Diptera
   
 ) %>% sort()
 
@@ -392,7 +392,7 @@ site_group_richness =  presence_absence %>%
     rich_foliage_inv_primary  = sum(presence[common_name %in% sp_g_foliage_invert_primary]),
     rich_ground_inv_primary  = sum(presence[common_name %in% sp_g_ground_invert_primary]),
     rich_bark_inv_primary  = sum(presence[common_name %in% sp_g_bark_invert_primary]),
-    rich_apriori     = sum(presence[common_name %in% sp_apriori]),
+    rich_predator     = sum(presence[common_name %in% sp_predator]),
     # Riparian habitat association
     rich_ripasso_inv = sum(presence[common_name %in% sp_ripasso_inv]),
     rich_ripasso     = sum(presence[common_name %in% sp_ripasso]),
@@ -413,7 +413,7 @@ bibi_excellent = ifelse(d$bibi >= 80, 1, 0)
 indval = multipatt(spmat, bibi_excellent, control = how(nperm=999)) 
 summary(indval)
 
-# ## NMDS visualization
+## NMDS visualization
 # library(vegan)
 # nmds = metaMDS(presence_absence %>%
 #                  pivot_wider(names_from = common_name, values_from = presence, values_fill = 0) %>%
@@ -421,16 +421,16 @@ summary(indval)
 # nmds$stress # stress > 0.2 suggests weak fit
 # nmds_scores = as.data.frame(scores(nmds, display = "sites"))
 # nmds_scores$site_id = rownames(nmds_scores)
-# nmds_plot_data = nmds_scores %>% left_join(site_metadata, by = "site_id")
+# nmds_plot_data = nmds_scores %>% left_join(site_data_reach, by = "site_id")
 # species_scores = as.data.frame(scores(nmds, display = "species"))
 # species_scores$species = rownames(species_scores)
 # 
-# ggplot(nmds_plot_data %>% left_join(site_data, by = "site_id"), aes(NMDS1, NMDS2, color = bibi)) +
+# ggplot(nmds_plot_data, aes(NMDS1, NMDS2, color = bibi)) +
 #   geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species), color = "gray", size = 3, vjust = -0.5, check_overlap = TRUE) +
 #   geom_point(size = 3, alpha = 0.8) +
 #   geom_text(aes(label = site_id), vjust = -0.5, size = 3, color = "black") +
 #   scale_color_continuous(type = "viridis") +
-#   labs(color = "Impervious %")
+#   labs(color = "B-IBI")
 # 
 # ggplot(species_scores, aes(x = 0, y = 0)) +
 #   geom_segment(aes(xend = NMDS1, yend = NMDS2),
@@ -450,12 +450,12 @@ richness_by_trophic_niche = presence_absence %>% left_join(species_metadata, by 
 richness_by_primary_lifestyle = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
   group_by(site_id, primary_lifestyle) %>% summarise(count = sum(presence), .groups = "drop")
 richness_by_ripasso = presence_absence %>% mutate(ripasso = common_name %in% c(sp_ripasso)) %>% group_by(site_id, ripasso) %>% summarize(count = sum(presence))
-richness_by_apriori = presence_absence %>% mutate(apriori = common_name %in% c(sp_apriori)) %>% group_by(site_id, apriori) %>% summarize(count = sum(presence))
+richness_by_predator = presence_absence %>% mutate(predator = common_name %in% c(sp_predator)) %>% group_by(site_id, predator) %>% summarize(count = sum(presence))
 
 ggplot(richness_by_trophic_niche, aes(x = count, y = reorder(site_id, count), fill = trophic_niche)) + geom_col()
 ggplot(richness_by_primary_lifestyle, aes(x = count, y = reorder(site_id, count), fill = primary_lifestyle)) + geom_col()
 ggplot(richness_by_ripasso, aes(x = count, y = reorder(site_id, count), fill = ripasso)) + geom_col()
-ggplot(richness_by_apriori, aes(x = count, y = reorder(site_id, count), fill = apriori)) + geom_col()
+ggplot(richness_by_predator, aes(x = count, y = reorder(site_id, count), fill = predator)) + geom_col()
 
 # Join with site data
 site_data_reach = full_join(site_data_reach, site_group_richness, by = "site_id")
@@ -502,12 +502,12 @@ ggplot(left_join(richness_by_ripasso, site_data_reach, by = "site_id"),
        aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = ripasso, fill = ripasso)) +
   geom_point() + geom_smooth(aes(group = ripasso), method = "lm", se = FALSE)
 
-ggplot(left_join(richness_by_apriori, site_data_reach, by = "site_id"),
-       aes(x = bibi, y = count, color = apriori, fill = apriori)) +
-  geom_point() + geom_smooth(aes(group = apriori), method = "lm", se = FALSE)
-ggplot(left_join(richness_by_apriori, site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = apriori, fill = apriori)) +
-  geom_point() + geom_smooth(aes(group = apriori), method = "lm", se = FALSE)
+ggplot(left_join(richness_by_predator, site_data_reach, by = "site_id"),
+       aes(x = bibi, y = count, color = predator, fill = predator)) +
+  geom_point() + geom_smooth(aes(group = predator), method = "lm", se = FALSE)
+ggplot(left_join(richness_by_predator, site_data_reach, by = "site_id"),
+       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = predator, fill = predator)) +
+  geom_point() + geom_smooth(aes(group = predator), method = "lm", se = FALSE)
 
 site_group_richness_long = site_group_richness %>% left_join(site_data_reach) %>% pivot_longer(
   cols = starts_with("rich_"),   # select all richness columns
@@ -578,7 +578,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "rich_foliage_inv_primary"  = data_reach$rich_foliage_inv_primary,
     "rich_ground_inv_primary"  = data_reach$rich_ground_inv_primary,
     "rich_bark_inv_primary"  = data_reach$rich_bark_inv_primary,
-    "rich_apriori"        = data_reach$rich_apriori,
+    "rich_predator"        = data_reach$rich_predator,
     "rich_ripasso"     = data_reach$rich_ripasso,
     "rich_ripobl"      = data_reach$rich_ripobl,
     "rich_ripasso_inv"     = data_reach$rich_ripasso_inv,
@@ -651,14 +651,14 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # A priori list of species that:
   # - Are primarily insectivorous
-  # - Are reported to forage on aquatic insects
-  m_apriori = glm(rich_apriori ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-  sem = psem(m_bibi, m_apriori); plot(sem); print(summary(sem)) 
+  # - Are reported to predate on aquatic insects
+  m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+  sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem)) 
   
   if (FALSE) { # Use forest cover instead of canopy
     sem = psem(
       lm(bibi ~ forest_reach + imp_basin, d), 
-      glm(rich_apriori ~ bibi + forest_reach + imp_reach, d, family = poisson)); plot(sem); print(summary(sem))
+      glm(rich_predator ~ bibi + forest_reach + imp_reach, d, family = poisson)); plot(sem); print(summary(sem))
   }
   
   # Marginal effect plots
@@ -666,21 +666,29 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     p_bibi_imp = ggplot(ggpredict(m_bibi, "imp_basin"), aes(x = x, y = predicted)) +
       geom_line(color = "black") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0.2) +
       geom_point(data = d, aes(x = imp_basin, y = bibi), shape = 16, color = "black", alpha = 0.5)
-    p_bird_bibi = ggplot(ggpredict(m_apriori, "bibi"), aes(x = x, y = predicted)) +
+    p_bird_bibi = ggplot(ggpredict(m_predator, "bibi"), aes(x = x, y = predicted)) +
       geom_line(color = "blue") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "blue", alpha = 0.2) +
-      geom_point(data = d, aes(x = bibi, y = rich_apriori), shape = 16, color = "blue", alpha = 0.5)
-    p_bird_imp = ggplot(ggpredict(m_apriori, "imp_reach [0:0.65 by=0.01]"), aes(x = x, y = predicted)) +
+      geom_point(data = d, aes(x = bibi, y = rich_predator), shape = 16, color = "blue", alpha = 0.5)
+    p_bird_imp = ggplot(ggpredict(m_predator, "imp_reach [0:0.65 by=0.01]"), aes(x = x, y = predicted)) +
       geom_line(color = "black") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0.2) +
-      geom_point(data = d, aes(x = imp_reach, y = rich_apriori), shape = 16, color = "black", alpha = 0.5)
-    p_bird_canopy = ggplot(ggpredict(m_apriori, "canopy_reach [0:1 by=0.01]"), aes(x = x, y = predicted)) +
+      geom_point(data = d, aes(x = imp_reach, y = rich_predator), shape = 16, color = "black", alpha = 0.5)
+    p_bird_canopy = ggplot(ggpredict(m_predator, "canopy_reach [0:1 by=0.01]"), aes(x = x, y = predicted)) +
       geom_line(color = "forestgreen") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "forestgreen", alpha = 0.2) +
-      geom_point(data = d, aes(x = canopy_reach, y = rich_apriori), shape = 16, color = "forestgreen", alpha = 0.5)
+      geom_point(data = d, aes(x = canopy_reach, y = rich_predator), shape = 16, color = "forestgreen", alpha = 0.5)
     
     (p_bibi_imp + p_bird_bibi) / (p_bird_imp + p_bird_canopy)
+    
+    ggplot(d, aes(x = bibi, y = rich_predator)) +
+      geom_rect(aes(xmin = 0, xmax = 20, ymin = -Inf, ymax = Inf), fill = "red", alpha = 0.01) +
+      geom_rect(aes(xmin = 20, xmax = 40, ymin = -Inf, ymax = Inf), fill = "orange", alpha = 0.01) +
+      geom_rect(aes(xmin = 40, xmax = 60, ymin = -Inf, ymax = Inf), fill = "yellow", alpha = 0.01) +
+      geom_rect(aes(xmin = 60, xmax = 80, ymin = -Inf, ymax = Inf), fill = "green", alpha = 0.01) +
+      geom_rect(aes(xmin = 80, xmax = 100, ymin = -Inf, ymax = Inf), fill = "dodgerblue", alpha = 0.01) +
+      geom_point() + geom_text_repel(aes(label = site_id))
   }
   
   # Check over/underdispersion -- if overdispersed, fit negative binomial
-  # simres_pois = simulateResiduals(m_apriori, n = 1000); plot(simres_pois); testDispersion(simres_pois)
+  # simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
 }
 
 # print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_invert), n = 100)

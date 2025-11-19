@@ -252,7 +252,8 @@ detections = prediction_data %>% filter(!common_name %in% c(
   "pied-billed grebe",
   "ruddy duck",
   "bufflehead",
-  "american pipit"
+  "american pipit",
+  "ruby-crowned kinglet"
 ))
 
 species_names = species_names %>% filter(common_name %in% detections$common_name)
@@ -281,7 +282,8 @@ if (use_platt_scaling) {
     "red-breasted sapsucker",
     "vaux's swift",
     "merlin",
-    "spotted sandpiper"
+    "spotted sandpiper",
+    "northern pygmy-owl"
   ), "threshold"] = Inf
   
   # Enforce the minimum threshold

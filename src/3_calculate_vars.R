@@ -33,7 +33,7 @@ sapply(pkgs, function(pkg) {
   as.character(packageVersion(pkg))
 })
 
-buffer_radius = set_units(5000, m) # 5km site buffer (alternative: ~550 m insect emergence 90% flux range falloff)
+buffer_radius = set_units(250, m) # site buffer (~550 m insect emergence 90% flux range falloff)
 
 theme_set(theme_minimal())
 
