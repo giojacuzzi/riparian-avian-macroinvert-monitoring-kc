@@ -1,0 +1,102 @@
+######################################################################################
+# Following:
+# - https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.1365-2664.2009.01664.x
+# - https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2293
+# - https://www.sciencedirect.com/science/article/abs/pii/S0006320709004819
+
+model{
+
+  ## Community level hyperpriors
+
+  # Occurrence
+  psi.mean ~ dunif(0,1)                   # probability scale
+  mu.u <- log(psi.mean) - log(1-psi.mean) # logit scale
+  sigma.u ~ dunif(0,5)                    # standard deviation
+  tau.u <- pow(sigma.u,-2)                # precision
+  
+  # Covariate effects on occurrence
+  mu.alpha1 ~ dnorm(0,0.01)
+  sigma.alpha1 ~ dunif(0,5)
+  tau.alpha1 <- pow(sigma.alpha1,-2)
+  mu.alpha2 ~ dnorm(0,0.01)
+  sigma.alpha2 ~ dunif(0,5)
+  tau.alpha2 <- pow(sigma.alpha2,-2)
+  mu.alpha3 ~ dnorm(0,0.01)
+  sigma.alpha3 ~ dunif(0,5)
+  tau.alpha3 <- pow(sigma.alpha3,-2)
+  
+  # Detection (unconfirmed true-positive)
+  v.mean  ~ dunif(0,1)
+  mu.v  <- log(v.mean) - log(1-v.mean)
+  sigma.v ~ dunif(0,5)
+  tau.v <- pow(sigma.v,-2)
+
+  # Covariate effects on detection (unconfirmed true-positive)
+  mu.beta1    ~ dnorm(0,0.01)
+  sigma.beta1 ~ dunif(0,5)
+  tau.beta1  <- pow(sigma.beta1,-2)
+
+  ## Species level priors
+  for (i in 1:I) {
+      
+      # Occupancy
+      u[i]      ~ dnorm(mu.u, tau.u)
+      alpha1[i] ~ dnorm(mu.alpha1,tau.alpha1)
+      alpha2[i] ~ dnorm(mu.alpha2,tau.alpha2)
+      alpha3[i] ~ dnorm(mu.alpha3,tau.alpha3)
+  
+      # Unconfirmed true positive detection
+      v[i]     ~ dnorm(mu.v, tau.v)
+      beta1[i] ~ dnorm(mu.beta1,tau.beta1)
+      
+      # Unconfirmed false positive detection
+      # w[i] ~ dnorm(mu.w,tau.w)
+      
+      # Confirmed true positive detection
+      # gamma[i] ~ dnorm(mu.b, tau.b)
+      # b[i] <- 1 / (1 + exp(-gamma[i]))
+  }
+  
+  for (i in 1:I) { # for each species i
+      for (j in 1:J) { # for each site j
+          
+              # Ecological process model for latent occurrence z
+              logit(psi[j,i]) <- u[i] + alpha1[i]*x_alpha1[j] + alpha2[i]*x_alpha2[j] + alpha3[i]*x_alpha3[j]
+              z[j,i] ~ dbern(psi[j,i])
+              
+              for (k in 1:K[j]) { # for each survey k during season t at site j
+    
+                  ## Observation model, assumming no false positives (e.g. Zipkin et al. 2009)
+                  
+                  # p11 is true-positive detection probability given z = 1
+                  logit(p11[j,k,i]) <- v[i] + beta1[i]*x_beta1[j,k]
+                
+                  p[j,k,i] <- z[j,i] * p11[j,k,i]
+                  
+                  # Observed outcome
+                  y[j,k,i] ~ dbern(p[j,k,i])
+                  
+                  # Simulated replicate for posterior predictive checks
+                  y_sim[j,k,i] ~ dbern(p[j,k,i])
+
+                  # Deviance (Broms et al. 2016)
+                  d_obs[j,k,i] <- y[j,k,i] * log(p[j,k,i]) + (1 - y[j,k,i]) * log(1 - p[j,k,i])
+                  d_sim[j,k,i] <- y_sim[j,k,i] * log(p[j,k,i]) + (1 - y_sim[j,k,i]) * log(1 - p[j,k,i])
+      
+              } # K surveys
+              
+              # Pad jagged array of deviance values with zeros to enable sum below
+              for (k in (K[j]+1):Kmax) {
+                  d_obs[j,k,i] <- 0
+                  d_sim[j,k,i] <- 0
+              }
+              
+      } # J sites
+  } # I species
+  
+  ## Derived quantities
+  
+  # Deviance of simulated and observed data for posterior predictive check
+  D_obs <- -2 * sum(d_obs[1:J,1:Kmax,1:I])
+  D_sim <- -2 * sum(d_sim[1:J,1:Kmax,1:I])
+}
