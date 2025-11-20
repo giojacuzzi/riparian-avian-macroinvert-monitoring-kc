@@ -166,6 +166,12 @@ plt = ggplot() +
     size = 2, nudge_x = 0.02, direction = "y", hjust = 0.02, max.overlaps = 30
   ) + theme(legend.position = "bottom"); print(plt)
 
+ggplot() +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
+  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = primary_lifestyle), cex = 2, priority = "density") +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name)), size = 3.5)
+
 
 ggplot(data = species_effects %>% filter(param == "alpha1"),
        aes(x = coef_mean, y = reorder(common_name, coef_mean))) +
