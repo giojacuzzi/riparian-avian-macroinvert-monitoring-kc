@@ -22,10 +22,7 @@ path_out_dir = "data/cache/0_aggregate_raw_pam_data"
 path_out_survey_file_counts = paste0(path_out_dir, '/survey_file_counts.feather')
 path_out_prediction_data = paste0(path_out_dir, '/prediction_data.feather')
 
-library(arrow)
-library(tidyverse)
-library(janitor)
-library(progress)
+source("src/global.R")
 
 # Parse metadata from survey .csv path
 parse_metadata = function(file_path) {

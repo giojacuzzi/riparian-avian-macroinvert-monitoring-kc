@@ -1,4 +1,4 @@
-library(tidyverse)
+source("src/global.R")
 
 path = "data/cache/models/reach_all.rds"
 in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
@@ -6,19 +6,6 @@ in_path_species_list    = "data/pam/species_list.txt"
 
 message("Loading data for model ", path)
 model_data = readRDS(path)
-
-species_names = read_lines(in_path_species_list) %>% as_tibble() %>%
-  separate(value, into = c("scientific_name", "common_name"), sep = "_") %>% mutate(
-    common_name = tolower(common_name), scientific_name = tolower(scientific_name)
-  ) %>% filter(common_name %in% sort(unique(model_data$species)))
-
-avonet = readxl::read_xlsx(in_path_avonet_traits, sheet = "AVONET2_eBird") %>%
-  janitor::clean_names() %>%
-  rename(scientific_name = species2, family = family2, order = order2) %>%
-  mutate(scientific_name = tolower(scientific_name)) %>%
-  filter(scientific_name %in% species_names$scientific_name) %>%
-  select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
-species_metadata = left_join(species_names, avonet, by = "scientific_name")
 
 community_baselines = model_data$msom_summary %>%
   filter(param %in% c("mu.u", "sigma.u",
@@ -125,9 +112,7 @@ species_effects = param_occ_data %>%
   mutate(coef = map(param, ~ model_data$msom_summary %>% filter(str_detect(param, paste0("^", .x, "(?!\\d)\\["))))) %>%
   unnest(coef, names_sep = "_") %>% mutate(species_idx = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", coef_param))) %>% mutate(common_name = species[species_idx])
 
-species_effects = species_effects %>% left_join(species_metadata, by ="common_name")
-
-# TODO: join with species metadata
+species_effects = species_effects %>% left_join(species_traits, by ="common_name")
 
 plt = ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
@@ -168,9 +153,16 @@ plt = ggplot() +
 
 ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
-  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = primary_lifestyle), cex = 2, priority = "density") +
+  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = benthic_macroinverts, shape = coef_overlap0), cex = 2, priority = "density") +
   geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name)), size = 3.5)
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name)), size = 3.5) +
+  scale_shape_manual(values = c(16, 1)) +
+  labs(color = "Predator", shape = "Significance") +
+  geom_text_repel(
+    data = species_effects,
+    aes(x = coef_mean, y = name, label = common_name, color = benthic_macroinverts),
+    size = 2, nudge_x = 0.02, direction = "y", hjust = 0.05, max.overlaps = 30
+  )
 
 
 ggplot(data = species_effects %>% filter(param == "alpha1"),

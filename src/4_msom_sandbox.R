@@ -1,4 +1,4 @@
-library(jagsUI)
+source("src/global.R")
 
 in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
 

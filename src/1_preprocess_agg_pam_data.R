@@ -19,17 +19,7 @@ tp_min_prob = 0.95 # Desired minimum probability of true positive
 calibration_tag = ifelse(use_platt_scaling, "calibrated", "naive")
 out_detect_hist_data = paste0("data/cache/1_preprocess_agg_pam_data/detections_", calibration_tag, "_", threshold_min_classifier_score, ".rds")
 
-# Load required packages (automatically install any missing)  -------------------------------------
-pkgs = c(
-  "tidyverse",  # data manipulation
-  "arrow",      # cache data compression
-  "PRROC"       # classifier performance evaluation
-)
-sapply(pkgs, function(pkg) {
-  if (!pkg %in% installed.packages()[, "Package"]) install.packages(pkg, dependencies = TRUE)
-  library(pkg, character.only = TRUE)
-  as.character(packageVersion(pkg))
-})
+source("src/global.R")
 
 # Load classifier prediction data
 message("Loading classifier prediction data")

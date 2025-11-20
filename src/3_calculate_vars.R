@@ -10,28 +10,7 @@ in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"
 # Outputs:
 out_cache_dir = "data/cache/3_calculate_vars"
 
-# Load required packages (automatically install any missing) -------------------------
-pkgs = c(
-  "tidyverse",   # data manipulation
-  "janitor",     # data cleaning
-  "sf",          # vector data
-  "terra",       # raster data
-  "tidyterra",   # raster data manipulation
-  "tigris",      # political boundaries
-  "geosphere",   # distance metrics
-  "mapview",     # interactive geospatial visualization
-  "leafsync",    # synchronized mapview panels
-  "progress",    # dynamic progress bar
-  "ggrepel",     # plot annotations
-  "landscapemetrics", # landscape metrics
-  "piecewiseSEM", # structural equation modeling
-  "units"
-)
-sapply(pkgs, function(pkg) {
-  if (!pkg %in% installed.packages()[, "Package"]) install.packages(pkg, dependencies = TRUE)
-  library(pkg, character.only = TRUE)
-  as.character(packageVersion(pkg))
-})
+source("src/global.R")
 
 buffer_radius = set_units(5000, m) # site buffer (~550 m insect emergence 90% flux range falloff; 5km basin)
 

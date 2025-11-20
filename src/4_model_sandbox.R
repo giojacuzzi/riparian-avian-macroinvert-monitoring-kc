@@ -1,18 +1,6 @@
-library(tidyverse)
-library(ggrepel)
-library(janitor)
-library(sf)
-library(DHARMa)
-library(mapview)
-library(piecewiseSEM)
-library(patchwork)
-library(ggeffects)
-theme_set(theme_minimal())
+source("src/global.R")
 
-in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
-in_path_species_list    = "data/pam/species_list.txt"
-in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
-in_path_elton_traits    = "data/traits/EltonTraits 1.0/BirdFuncDat.csv"
+in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 
 exclude_agri_sites = TRUE
 
@@ -54,11 +42,6 @@ detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
-species_names = read_lines(in_path_species_list) %>% as_tibble() %>%
-  separate(value, into = c("scientific_name", "common_name"), sep = "_") %>% mutate(
-    common_name = tolower(common_name), scientific_name = tolower(scientific_name)
-  ) #%>% filter(common_name %in% sort(unique(detections$long$common_name)))
-
 # TODO: assess adequacy of sampling effort to detect total species richness via sample size-based rarefaction and extrapolation sampling curves for species richness (iNEXT)? Quantify sample completeness to determine the estimated proportion of species detected from the predicted species pool by plotting sample coverage with respect to the number of sampling units.
 if (FALSE) {
   library(iNEXT)
@@ -89,248 +72,89 @@ if (FALSE) {
   
 }
 
-# Load AVONET species trait metadata
-avonet = readxl::read_xlsx(in_path_avonet_traits, sheet = "AVONET2_eBird") %>%
-  janitor::clean_names() %>%
-  rename(scientific_name = species2, family = family2, order = order2) %>%
-  mutate(scientific_name = tolower(scientific_name)) %>%
-  filter(scientific_name %in% species_names$scientific_name) %>%
-  select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
-
-# Load EltonTraits 1.0 species trait metadata
-eltontraits = read_csv(in_path_elton_traits) %>% clean_names() %>% rename(scientific_name = scientific, common_name = english) %>%
-  mutate(
-    common_name = str_to_lower(common_name), scientific_name = str_to_lower(scientific_name)
-  ) %>% mutate(
-    common_name = case_when(
-      common_name == "american treecreeper" ~ "brown creeper",
-      common_name == "winter wren"          ~ "pacific wren",
-      common_name == "black-throated grey warbler" ~ "black-throated gray warbler",
-      common_name == "common teal" ~ "green-winged teal",
-      TRUE ~ common_name   # keep all others unchanged
-    )
-  ) %>% filter(common_name %in% species_names$common_name) %>%
-  select(common_name, diet_inv, diet_5cat, starts_with("for_strat"), body_mass_value)
-
-setdiff(species_names$common_name, eltontraits %>% filter(common_name %in% species_names$common_name) %>% pull(common_name))
-
-# Add both trait data sources to species metadata
-species_metadata = left_join(species_names, avonet, by = "scientific_name")
-species_metadata = left_join(species_metadata, eltontraits, by = "common_name")
-
 # NOTE: Very few aerial specialist foragers
 eltontraits %>% filter(for_strat_aerial >= 10) %>% pull(common_name)
 
 # Get AVONET invertivore community subset
 # "Invertivore = species obtaining at least 60% of food resources from invertebrates in terrestrial systems, including insects, worms, arachnids, etc."
-invertivores_avonet = species_metadata %>% filter(trophic_niche == "Invertivore") %>% pull(common_name) %>% sort()
+invertivores_avonet = species_traits %>% filter(trophic_niche == "Invertivore") %>% pull(common_name) %>% sort()
 # "Aquatic Predator = species obtaining at least 60% of food resources from vertebrate and invertebrate animals in aquatic systems, including fish, crustacea, molluscs, etc."
-species_metadata %>% filter(trophic_niche == "Aquatic predator") %>% pull(common_name)
+species_traits %>% filter(trophic_niche == "Aquatic predator") %>% pull(common_name)
 
 # Get Eltontraits invertivore community subset
 # "Percent use of: Invertebrates-general, aquatic invertebrates, shrimp, krill, squid, crustacaeans, molluscs, cephalapod, polychaetes, gastropods, orthoptera, terrestrial Invertebrates, ground insects, insect larvae, worms, orthopterans, flying insects"
-species_invert_ETdietGt10 = species_metadata %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # nearly all species
+species_invert_ETdietGt10 = species_traits %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # nearly all species
 # "Assignment to the dominant among five diet categories based on the summed scores of constituent individual diets."
-invertivores_eltontraits = species_metadata %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
+invertivores_eltontraits = species_traits %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
 
 setdiff(invertivores_eltontraits, invertivores_avonet)
 setdiff(invertivores_avonet, invertivores_eltontraits)
 
-# Load guild data
-species_guilds = read_csv("data/traits/species_guilds.csv") %>% clean_names() %>% mutate(common_name = tolower(common_name))
-
 # Insectivores
-sp_invert = species_metadata %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # most species
-sp_invert_primary = species_metadata %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
+sp_invert = species_traits %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # most species
+sp_invert_primary = species_traits %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
 
 # Foraging guild: Aerial insectivores (e.g. swallows, swifts, flycatchers)
 # primarily capture prey while they are flying in the air
-sp_g_aerial_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
+sp_g_aerial_invert = species_traits %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
   filter(common_name %in% sp_invert) %>% pull(common_name)
 
-sp_g_aerial_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
+sp_g_aerial_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
   filter(common_name %in% sp_invert_primary) %>% pull(common_name)
 
-sp_g_foliage_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
+sp_g_foliage_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
   filter(common_name %in% sp_invert_primary) %>% pull(common_name)
 
-sp_g_ground_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
+sp_g_ground_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
   filter(common_name %in% sp_invert_primary) %>% pull(common_name)
 
-sp_g_bark_invert_primary = species_guilds %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
+sp_g_bark_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
   filter(common_name %in% sp_invert_primary) %>% pull(common_name)
 
 # Foraging guild: Foliage gleaners (e.g. warblers, vireos)
 # typically capture insects located on vegetation or woody substrate
-sp_g_foliage_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
+sp_g_foliage_invert = species_traits %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
   filter(common_name %in% sp_invert) %>% pull(common_name)
 
 # Foraging guild: Ground foragers (e.g. american robin)
 # procure prey within forest leaf-litter and at the soil surface
-sp_g_ground_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
+sp_g_ground_invert = species_traits %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
   filter(common_name %in% sp_invert) %>% pull(common_name)
 
 # Foraging guild: Bark-probers (e.g. brown creeper, red-breated nuthatch, woodpeckers and sapsuckers)
 # extract prey from under bark or by boring into wood
-sp_g_bark_invert = species_guilds %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
+sp_g_bark_invert = species_traits %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
   filter(common_name %in% sp_invert) %>% pull(common_name)
 
 # Riparian associates
-sp_ripasso = species_guilds %>% filter(rip_asso_rich2002 == "X") %>% pull(common_name) %>% sort()
+sp_ripasso = species_traits %>% filter(rip_asso_rich2002 == "X") %>% pull(common_name) %>% sort()
 # Riparian obligats
-sp_ripobl  = species_guilds %>% filter(rip_obl_rich2002 == "X")  %>% pull(common_name) %>% sort()
+sp_ripobl  = species_traits %>% filter(rip_obl_rich2002 == "X")  %>% pull(common_name) %>% sort()
 
 # A priori list of species that:
-# - Are primarily insectivorous
-# - Are reported to forage on aquatic insects
+# - Are primarily invertivores
+# - Are reported to forage on aquatic macroinvertebrate taxa measured in B-IBI
 #
 # https://pugetsoundstreambenthos.org/About-BIBI.aspx
-# B-IBI is calculated from stream site samples of primarily EPT species...
+# B-IBI is calculated from stream site samples of the following insect orders...
 # - Ephemeroptera, mayflies
 # - Plecoptera, stoneflies
 # - Trichoptera, caddisflies
-#
-# ...but also:
 # - Diptera, true flies and midges (with aquatic larvae e.g. Chironomidae, Simuliidae, Tipulidae)
+# ... and classes of mollusks:
 # - Bivalvia, freshwater clams (e.g. Unionidae, Sphaeriidae)
 # - Gastropoda, freshwater snails (e.g. Lymnaeidae, Planorbidae)
 # - aquatic worms
 #
-# Diets for each species obtained from Birds of the World, unless otherwise commented
-sp_predator = c(
-  ## Primary invertebrate diet (Eltontraits Diet-5cat) -----------------------------------------------
+# Diets for each species obtained from Birds of the World, unless otherwise noted in raw data
+sp_predator = species_traits %>% filter(benthic_macroinverts == TRUE, diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
   
-  # Emergent aquatic invertebrate (EPT) consumers:
-  "american dipper",             # Ephemeroptera, Plecoptera, Trichoptera, Diptera (Chironomidae, Simuliidae, Tipulidae)
-  "american pipit",              # Ephemeroptera, Plecoptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
-  "bufflehead",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Chaoborinae), Odonata, Hemiptera (Corixidae)
-  "cliff swallow",               # Ephemeroptera, Diptera (Chironomidae, Simuliidae), Odonata
-  # TODO: "common nighthawk"     # Ephemeroptera, Trichopetera, Diptera
-  "common yellowthroat",         # Ephemeroptera, Trichoptera, Diptera, https://www.jstor.org/stable/2426510?seq=1
-  "golden-crowned kinglet",      # Plecoptera, Trichoptera, Diptera (Chironomus, Tipulidae, Culicidae)
-  "hermit thrush",               # marginal evidence of mayfly predation, https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=osu1236799366&disposition=inline
-  # TODO: "hermit warbler" # UNLIKELY
-  "house wren",                  # marginal evidence of mayfly predation
-  "purple martin",               # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Tipulidae), Odonata
-  "ruddy duck",                  # Ephemeroptera, Trichoptera, Diptera (Chironomidae, Culicidae), Odonata, Corixidae
-  "spotted sandpiper",           # Ephemeroptera, Diptera
-  "tree swallow",                # Ephemeroptera, Plecoptera, Trichoptera, Diptera, Bivalvia, Odonata
-  "vaux's swift",                # Ephemeroptera, Diptera
-  "western wood-pewee",          # Ephemeroptera, Diptera, Odonata
-  "wilson's warbler",            # Ephemeroptera, Plecoptera, Trichoptera, Diptera
-  "yellow-rumped warbler",       # Trichoptera, Diptera (Tipulidae, Muscidae)
-
-  # Potential aquatic invertebrate consumers (Diptera and/or Odonata):
-  "american kestrel",              # Odonata
-  "barn swallow",                  # Diptera (Tipulidae), Odonata
-  # "black-capped chickadee",        # marginal evidence of Diptera (Chironomidae) https://www.jstor.org/stable/2426510?seq=1
-  "black-headed grosbeak",         # Unspecified, https://doi.org/10.1002/ecs2.3148
-  "brewer's blackbird",            # Diptera
-  # "chestnut-backed chickadee",     # Diptera (potential aquatic larvae Syrphidae, Tabanidae, Tipulidae)
-  "hammond's flycatcher",          # Diptera (Tipulidae)
-  "killdeer",                      # Diptera, Odonata, Hemiptera (Corixidae)
-  "marsh wren",                    # Diptera (Tipulidae), Odonata, Coleoptera (Dytiscidae)
-  "northern pygmy-owl",            # Odonata
-  "northern rough-winged swallow", # Diptera
-  "northern shoveler",             # Diptera (Chironomidae)
-  "olive-sided flycatcher",        # Diptera, Odonata, https://doi.org/10.3389/fevo.2021.633160
-  "pacific wren",                  # Diptera (Stratiomyidae)
-  "pacific-slope flycatcher",      # Diptera
-  "pied-billed grebe",             # Odonata, Bivalvia, Gastropoda
-  "red-eyed vireo",                # Diptera, Odonata
-  "ruby-crowned kinglet",          # Diptera
-  "swainson's thrush",             # Diptera (Tipulidae, Bibionidae)
-  "violet-green swallow",          # Diptera
-  "warbling vireo",                # Unspecified, https://doi.org/10.1002/ecs2.3148
-  "western tanager",               # Diptera (Tipulidae), Odonata
-  "willow flycatcher",             # Diptera (Tabanidae, Syrphidae), Odonata
-  "yellow warbler"                # Diptera (Chironomidae), https://doi.org/10.1002/ecs2.3148
-  # TODO: veery # Diptera
-
-  # Terrestrial or Marine primary invertebrate consumers (no evidence of freshwater aquatic invert prey):
-  
-  # "bewick's wren",               #
-  # "black-throated gray warbler", #
-  # "brown creeper"                # Tricoptera (only one study with sample size of 1, very likely incidental)
-  # "bushtit",                     #
-  # "cassin's vireo",              #
-  # "downy woodpecker",            #
-  # "hairy woodpecker",            #
-  # "hutton's vireo",              #
-  # "macgillivray's warbler",      #
-  # "marbled murrelet",            #
-  # "northern flicker",            #
-  # "orange-crowned warbler",      #
-  # "pileated woodpecker",         #
-  # "red-breasted sapsucker",      #
-  # "townsend's warbler",          #
-  
-  ## Invertebrate diet (Eltontraits >= 10%) -----------------------------------------------
-  
-  # TODO: Emergent aquatic invertebrate (EPT) consumers:
-
-  ## Primary VertFishScav
-  # "american bittern",          # Odonata, Belastomatidae (giant waterbugs), Nepidae (water scorpions), Dytiscidae (water beetles)
-  # barn owl                  #
-  # barred owl                #
-  # "belted kingfisher"         # Ephemeroptera [Prose BL 1985 "Habitat Suitability Index Models: Belted Kingfisher; Hamas MJ 1975 "Ecological and physiological..."
-  # "common merganser",          # Ephemeroptera, Trichoptera, Diptera, Odonata
-  # "common raven",              # OMNIVORE CANDIDATE, Diptera (Tipulidae)
-  # "glaucous-winged gull",      # Bivalvia (very rarely freshwater)
-  # "great blue heron",          # Odonata
-  # "great horned owl",          #
-  # "green heron",               # Odonata, Ephemeroptera
-  # "merlin",                    # Odonata
-  # northern harrier          #
-  # red-tailed hawk           #
-  # "ring-billed gull",          # Ephemeroptera, Trichoptera, Odonata, Diptera
-  
-  ## Primary omnivore
-  # american crow             #
-  # "american robin",          # Odonata
-  # "california gull",           # Ephemeroptera, Diptera, Odonata
-  # "fox sparrow",               # Diptera, Bivalvia, Gastropoda
-  # "hooded merganser",          # Trichoptera, Odonata, Bivalvia
-  # "lincoln's sparrow",         # Ephemeroptera, Diptera
-  # "mallard",                   # Trichoptera, Diptera (Chironomidae), Gastropoda
-  # "red-breasted nuthatch",     # Diptera (but almost exclusively arboreal)
-  # "red-winged blackbird",      # Odonata, Diptera (Stratiomyidae)
-  # "savannah sparrow",          # Odonata, Diptera (Chironomidae, Coelopidae)
-  # "song sparrow",            # Ephemeroptera, Diptera (Chironomidae, Tipulidae), Gastropoda https://doi.org/10.1002/ecs2.3148
-  # "spotted towhee",            # Diptera (limited aquatic evidence)
-  # steller's jay             #
-  # "virginia rail",             # Odonata, Diptera, Gastropoda
-  # western meadowlark        #
-  # western screech-owl       #
-
-  ## Primary frugivore, granivore
-  # "anna's hummingbird",        # Diptera (Chironomidae)
-  # "cedar waxwing",             # Ephemeroptera, Plecoptera, Odonata
-  # "rufous hummingbird",        # Diptera (Chironomidae)
-  # varied thrush             # 
-  # "american coot",             # Odonata, Diptera, Gastropoda
-  # american goldfinch        #
-  # "blue-winged teal",          # Diptera (Chironomidae), Bivalvia, Gastropoda
-  # "brown-headed cowbird"    #
-  # chipping sparrow          #
-  # "cinnamon teal",             # Diptera (Chironomidae), Odonata, Gastropoda
-  # "dark-eyed junco",           # Diptera (little evidence for aquatic)
-  # "eurasian collared-dove",    # Diptera (little evidence for aquatic)
-  # evening grosbeak          #
-  # "golden-crowned sparrow",    # Diptera (Tipulidae, indefinite evidence for aquatic)
-  # "green-winged teal",         # Diptera (Chironomidae), Bivalvia, Gastropoda
-  # house finch               # 
-  # "house sparrow",             # Diptera (little evidence for aquatic) 
-  # "lesser scaup",              # Diptera (Chironomidae), Bivalvia, Gastropoda
-  # pine siskin               #
-  # purple finch              #
-  # red crossbill             #
-  # "ring-necked duck",          # Trichoptera, Diptera (Chironomidae), Odonata, Bivaliva, Gastropoda
-  # rock pigeon               #
-  # white-crowned sparrow     #
-  # "white-throated sparrow"    # Odonata, Diptera
-  
-) %>% sort()
+# TODO: FINALIZE VALIDATIONS
+sp_predator = setdiff(sp_predator, c(
+  "black-capped chickadee", 
+  "chestnut-backed chickadee"
+))
+#####
 
 # Riparian associate invertivores
 sp_ripasso_inv = c(sp_invert[sp_invert %in% c(sp_ripasso)])
@@ -445,9 +269,9 @@ summary(indval)
 #   labs(title = "Species vectors")
 
 # Richness across AVONET guilds per site
-richness_by_trophic_niche = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
+richness_by_trophic_niche = presence_absence %>% left_join(species_traits, by = "common_name") %>%
   group_by(site_id, trophic_niche) %>% summarise(count = sum(presence), .groups = "drop")
-richness_by_primary_lifestyle = presence_absence %>% left_join(species_metadata, by = "common_name") %>%
+richness_by_primary_lifestyle = presence_absence %>% left_join(species_traits, by = "common_name") %>%
   group_by(site_id, primary_lifestyle) %>% summarise(count = sum(presence), .groups = "drop")
 richness_by_ripasso = presence_absence %>% mutate(ripasso = common_name %in% c(sp_ripasso)) %>% group_by(site_id, ripasso) %>% summarize(count = sum(presence))
 richness_by_predator = presence_absence %>% mutate(predator = common_name %in% c(sp_predator)) %>% group_by(site_id, predator) %>% summarize(count = sum(presence))
@@ -717,6 +541,6 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 
 # print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_invert), n = 100)
 # 
-# species_metadata %>% filter(common_name %in% c(
+# species_traits %>% filter(common_name %in% c(
 #   "green-winged teal", "mallard", "gadwall", "wood duck", "common merganser", "blue-winged teal", "cackling goose", "caspian tern", "great blue heron", "red-winged blackbird", "american bittern", "green heron"
 # )) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)
