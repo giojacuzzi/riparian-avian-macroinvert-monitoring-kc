@@ -33,7 +33,7 @@ sapply(pkgs, function(pkg) {
   as.character(packageVersion(pkg))
 })
 
-buffer_radius = set_units(250, m) # site buffer (~550 m insect emergence 90% flux range falloff)
+buffer_radius = set_units(5000, m) # site buffer (~550 m insect emergence 90% flux range falloff; 5km basin)
 
 theme_set(theme_minimal())
 
@@ -424,6 +424,17 @@ for (s in 1:nrow(sites_aru)) {
       percent = sum(percent)
     ) %>% arrange(desc(percent))
   
+  cover_summary = cover_summary %>% # Forest AND wetlands
+    bind_rows(
+      cover_summary %>%
+        filter(group %in% c("Forest", "Wetlands")) %>%
+        summarise(
+          group = "Forest and Wetlands",
+          count = sum(count),
+          percent = sum(percent)
+        )
+    )
+  
   # Major landcover classes
   r = site_nlcd_landcover
   # Reclassify summary group "Developed, Variable Intensity"
@@ -592,6 +603,7 @@ message("Visualizing geospatial data")
 site_order = unique(site_data %>% arrange(desc(nlcd_developed_variable_intensity)) %>% pull(site_id))
 
 nlcd_cols = grep("^nlcd_", names(site_data), value = TRUE)
+nlcd_cols = setdiff(nlcd_cols, "nlcd_forest_and_wetlands")
 nlcd_long = site_data %>% st_drop_geometry() %>% select(site_id, all_of(nlcd_cols)) %>%
   pivot_longer(
     cols = -site_id,

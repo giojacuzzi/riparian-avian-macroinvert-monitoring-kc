@@ -594,6 +594,8 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "ed_basin"      = data_basin$edge_density,
     "forest_reach"  = data_reach$nlcd_forest,
     "forest_basin"  = data_basin$nlcd_forest,
+    "riphab_reach"  = data_reach$nlcd_forest_and_wetlands,
+    "riphab_basin"  = data_basin$nlcd_forest_and_wetlands,
     "site_id"       = data_reach$site_id
   )
   pairwise_collinearity(d %>% select(where(is.numeric)))
@@ -655,10 +657,19 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
   sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem)) 
   
+  if (FALSE) { # Alternative scale hypotheses validations (compare AIC and R.squared)
+    m_reach_bibi = lm(bibi ~ canopy_reach + imp_reach, d)
+    m_reach_rich = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem_reach = psem(m_reach_bibi, m_reach_rich); plot(sem_reach); print(summary(sem_reach))
+    
+    m_basin_bibi = lm(bibi ~ canopy_basin + imp_basin, d)
+    m_basin_rich = glm(rich_predator ~ bibi + canopy_basin + imp_basin, d, family = poisson)
+    sem_basin = psem(m_basin_bibi, m_basin_rich); plot(sem_basin); print(summary(sem_basin)) 
+  }
   if (FALSE) { # Use forest cover instead of canopy
     sem = psem(
-      lm(bibi ~ forest_reach + imp_basin, d), 
-      glm(rich_predator ~ bibi + forest_reach + imp_reach, d, family = poisson)); plot(sem); print(summary(sem))
+      lm(bibi ~ riphab_reach + imp_basin, d), 
+      glm(rich_predator ~ bibi + riphab_reach + imp_reach, d, family = poisson)); plot(sem); print(summary(sem))
   }
   
   # Marginal effect plots
@@ -689,6 +700,19 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # Check over/underdispersion -- if overdispersed, fit negative binomial
   # simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
+  
+  # TODO: Moran's I test for spatial autocorrelation
+  # library(spdep)
+  # # site coords
+  # coords <- cbind(stream_data$longitude, stream_data$latitude)
+  # # spatial weights matrix (inverse distance)
+  # dists <- as.matrix(dist(coords))
+  # inv_dists <- 1/dists
+  # diag(inv_dists) <- 0  # no self-weight
+  # listw <- mat2listw(inv_dists)
+  # # Moran's I for residuals
+  # resids <- residuals(your_model, type="response")  # e.g., BIBI residuals
+  # moran.test(resids, listw)
 }
 
 # print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_invert), n = 100)
