@@ -1,0 +1,132 @@
+common_name,scientific_name,benthic_macroinverts,ephemeroptera,plecoptera,trichoptera,diptera,odonata,bivalvia,gastropoda,source
+american bittern,botaurus lentiginosus,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+american coot,fulica americana,TRUE,,,,diptera,odonata,,gastropoda,https://birdsoftheworld.org/
+american crow,corvus brachyrhynchos,,,,,,,,,https://birdsoftheworld.org/
+american dipper,cinclus mexicanus,TRUE,ephemeroptera,plecoptera,trichoptera,"Chironomidae, Simuliidae, Tipulidae",,,,https://birdsoftheworld.org/
+american goldfinch,spinus tristis,,,,,,,,,https://birdsoftheworld.org/
+american kestrel,falco sparverius,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+american pipit,anthus rubescens,TRUE,ephemeroptera,plecoptera,trichoptera,"Chironomidae, Tipulidae",odonata,,,https://birdsoftheworld.org/
+american robin,turdus migratorius,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+american wigeon,mareca americana,,,,,,,,,https://birdsoftheworld.org/
+anna's hummingbird,calypte anna,TRUE,,,,Chironomidae,,,,https://birdsoftheworld.org/
+bald eagle,haliaeetus leucocephalus,,,,,,,,,https://birdsoftheworld.org/
+band-tailed pigeon,patagioenas fasciata,,,,,,,,,https://birdsoftheworld.org/
+barn owl,tyto alba,,,,,,,,,https://birdsoftheworld.org/
+barn swallow,hirundo rustica,TRUE,,,,Tipulidae,odonata,,,https://birdsoftheworld.org/
+barred owl,strix varia,,,,,,,,,https://birdsoftheworld.org/
+belted kingfisher,megaceryle alcyon,TRUE,ephemeroptera,,,,,,,https://www.usgs.gov/publications/habitat-suitability-index-models-belted-kingfisher
+bewick's wren,thryomanes bewickii,,,,,,,,,https://birdsoftheworld.org/
+black-capped chickadee,poecile atricapillus,TRUE,,,,Chironomidae,,,,https://birdsoftheworld.org/
+black-headed grosbeak,pheucticus melanocephalus,TRUE,,,,,,,,https://doi.org/10.1002/ecs2.3148
+black-throated gray warbler,setophaga nigrescens,,,,,,,,,https://birdsoftheworld.org/
+blue-winged teal,spatula discors,TRUE,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
+brewer's blackbird,euphagus cyanocephalus,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+brown creeper,certhia americana,,,,,,,,,https://birdsoftheworld.org/
+brown-headed cowbird,molothrus ater,,,,,,,,,https://birdsoftheworld.org/
+bufflehead,bucephala albeola,TRUE,ephemeroptera,,trichoptera,"Chironomidae, Chaoborinae",odonata,,,https://birdsoftheworld.org/
+bushtit,psaltriparus minimus,,,,,,,,,https://birdsoftheworld.org/
+cackling goose,branta hutchinsii,,,,,,,,,https://birdsoftheworld.org/
+california gull,larus californicus,TRUE,ephemeroptera,,,diptera,odonata,,,https://birdsoftheworld.org/
+california quail,callipepla californica,,,,,,,,,https://birdsoftheworld.org/
+california scrub-jay,aphelocoma californica,,,,,,,,,https://birdsoftheworld.org/
+canada goose,branta canadensis,,,,,,,,,https://birdsoftheworld.org/
+caspian tern,hydroprogne caspia,,,,,,,,,https://birdsoftheworld.org/
+cassin's vireo,vireo cassinii,,,,,,,,,https://birdsoftheworld.org/
+cedar waxwing,bombycilla cedrorum,TRUE,ephemeroptera,plecoptera,,,odonata,,,https://birdsoftheworld.org/
+chestnut-backed chickadee,poecile rufescens,TRUE,,,,"Syrphidae, Tabanidae, Tipulidae",,,,https://birdsoftheworld.org/
+chipping sparrow,spizella passerina,,,,,,,,,https://birdsoftheworld.org/
+cinnamon teal,spatula cyanoptera,TRUE,,,,Chironomidae,odonata,,gastropoda,https://birdsoftheworld.org/
+cliff swallow,petrochelidon pyrrhonota,TRUE,ephemeroptera,,,"Chironomidae, Simuliidae",odonata,,,https://birdsoftheworld.org/
+common merganser,mergus merganser,TRUE,ephemeroptera,,trichoptera,diptera,odonata,,,https://birdsoftheworld.org/
+common nighthawk,chordeiles minor,TRUE,ephemeroptera,,trichoptera,diptera,,,,https://birdsoftheworld.org/
+common raven,corvus corax,TRUE,,,,Tipulidae,,,,https://birdsoftheworld.org/
+common yellowthroat,geothlypis trichas,TRUE,ephemeroptera,,trichoptera,diptera,,,,https://birdsoftheworld.org/
+cooper's hawk,accipiter cooperii,,,,,,,,,https://birdsoftheworld.org/
+dark-eyed junco,junco hyemalis,,,,,,,,,https://birdsoftheworld.org/
+double-crested cormorant,nannopterum auritum,,,,,,,,,https://birdsoftheworld.org/
+downy woodpecker,dryobates pubescens,,,,,,,,,https://birdsoftheworld.org/
+eurasian collared-dove,streptopelia decaocto,,,,,,,,,https://birdsoftheworld.org/
+european starling,sturnus vulgaris,,,,,,,,,https://birdsoftheworld.org/
+evening grosbeak,coccothraustes vespertinus,,,,,,,,,https://birdsoftheworld.org/
+fox sparrow,passerella iliaca,TRUE,,,,diptera,,bivalvia,gastropoda,https://birdsoftheworld.org/
+gadwall,mareca strepera,,,,,,,,,https://birdsoftheworld.org/
+glaucous-winged gull,larus glaucescens,,,,,,,,,https://birdsoftheworld.org/
+golden-crowned kinglet,regulus satrapa,TRUE,,plecoptera,trichoptera,"Chironomus, Tipulidae, Culicidae",,,,https://birdsoftheworld.org/
+golden-crowned sparrow,zonotrichia atricapilla,TRUE,,,,Tipulidae,,,,https://birdsoftheworld.org/
+great blue heron,ardea herodias,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+great horned owl,bubo virginianus,,,,,,,,,https://birdsoftheworld.org/
+green heron,butorides virescens,TRUE,ephemeroptera,,,,odonata,,,https://birdsoftheworld.org/
+green-winged teal,anas crecca,TRUE,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
+hairy woodpecker,dryobates villosus,,,,,,,,,https://birdsoftheworld.org/
+hammond's flycatcher,empidonax hammondii,TRUE,,,,Tipulidae,,,,https://birdsoftheworld.org/
+hermit thrush,catharus guttatus,TRUE,ephemeroptera,,,,,,,https://birdsoftheworld.org/
+hermit warbler,setophaga occidentalis,TRUE,,plecoptera,,diptera,,,,https://birdsoftheworld.org/
+hooded merganser,lophodytes cucullatus,TRUE,,,trichoptera,,odonata,bivalvia,,https://birdsoftheworld.org/
+house finch,haemorhous mexicanus,,,,,,,,,https://birdsoftheworld.org/
+house sparrow,passer domesticus,,,,,,,,,https://birdsoftheworld.org/
+house wren,troglodytes aedon,TRUE,ephemeroptera,,,,,,,https://birdsoftheworld.org/
+hutton's vireo,vireo huttoni,,,,,,,,,https://birdsoftheworld.org/
+killdeer,charadrius vociferus,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+lesser scaup,aythya affinis,TRUE,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
+lincoln's sparrow,melospiza lincolnii,TRUE,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
+macgillivray's warbler,geothlypis tolmiei,,,,,,,,,https://birdsoftheworld.org/
+mallard,anas platyrhynchos,TRUE,,,trichoptera,Chironomidae,,,gastropoda,https://birdsoftheworld.org/
+marbled murrelet,brachyramphus marmoratus,,,,,,,,,https://birdsoftheworld.org/
+marsh wren,cistothorus palustris,TRUE,,,,diptera,odonata,,,https://birdsoftheworld.org/
+merlin,falco columbarius,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+mourning dove,zenaida macroura,,,,,,,,,https://birdsoftheworld.org/
+northern flicker,colaptes auratus,,,,,,,,,https://birdsoftheworld.org/
+northern harrier,circus hudsonius,,,,,,,,,https://birdsoftheworld.org/
+northern pygmy-owl,glaucidium gnoma,TRUE,,,,,odonata,,,https://birdsoftheworld.org/
+northern rough-winged swallow,stelgidopteryx serripennis,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+northern shoveler,spatula clypeata,TRUE,,,,Chironomidae,,,,https://birdsoftheworld.org/
+olive-sided flycatcher,contopus cooperi,TRUE,,,,diptera,,,,https://doi.org/10.3389/fevo.2021.633160
+orange-crowned warbler,leiothlypis celata,,,,,,,,,https://birdsoftheworld.org/
+osprey,pandion haliaetus,,,,,,,,,https://birdsoftheworld.org/
+pacific wren,troglodytes pacificus,TRUE,,,,Stratiomyidae,,,,https://birdsoftheworld.org/
+pacific-slope flycatcher,empidonax difficilis,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+pied-billed grebe,podilymbus podiceps,TRUE,,,,,odonata,bivalvia,gastropoda,https://birdsoftheworld.org/
+pileated woodpecker,dryocopus pileatus,,,,,,,,,https://birdsoftheworld.org/
+pine siskin,spinus pinus,,,,,,,,,https://birdsoftheworld.org/
+purple finch,haemorhous purpureus,,,,,,,,,https://birdsoftheworld.org/
+purple martin,progne subis,TRUE,ephemeroptera,,trichoptera,"Chironomidae, Tipulidae",odonata,,,https://birdsoftheworld.org/
+red crossbill,loxia curvirostra,,,,,,,,,https://birdsoftheworld.org/
+red-breasted nuthatch,sitta canadensis,,,,,,,,,https://birdsoftheworld.org/
+red-breasted sapsucker,sphyrapicus ruber,,,,,,,,,https://birdsoftheworld.org/
+red-eyed vireo,vireo olivaceus,TRUE,,,,diptera,odonata,,,https://birdsoftheworld.org/
+red-tailed hawk,buteo jamaicensis,,,,,,,,,https://birdsoftheworld.org/
+red-winged blackbird,agelaius phoeniceus,TRUE,,,,Stratiomyidae,odonata,,,https://birdsoftheworld.org/
+ring-billed gull,larus delawarensis,TRUE,ephemeroptera,,trichoptera,diptera,odonata,,,https://birdsoftheworld.org/
+ring-necked duck,aythya collaris,TRUE,,,trichoptera,Chironomidae,odonata,bivalvia,gastropoda,https://birdsoftheworld.org/
+rock pigeon,columba livia,,,,,,,,,https://birdsoftheworld.org/
+ruby-crowned kinglet,corthylio calendula,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+ruddy duck,oxyura jamaicensis,TRUE,ephemeroptera,,trichoptera,"Chironomidae, Culicidae",odonata,,,https://birdsoftheworld.org/
+rufous hummingbird,selasphorus rufus,TRUE,,,,Chironomidae,,,,https://birdsoftheworld.org/
+savannah sparrow,passerculus sandwichensis,TRUE,,,,"Chironomidae, Coelopidae",odonata,,,https://birdsoftheworld.org/
+sharp-shinned hawk,accipiter striatus,,,,,,,,,https://birdsoftheworld.org/
+song sparrow,melospiza melodia,TRUE,ephemeroptera,,,"Chironomidae, Tipulidae",,,gastropoda,https://doi.org/10.1002/ecs2.3148
+sooty grouse,dendragapus fuliginosus,,,,,,,,,https://birdsoftheworld.org/
+spotted sandpiper,actitis macularius,TRUE,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
+spotted towhee,pipilo maculatus,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+steller's jay,cyanocitta stelleri,,,,,,,,,https://birdsoftheworld.org/
+swainson's thrush,catharus ustulatus,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+townsend's warbler,setophaga townsendi,,,,,,,,,https://birdsoftheworld.org/
+tree swallow,tachycineta bicolor,TRUE,ephemeroptera,plecoptera,trichoptera,diptera,odonata,bivalvia,,https://birdsoftheworld.org/
+turkey vulture,cathartes aura,,,,,,,,,https://birdsoftheworld.org/
+varied thrush,ixoreus naevius,,,,,,,,,https://birdsoftheworld.org/
+vaux's swift,chaetura vauxi,TRUE,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
+veery,catharus fuscescens,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+violet-green swallow,tachycineta thalassina,TRUE,,,,diptera,,,,https://birdsoftheworld.org/
+virginia rail,rallus limicola,TRUE,,,,diptera,odonata,,gastropoda,https://birdsoftheworld.org/
+warbling vireo,vireo gilvus,TRUE,,,,,,,,https://doi.org/10.1002/ecs2.3148
+western meadowlark,sturnella neglecta,,,,,,,,,https://birdsoftheworld.org/
+western screech-owl,megascops kennicottii,,,,,,,,,https://birdsoftheworld.org/
+western tanager,piranga ludoviciana,TRUE,,,,Tipulidae,odonata,,,https://birdsoftheworld.org/
+western wood-pewee,contopus sordidulus,TRUE,ephemeroptera,,,diptera,odonata,,,https://birdsoftheworld.org/
+white-crowned sparrow,zonotrichia leucophrys,,,,,,,,,https://birdsoftheworld.org/
+white-throated sparrow,zonotrichia albicollis,TRUE,,,,diptera,odonata,,,https://birdsoftheworld.org/
+willow flycatcher,empidonax traillii,TRUE,,,,"Tabanidae, Syrphidae",odonata,,,https://birdsoftheworld.org/
+wilson's warbler,cardellina pusilla,TRUE,ephemeroptera,plecoptera,trichoptera,diptera,,,,https://birdsoftheworld.org/
+wood duck,aix sponsa,,,,,,,,,https://birdsoftheworld.org/
+yellow warbler,setophaga petechia,TRUE,,,,Chironomidae,,,,https://doi.org/10.1002/ecs2.3148
+yellow-rumped warbler,setophaga coronata,TRUE,,,trichoptera,"Tipulidae, Muscidae",,,,https://birdsoftheworld.org/
