@@ -3,7 +3,6 @@
 #
 # Inputs:
 overwrite_geospatial_site_data = FALSE
-in_path_site_metadata   = "data/site_metadata.csv"
 in_path_pssb_data       = "data/raw/pssb/ScoresByYear.csv"
 in_path_nlcd_metadata   = "data/raw/nlcd_metadata.csv"
 in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"
@@ -14,20 +13,8 @@ source("src/global.R")
 
 buffer_radius = set_units(5000, m) # site buffer (~550 m insect emergence 90% flux range falloff; 5km basin)
 
-theme_set(theme_minimal())
-
 # Load ARU and PSSB site locations and define study area -----------------------------
 message("Loading ARU and PSSB site locations")
-
-site_metadata = read_csv(in_path_site_metadata, show_col_types = FALSE) %>% clean_names() %>% mutate(site_id = as.character(site_id))
-
-crs_standard = "EPSG:32610" # shared coordinate reference system (metric)
-
-# Create sf points for site locations (reference original crs 4326)
-sites_aru = site_metadata %>%
-  st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
-sites_pssb = site_metadata %>%
-  st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
 
 # Retrieve study area
 study_area = st_read(paste0(in_cache_geospatial_dir, "/sf_studyarea.gpkg"), quiet = TRUE)

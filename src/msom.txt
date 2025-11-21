@@ -6,56 +6,52 @@
 
 model{
 
-  ## Community level hyperpriors
-
-  # Occurrence
-  psi.mean ~ dunif(0,1)                   # probability scale
-  mu.u <- log(psi.mean) - log(1-psi.mean) # logit scale
-  sigma.u ~ dunif(0,5)                    # standard deviation
-  tau.u <- pow(sigma.u,-2)                # precision
+  ## Community (group) level hyperpriors
+  for (g in 1:G) {
+    # Occurrence
+    psi.mean[g] ~ dunif(0,1)                         # probability scale
+    mu.u[g] <- log(psi.mean[g]) - log(1-psi.mean[g]) # logit scale
+    sigma.u[g] ~ dunif(0,5)                          # standard deviation
+    tau.u[g] <- pow(sigma.u[g],-2)                   # precision
+    
+    # Covariate effects on occurrence
+    mu.alpha1[g] ~ dnorm(0,0.01)
+    sigma.alpha1[g] ~ dunif(0,5)
+    tau.alpha1[g] <- pow(sigma.alpha1[g],-2)
+    mu.alpha2[g] ~ dnorm(0,0.01)
+    sigma.alpha2[g] ~ dunif(0,5)
+    tau.alpha2[g] <- pow(sigma.alpha2[g],-2)
+    mu.alpha3[g] ~ dnorm(0,0.01)
+    sigma.alpha3[g] ~ dunif(0,5)
+    tau.alpha3[g] <- pow(sigma.alpha3[g],-2)
+    
+    # Detection (unconfirmed true-positive)
+    v.mean[g]  ~ dunif(0,1)
+    mu.v[g]  <- log(v.mean[g]) - log(1-v.mean[g])
+    sigma.v[g] ~ dunif(0,5)
+    tau.v[g] <- pow(sigma.v[g],-2)
   
-  # Covariate effects on occurrence
-  mu.alpha1 ~ dnorm(0,0.01)
-  sigma.alpha1 ~ dunif(0,5)
-  tau.alpha1 <- pow(sigma.alpha1,-2)
-  mu.alpha2 ~ dnorm(0,0.01)
-  sigma.alpha2 ~ dunif(0,5)
-  tau.alpha2 <- pow(sigma.alpha2,-2)
-  mu.alpha3 ~ dnorm(0,0.01)
-  sigma.alpha3 ~ dunif(0,5)
-  tau.alpha3 <- pow(sigma.alpha3,-2)
+    # Covariate effects on detection (unconfirmed true-positive)
+    mu.beta1[g]    ~ dnorm(0,0.01)
+    sigma.beta1[g] ~ dunif(0,5)
+    tau.beta1[g]  <- pow(sigma.beta1[g],-2)
   
-  # Detection (unconfirmed true-positive)
-  v.mean  ~ dunif(0,1)
-  mu.v  <- log(v.mean) - log(1-v.mean)
-  sigma.v ~ dunif(0,5)
-  tau.v <- pow(sigma.v,-2)
-
-  # Covariate effects on detection (unconfirmed true-positive)
-  mu.beta1    ~ dnorm(0,0.01)
-  sigma.beta1 ~ dunif(0,5)
-  tau.beta1  <- pow(sigma.beta1,-2)
+  } # G groups
 
   ## Species level priors
   for (i in 1:I) {
       
       # Occupancy
-      u[i]      ~ dnorm(mu.u, tau.u)
-      alpha1[i] ~ dnorm(mu.alpha1,tau.alpha1)
-      alpha2[i] ~ dnorm(mu.alpha2,tau.alpha2)
-      alpha3[i] ~ dnorm(mu.alpha3,tau.alpha3)
+      u[i]      ~ dnorm(mu.u[group[i]], tau.u[group[i]])
+      alpha1[i] ~ dnorm(mu.alpha1[group[i]],tau.alpha1[group[i]])
+      alpha2[i] ~ dnorm(mu.alpha2[group[i]],tau.alpha2[group[i]])
+      alpha3[i] ~ dnorm(mu.alpha3[group[i]],tau.alpha3[group[i]])
   
       # Unconfirmed true positive detection
-      v[i]     ~ dnorm(mu.v, tau.v)
-      beta1[i] ~ dnorm(mu.beta1,tau.beta1)
-      
-      # Unconfirmed false positive detection
-      # w[i] ~ dnorm(mu.w,tau.w)
-      
-      # Confirmed true positive detection
-      # gamma[i] ~ dnorm(mu.b, tau.b)
-      # b[i] <- 1 / (1 + exp(-gamma[i]))
-  }
+      v[i]     ~ dnorm(mu.v[group[i]], tau.v[group[i]])
+      beta1[i] ~ dnorm(mu.beta1[group[i]],tau.beta1[group[i]])
+  
+  } # I species
   
   for (i in 1:I) { # for each species i
       for (j in 1:J) { # for each site j
@@ -99,4 +95,14 @@ model{
   # Deviance of simulated and observed data for posterior predictive check
   D_obs <- -2 * sum(d_obs[1:J,1:Kmax,1:I])
   D_sim <- -2 * sum(d_sim[1:J,1:Kmax,1:I])
+  
+  # Estimated number of occuring sites per species (among the sampled population of sites)
+  for (i in 1:I) {
+    Nocc[i] <- sum(z[ ,i])
+  }
+  
+  # Estimated number of occuring species per site (among the species that were detected anywhere)
+  for (j in 1:J) {
+    Nsite[j] <- sum(z[j, ])
+  }
 }

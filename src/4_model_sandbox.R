@@ -147,8 +147,8 @@ sp_ripobl  = species_traits %>% filter(rip_obl_rich2002 == "X")  %>% pull(common
 # - aquatic worms
 #
 # Diets for each species obtained from Birds of the World, unless otherwise noted in raw data
-sp_predator = species_traits %>% filter(benthic_macroinverts == TRUE, diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
-  
+sp_predator = species_traits %>% filter(invert_predator == "invert_predator") %>% pull(common_name) %>% sort()
+
 # TODO: FINALIZE VALIDATIONS
 sp_predator = setdiff(sp_predator, c(
   "black-capped chickadee", 

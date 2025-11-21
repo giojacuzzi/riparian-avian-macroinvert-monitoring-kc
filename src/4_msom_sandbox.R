@@ -1,20 +1,25 @@
 source("src/global.R")
 
+site_data_reach = readRDS("data/cache/3_calculate_vars/NEW_site_data_550m.rds")
+site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
+
+# Spatial scale
+site_data = site_data_reach
+# Species grouping
+grouping = "invert_predator" # or "all"
+
+# -------------------------------------
+
+path_out = paste0("data/cache/models/reach_", grouping, ".rds")
+
+model_file = "src/msom.txt"
+
 in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
 
 # Load species detection history data
 detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
-
-site_data_reach = readRDS("data/cache/3_calculate_vars/NEW_site_data_550m.rds")
-site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
-
-site_data = site_data_reach
-
-path_out = paste0("data/cache/models/reach_all.rds")
-
-model_file = "src/msom.txt"
 
 # Format detection data as multidimensional array (site x survey x species)
 detections_long = detections$long %>% rename(site = site_id, survey = survey_num, species = common_name)
@@ -26,11 +31,22 @@ species = unique(detections_long$species)
 y = xtabs(count ~ site + survey + species, data = detections_long)
 y = as.array(y)
 
+# Assign species group membership
+groups = species_traits %>% filter(common_name %in% species) %>%
+  mutate(
+    group_raw   = if (grouping == "all") "all" else .[[grouping]],
+    group       = ifelse(is.na(group_raw), "NA", as.character(group_raw)),
+    group_idx   = if (grouping == "all") 1 else as.integer(factor(group)),
+    grouping    = grouping
+  ) %>%
+  select(common_name, group, group_idx, grouping)
+
 # Model data constants
 J = dim(y)[1]
 K = dim(y)[2]
 Kmax = max(K)
 I = dim(y)[3]
+G = length(unique(groups$group_idx))
 
 # Model data covariates
 site_data = site_data %>% slice(match(sites, site_id)) # match site order in y
@@ -63,11 +79,13 @@ n_beta_params = nrow(param_beta_data)
 # Package data for MSOM -----------------------------------------------------------------------------------
 
 msom_data = list(
-  J = J,       # number of sites sampled
-  K = rep(K, J),       # number of secondary sampling periods (surveys) per site per season (site x season) # NOTE: same number of surveys per site here!
-  Kmax = Kmax, # maximum number of surveys across all sites and seasons
-  I = I,       # number of species observed
-  y = y        # observed (detection-nondetection) data matrix
+  J = J,                                # number of sites sampled
+  K = rep(K, J),                        # number of secondary sampling periods (surveys) per site
+  Kmax = Kmax,                          # maximum number of surveys across all sites and seasons
+  I = I,                                # number of species observed
+  G = G,                                # number of species groups
+  group = as.integer(groups$group_idx), # species group membership
+  y = y                                 # observed (detection-nondetection) data matrix
 )
 
 # Add covariates to msom_data
@@ -102,8 +120,6 @@ message("Running JAGS (current time ", time_start <- Sys.time(), ")")
 msom = jags(data = msom_data,
             inits = function() { list( # initial values to avoid data/model conflicts
               z = z
-              # v = rep(logit(0.70), length(species)), # informative priors are necessary to avoid invalid PPC log(0) values
-              # w = rep(logit(0.05), length(species))
             ) },
             parameters.to.save = c( # monitored parameters
               "mu.u", "sigma.u", "u",
@@ -112,10 +128,11 @@ msom = jags(data = msom_data,
               # "mu.b", "sigma.b", "b",
               paste0("mu.alpha", 1:n_alpha_params), paste0("sigma.alpha", 1:n_alpha_params), paste0("alpha", 1:n_alpha_params),
               paste0("mu.beta",  1:n_beta_params),  paste0("sigma.beta",  1:n_beta_params),  paste0("beta",  1:n_beta_params),
-              "D_obs", "D_sim"
+              "D_obs", "D_sim",
+              "Nocc", "Nsite"
             ),
             model.file = model_file,
-            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = FALSE, # ETA: 
+            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: < 1 hr
             # n.chains = 3, n.adapt = 1000, n.iter = 10000, n.burnin = 2000, n.thin = 1, parallel = TRUE, # TODO: ETA
             DIC = FALSE, verbose=TRUE)
 
@@ -180,7 +197,8 @@ msom_results = list(
   param_alpha_data  = param_alpha_data,
   param_beta_data   = param_beta_data,
   sites             = sites,
-  species           = species
+  species           = species,
+  groups            = groups
 )
 if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
 saveRDS(msom_results, file = path_out)

@@ -86,10 +86,7 @@ if (!exists("eltontraits", envir = .GlobalEnv)) {
 # Load species diet data
 if (!exists("diets", envir = .GlobalEnv)) {
   diets = read_csv("data/traits/species_diets.csv", show_col_types = FALSE) %>% clean_names() %>%
-    mutate(
-      benthic_macroinverts = replace_na(benthic_macroinverts, FALSE),
-      across(where(is.character), ~ na_if(.x, ""))
-    )
+    mutate(across(where(is.character), ~ na_if(.x, "")))
 }
 
 if (!exists("guilds", envir = .GlobalEnv)) {
@@ -104,5 +101,48 @@ if (!exists("species_traits", envir = .GlobalEnv)) {
   species_traits = left_join(species_traits, eltontraits, by = "common_name")
   species_traits = left_join(species_traits, diets,       by = c("common_name", "scientific_name"))
   species_traits = left_join(species_traits, guilds,      by = "common_name")
+  species_traits = species_traits %>% mutate(
+    invert_predator = ifelse(
+      benthic_macroinverts == "predator" & diet_5cat == "Invertebrate",
+      "invert_predator", "NA"
+    ))
 }
 
+# Geospatial data ----------------------------------------------------------------
+
+crs_standard = "EPSG:32610" # shared coordinate reference system (metric)
+
+if (!exists("site_metadata", envir = .GlobalEnv)) {
+  
+  # Load site location and survey metadata
+  site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE) %>% clean_names() %>% mutate(site_id = as.character(site_id))
+  
+  # Create sf points for site locations (reference original crs 4326)
+  sites_aru = site_metadata %>%
+    st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
+  sites_pssb = site_metadata %>%
+    st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
+}
+
+theme_sleek <- function(base_size = 11, base_family = "") {
+  half_line <- base_size/2
+  theme_light(base_size = base_size, base_family = base_family) +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.ticks.length = unit(half_line / 2.2, "pt"),
+      strip.background = element_rect(fill = NA, colour = NA),
+      strip.text.x = element_text(colour = "grey30"),
+      strip.text.y = element_text(colour = "grey30"),
+      axis.text = element_text(colour = "grey30"),
+      axis.title = element_text(colour = "grey30"),
+      legend.title = element_text(colour = "grey30", size = rel(0.9)),
+      panel.border = element_rect(fill = NA, colour = "grey70", linewidth = 1),
+      legend.key.size = unit(0.9, "lines"),
+      legend.text = element_text(size = rel(0.7), colour = "grey30"),
+      legend.key = element_rect(colour = NA, fill = NA),
+      legend.background = element_rect(colour = NA, fill = NA),
+      plot.title = element_text(colour = "grey30", size = rel(1)),
+      plot.subtitle = element_text(colour = "grey30", size = rel(.85))
+    )
+}

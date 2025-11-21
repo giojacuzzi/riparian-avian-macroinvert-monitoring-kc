@@ -1,18 +1,24 @@
 source("src/global.R")
 
-path = "data/cache/models/reach_all.rds"
-in_path_avonet_traits   = "data/traits/AVONET Supplementary dataset 1.xlsx"
-in_path_species_list    = "data/pam/species_list.txt"
+path = "data/cache/models/reach_invert_predator.rds"
 
 message("Loading data for model ", path)
 model_data = readRDS(path)
+groups = model_data$groups
 
 community_baselines = model_data$msom_summary %>%
-  filter(param %in% c("mu.u", "sigma.u",
-                      "mu.v", "sigma.v",
-                      "mu.w", "sigma.w",
-                      "mu.b", "sigma.b")) %>%
-  select(param, prob, prob_lower95, prob_upper95)
+  filter(Reduce(`|`, lapply(
+    c("mu.u", "sigma.u", "mu.v", "sigma.v",
+      "mu.w", "sigma.w", "mu.b", "sigma.b"),
+    \(p) str_starts(param, p)
+  ))) %>%
+  mutate(
+    group_idx = str_extract(param, "(?<=\\[)\\d+(?=\\])") %>% as.integer(),
+    param = str_remove(param, "\\[\\d+\\]")
+  ) %>%
+  select(param, group_idx, prob, prob_lower95, prob_upper95)
+
+community_baselines = community_baselines %>% left_join(groups %>% distinct(group_idx, group), by = "group_idx")
 
 message("Baseline occurrence probability:")
 print(subset(community_baselines, param == "mu.u"))
@@ -20,7 +26,7 @@ print(subset(community_baselines, param == "mu.u"))
 message("Baseline detection probability:")
 print(subset(community_baselines, param == "mu.v"))
 
-ggplot(community_baselines, aes(x = prob, y = param)) +
+ggplot(community_baselines, aes(x = prob, y = param, color = group)) +
   geom_point(position = position_dodge(width = 0.5), size = 3) +
   geom_errorbar(aes(xmin = prob_lower95, xmax = prob_upper95), width = 0.2, position = position_dodge(width = 0.5)) +
   labs(x = "Posterior probability", y = "Parameter",
@@ -36,25 +42,26 @@ species_baselines = model_data$msom_summary %>%
   filter(grepl("^[uvwb]\\[", param)) %>%
   select(param, prob, prob_lower95, prob_upper95) %>%
   mutate(species_idx = str_extract(param, "(?<=\\[)[0-9]+") %>% as.integer()) %>%
-  mutate(species_name = species[species_idx])
+  mutate(common_name = species[species_idx]) %>%
+  left_join(groups, by = "common_name")
 
 message("Species occurrence probability range:")
 species_baselines %>% filter(startsWith(param, "u")) %>% summarise(
   prob_min = min(prob),
-  species_min = species_name[which.min(prob)],
+  species_min = common_name[which.min(prob)],
   prob_max = max(prob),
-  species_max = species_name[which.max(prob)],
+  species_max = common_name[which.max(prob)],
   .groups = "drop"
 )
 
-ggplot(species_baselines %>% filter(startsWith(param, "u")), aes(x = prob, y = reorder(species_name, prob))) +
+ggplot(species_baselines %>% filter(startsWith(param, "u")), aes(x = prob, y = reorder(common_name, prob), color = group)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
   geom_errorbarh(aes(xmin = prob_lower95, xmax = prob_upper95), height = 0.1, position = position_dodge(width = 0.5)) +
   labs(x = "Posterior probability", y = "Species index",
        title = "Species-specific occurrence probability `u` across models (mean and 95% BCI)"
   ) + theme(legend.position = "bottom")
 
-ggplot(species_baselines %>% filter(startsWith(param, "v")), aes(x = prob, y = reorder(species_name, prob))) +
+ggplot(species_baselines %>% filter(startsWith(param, "v")), aes(x = prob, y = reorder(common_name, prob), color = group)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
   geom_errorbarh(aes(xmin = prob_lower95, xmax = prob_upper95), height = 0.1, position = position_dodge(width = 0.5)) +
   labs(x = "Posterior probability", y = "Species index",
@@ -81,13 +88,38 @@ ggplot(species_baselines %>% filter(startsWith(param, "v")), aes(x = prob, y = r
 
 message("Comparing model coefficients")
 
+# occ_coef_summary = model_data$msom_summary %>%
+#   filter(str_detect(param, "^(mu|sigma)\\.alpha")) %>% arrange(param) %>%
+#   select(param, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0)
+
 occ_coef_summary = model_data$msom_summary %>%
-  filter(str_detect(param, "^(mu|sigma)\\.alpha")) %>% arrange(param) %>%
-  select(param, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0)
+  filter(Reduce(`|`, lapply(
+    c("mu.alpha", "sigma.alpha"),
+    \(p) str_starts(param, p)
+  ))) %>%
+  mutate(
+    group_idx = str_extract(param, "(?<=\\[)\\d+(?=\\])") %>% as.integer(),
+    param = str_remove(param, "\\[\\d+\\]")
+  ) %>%
+  select(param, group_idx, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0) %>%
+  left_join(groups %>% distinct(group_idx, group), by = "group_idx")
+
+
+# detect_coef_summary = model_data$msom_summary %>%
+#   filter(str_detect(param, "^(mu|sigma)\\.beta")) %>% arrange(param) %>%
+#   select(param, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0)
 
 detect_coef_summary = model_data$msom_summary %>%
-  filter(str_detect(param, "^(mu|sigma)\\.beta")) %>% arrange(param) %>%
-  select(param, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0)
+  filter(Reduce(`|`, lapply(
+    c("mu.beta", "sigma.beta"),
+    \(p) str_starts(param, p)
+  ))) %>%
+  mutate(
+    group_idx = str_extract(param, "(?<=\\[)\\d+(?=\\])") %>% as.integer(),
+    param = str_remove(param, "\\[\\d+\\]")
+  ) %>%
+  select(param, group_idx, mean, sd, `2.5%`, `97.5%`, `25%`, `75%`, overlap0) %>%
+  left_join(groups %>% distinct(group_idx, group), by = "group_idx")
 
 param_alpha_data = model_data$param_alpha_data
 param_beta_data = model_data$param_beta_data
@@ -97,13 +129,13 @@ param_occ_data = param_alpha_data
 occ_effect_sizes = full_join(occ_coef_summary %>% filter(str_starts(param, "mu")), param_occ_data %>% mutate(param = paste0("mu.", param)), by='param')
 
 # Compare species level effects of each covariate on occurrence
-ggplot(occ_effect_sizes, aes(x = mean, y = as.factor(name))) +
+ggplot(occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group))) +
     geom_vline(xintercept = 0, color = "gray") +
-    geom_point(aes(color = overlap0)) +
-    geom_errorbar(aes(xmin = `25%`,  xmax = `75%`,   color = overlap0), width = 0, linewidth = 1) +
-    geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`, color = overlap0), width = 0) +
-    scale_color_manual(values = c("black", "gray")) +
-    xlim(c(-1, 1)) +
+    geom_point() +
+    geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1) +
+    geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0) +
+    # scale_color_manual(values = c("black", "gray")) +
+    # xlim(c(-1, 1)) +
     labs(title = "Community level effect sizes for occurrence covariates",
          subtitle = tools::file_path_sans_ext(basename(path)),
          x = "Coefficient estimate", y = "Parameter")
@@ -112,7 +144,8 @@ species_effects = param_occ_data %>%
   mutate(coef = map(param, ~ model_data$msom_summary %>% filter(str_detect(param, paste0("^", .x, "(?!\\d)\\["))))) %>%
   unnest(coef, names_sep = "_") %>% mutate(species_idx = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", coef_param))) %>% mutate(common_name = species[species_idx])
 
-species_effects = species_effects %>% left_join(species_traits, by ="common_name")
+species_effects = species_effects %>% left_join(species_traits, by ="common_name") %>%
+  left_join(groups, by = "common_name")
 
 plt = ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
@@ -153,16 +186,28 @@ plt = ggplot() +
 
 ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
-  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = benthic_macroinverts, shape = coef_overlap0), cex = 2, priority = "density") +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name)), size = 3.5) +
+  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = group, shape = coef_overlap0), cex = 2, priority = "density") +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group)), size = 3.5) +
   scale_shape_manual(values = c(16, 1)) +
-  labs(color = "Predator", shape = "Significance") +
+  labs(color = "Predator", shape = "Significance")
   geom_text_repel(
     data = species_effects,
-    aes(x = coef_mean, y = name, label = common_name, color = benthic_macroinverts),
+    aes(x = coef_mean, y = name, label = common_name, color = group),
     size = 2, nudge_x = 0.02, direction = "y", hjust = 0.05, max.overlaps = 30
   )
+  
+ggplot(species_effects, aes(x = coef_mean, y = name, group = group, color = group)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
+  geom_beeswarm(aes(shape = coef_overlap0), dodge.width = 0.5, cex = 1.5, priority = "density", size = 1.5, alpha = 0.5) +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), group = as.factor(group)), size = 3.5, position = position_dodge(width = 0.5)) +
+  scale_shape_manual(values = c(16, 1))
+
+ggplot(species_effects %>%
+         mutate(group_shape = paste(group, coef_overlap0, sep = "_")), aes(x = coef_mean, y = name, color = group, group = group_shape)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
+  geom_beeswarm(aes(shape = coef_overlap0), dodge.width = 0.5, cex = 1, priority = "density", size = 1.5)
 
 
 ggplot(data = species_effects %>% filter(param == "alpha1"),
