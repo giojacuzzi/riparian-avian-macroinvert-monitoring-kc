@@ -1,7 +1,7 @@
 source("src/global.R")
 
-site_data_reach = readRDS("data/cache/3_calculate_vars/NEW_site_data_550m.rds")
-site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
+site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
+site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
 
 # Spatial scale
 site_data = site_data_reach
@@ -14,7 +14,7 @@ path_out = paste0("data/cache/models/reach_", grouping, ".rds")
 
 model_file = "src/msom.txt"
 
-in_cache_detections     = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
+in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
 
 # Load species detection history data
 detections = readRDS(in_cache_detections)
