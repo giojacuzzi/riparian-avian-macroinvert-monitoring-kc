@@ -52,6 +52,33 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
   mapview(sites_aru, zcol = "dist_m", layer.name = "ARU") +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
+# Load ICLUS impervious surface projections ------------------------------------------------
+# https://catalog.data.gov/dataset/iclus-v1-3-estimated-percent-impervious-surface-for-the-conterminous-usa12?utm_source=chatgpt.com
+
+iclus_scenarios = c("a1", "a2", "b1", "b2")
+iclus_years = as.character(seq(2020, 2100, 10))
+
+rast_imp_iclus_projections = list()
+
+for (scenario in iclus_scenarios) {
+  rast_imp_iclus_projections[[scenario]] = list()
+  for (year in iclus_years) {
+    iclus_path = file.path(
+      in_data_geospatial,
+      "ICLUS",
+      paste0("is_iclus_", scenario),
+      paste0("is", year, scenario),
+      "w001001.adf"
+    )
+    imp_iclus_raw = rast(iclus_path)
+    template = project(vect(study_area), crs(imp_iclus_raw))
+    rast_imp_iclus = mask(crop(imp_iclus_raw, template), template)
+    # plot(rast_imp_iclus, main = paste(scenario, year))
+    
+    rast_imp_iclus_projections[[scenario]][[year]] = rast_imp_iclus
+  }
+}
+
 # Load USFS Riparian Areas map ------------------------------------------------
 # https://www.fs.usda.gov/rds/archive/catalog/RDS-2019-0030
 message("Loading USFS Riparian Areas")
@@ -384,10 +411,22 @@ rast_data = list(
 
 # Cache data ----------------------------------------------------------------------------
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
 for (n in names(rast_data)) {
   out_filepath = file.path(out_dir, paste0(n, ".tif"))
   writeRaster(rast_data[[n]], out_filepath, overwrite = TRUE)
   message(crayon::green("Cached", out_filepath))
+}
+
+for (scenario in names(rast_imp_iclus_projections)) {
+  for (year in names(rast_imp_iclus_projections[[scenario]])) {
+    
+    rast_to_save = rast_imp_iclus_projections[[scenario]][[year]]
+    out_filepath = file.path(out_dir, "iclus", scenario, paste0("is", year, scenario, ".tif"))
+    if (!dir.exists(dirname(out_filepath))) dir.create(dirname(out_filepath), recursive = TRUE)
+    writeRaster(rast_to_save, out_filepath, overwrite = TRUE)
+    message(crayon::green("Cached", out_filepath))
+  }
 }
 
 out_filepath = file.path(out_dir, "sf_ripfb.gpkg")

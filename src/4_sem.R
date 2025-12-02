@@ -2,12 +2,14 @@ source("src/global.R")
 
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 
+out_cache_dir = "data/cache/4_sem"
+
 exclude_agri_sites = TRUE
 
 # Load site variable data ------------------------------------------------------------
 
-site_data_reach = readRDS("data/cache/3_calculate_vars/NEW_site_data_550m.rds")
-site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
+site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
+site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
 
 # Urbanization x B-IBI gradient
 ggplot(site_data_reach, aes(x = rast_nlcd_impervious_sum_proportion, y = bibi)) +
@@ -477,9 +479,25 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # A priori list of species that:
   # - Are primarily insectivorous
-  # - Are reported to predate on aquatic insects
+  # - Are reported to predate on aquatic 
+  m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
   m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-  sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem)) 
+  sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem))
+  
+  if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+  out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
+  saveRDS(sem, out_filepath)
+  message(crayon::green("Cached", out_filepath))
+  
+  if (FALSE) { # Alternative imp drives canopy
+    m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
+    m_canopy = lm(canopy_reach ~ imp_reach, d)
+    m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_canopy, m_predator); plot(sem); print(summary(sem))
+    
+    m_imp_reach = lm(imp_reach ~ imp_basin, d)
+    sem = psem(m_bibi, m_canopy, m_imp_reach, m_predator); plot(sem); print(summary(sem))
+  }
   
   if (FALSE) { # Alternative scale hypotheses validations (compare AIC and R.squared)
     m_reach_bibi = lm(bibi ~ canopy_reach + imp_reach, d)
@@ -499,11 +517,13 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   # Marginal effect plots
   {
     p_bibi_imp = ggplot(ggpredict(m_bibi, "imp_basin"), aes(x = x, y = predicted)) +
-      geom_line(color = "black") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0.2) +
-      geom_point(data = d, aes(x = imp_basin, y = bibi), shape = 16, color = "black", alpha = 0.5)
+      geom_line(color = "red") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "red", alpha = 0.2) +
+      geom_point(data = d, aes(x = imp_basin, y = bibi), shape = 16, color = "red", alpha = 0.5) +
+      labs(x = "Impervious surface %", y = "B-IBI") + theme_sleek() + theme(aspect.ratio=1)
     p_bird_bibi = ggplot(ggpredict(m_predator, "bibi"), aes(x = x, y = predicted)) +
       geom_line(color = "blue") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "blue", alpha = 0.2) +
-      geom_point(data = d, aes(x = bibi, y = rich_predator), shape = 16, color = "blue", alpha = 0.5)
+      geom_point(data = d, aes(x = bibi, y = rich_predator), shape = 16, color = "blue", alpha = 0.5) +
+      labs(x = "B-IBI", y = "Predator richness") + theme_sleek() + theme(aspect.ratio=1)
     p_bird_imp = ggplot(ggpredict(m_predator, "imp_reach [0:0.65 by=0.01]"), aes(x = x, y = predicted)) +
       geom_line(color = "black") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0.2) +
       geom_point(data = d, aes(x = imp_reach, y = rich_predator), shape = 16, color = "black", alpha = 0.5)
@@ -512,6 +532,10 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
       geom_point(data = d, aes(x = canopy_reach, y = rich_predator), shape = 16, color = "forestgreen", alpha = 0.5)
     
     (p_bibi_imp + p_bird_bibi) / (p_bird_imp + p_bird_canopy)
+    
+    (p_bibi_imp / p_bird_bibi)
+    
+    # ggsave("marginal_effects.pdf", (p_bibi_imp / p_bird_bibi))
     
     ggplot(d, aes(x = bibi, y = rich_predator)) +
       geom_rect(aes(xmin = 0, xmax = 20, ymin = -Inf, ymax = Inf), fill = "red", alpha = 0.01) +

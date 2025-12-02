@@ -5,8 +5,8 @@
 .DS_Store
 
 # Image files
-.png
-.pdf
+*.png
+*.pdf
 
 # History files
 *.Rproj

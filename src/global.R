@@ -21,6 +21,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     "tidyterra",        # raster data manipulation
     "tigris",           # political boundaries
     # visualization and plotting
+    "ggnewscale",       # multiple scales
     "ggrepel",          # annotations
     "ggeffects",        # marginal effects
     "patchwork",        # multipanel plots
@@ -112,17 +113,14 @@ if (!exists("species_traits", envir = .GlobalEnv)) {
 
 crs_standard = "EPSG:32610" # shared coordinate reference system (metric)
 
-if (!exists("site_metadata", envir = .GlobalEnv)) {
-  
-  # Load site location and survey metadata
-  site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE) %>% clean_names() %>% mutate(site_id = as.character(site_id))
-  
-  # Create sf points for site locations (reference original crs 4326)
-  sites_aru = site_metadata %>%
-    st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
-  sites_pssb = site_metadata %>%
-    st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
-}
+# Load site location and survey metadata
+site_metadata = read_csv("data/site_metadata.csv", show_col_types = FALSE) %>% clean_names() %>% mutate(site_id = as.character(site_id))
+
+# Create sf points for site locations (reference original crs 4326)
+sites_aru = site_metadata %>%
+  st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326)
+sites_pssb = site_metadata %>%
+  st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
 
 theme_sleek <- function(base_size = 11, base_family = "") {
   half_line <- base_size/2

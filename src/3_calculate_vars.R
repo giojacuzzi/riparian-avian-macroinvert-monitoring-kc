@@ -11,7 +11,12 @@ out_cache_dir = "data/cache/3_calculate_vars"
 
 source("src/global.R")
 
-buffer_radius = set_units(5000, m) # site buffer (~550 m insect emergence 90% flux range falloff; 5km basin)
+# site buffer:
+# ~550 m insect emergence 90% flux range falloff
+# 5km basin/watershed
+buffer_radius = set_units(5000, m)
+
+sites_to_discard = c("257", "259", "150", "155", "3097")
 
 # Load ARU and PSSB site locations and define study area -----------------------------
 message("Loading ARU and PSSB site locations")
@@ -69,6 +74,23 @@ ggplot(pssb_data_scores_sites, aes(x = ept_richness_quantity, y = overall_score)
 
 # Load and process geospatial data ---------------------------------------------------
 message("Loading geospatial data")
+
+# TODO: Load ICLUS impervious surface projections
+message("- ICLUS projection rasters")
+iclus_rast_filepaths = list.files(file.path(in_cache_geospatial_dir, "iclus"), pattern = "^is.*\\.tif$", full.names = TRUE, recursive = TRUE)
+
+rast_imp_iclus_projections = list()
+
+for (f in iclus_rast_filepaths) {
+  fname <- basename(f)
+  year <- str_extract(fname, "(?<=is)\\d{4}")           # 2100
+  scenario <- str_extract(fname, "(?<=\\d{4})[a-z0-9]+") # a1, a2, b1, b2
+  r <- rast(f)
+  if (is.null(rast_imp_iclus_projections[[scenario]])) {
+    rast_imp_iclus_projections[[scenario]] <- list()
+  }
+  rast_imp_iclus_projections[[scenario]][[year]] <- r
+}
 
 # Load cached raster data
 message("- Rasters")
@@ -150,7 +172,9 @@ rast_stats = function(rast, na.rm = TRUE) {
 # Questionable: 37, 38, 45, 47
 # Good: 39, 220, 50
 
-geospatial_site_data = list()
+site_zones = list()
+## Compute site buffer and interaction zones
+message("Computing site buffers and interaction zones")
 pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = nrow(sites_aru), clear = FALSE)
 for (s in 1:nrow(sites_aru)) {
 
@@ -244,50 +268,227 @@ for (s in 1:nrow(sites_aru)) {
   # Inspect interaction zone and component layers
   # mapview(site, col.regions = "purple", layer.name = paste0("site_", s_id)) +
   #   mapview(site_pssb, col.regions = "orange") +
-  #   mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer") +
-  #   mapview(waterbodies, col.regions = "red") +
-  #   mapview(waterbodies_buffer, col.regions = "pink") +
+  #   mapview(site_buffer, alpha.regions = 0, lwd = 3, col.regions = "black", layer.name = "buffer_reach") +
+  #   # mapview(waterbodies, col.regions = "red") +
+  #   # mapview(waterbodies_buffer, col.regions = "pink") +
   #   mapview(flowlines, zcol = "f_code") +
-  #   mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
+  #   # mapview(max_dispersal_zone, col.regions = "gray", alpha = 0.2) +
   #   mapview(riparian_zone, col.regions = "yellow") +
-  #   mapview(emergence_zone, col.regions = "blue") +
+  #   # mapview(emergence_zone, col.regions = "blue") +
   #   mapview(interaction_zone, col.regions = "green")
+
+  if (s_id == "121") { # Figure
+    emergence_zone = st_intersection(emergence_zone, site_buffer %>% st_transform(st_crs(emergence_zone)))
+    
+    imp = transform_crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer, site_buffer)
+    imp = project(imp, crs(site_buffer))
+    imp = as.data.frame(imp, xy = TRUE)
+    
+    canopy = transform_crop_and_mask(rast_data$rast_usfs_canopycover, site_buffer, site_buffer)
+    canopy = project(canopy, crs(site_buffer))
+    canopy = as.data.frame(canopy, xy = TRUE)
+    
+    p_site = ggplot() +
+      geom_sf(data = site_buffer, color = "grey10", fill = "transparent", linewidth = 0.5) +
+      
+      # geom_raster(data = imp, aes(x = x, y = y, fill = rast_nlcd_impervious)) +
+      # scale_fill_gradient(low = alpha("white", 0.1), high = alpha("red", 1.0)) +
+      # new_scale_fill() +
+      # geom_raster(data = canopy, aes(x = x, y = y, fill = rast_usfs_canopycover)) +
+      # scale_fill_gradient(low = alpha("white", 0.1), high = alpha("forestgreen", 1.0)) +
+      # geom_sf(data = interaction_zone, fill = "white", color = "white", linetype = "dashed", linewidth = 0.5, alpha = 0.5) +
+      
+      geom_sf(data = riparian_zone, fill = "dodgerblue", color = "transparent", alpha = 0.5) +
+      geom_sf(data = interaction_zone, fill = "transparent", color = "dodgerblue", linewidth = 0.5, alpha = 0) +
+      geom_sf(data = flowlines, color = "dodgerblue", linewidth = 1, alpha = 0.75) +
+      geom_sf(data = waterbodies, fill = "dodgerblue", color = "transparent", linewidth = 0, alpha = 0.75) +
+      geom_sf(data = site, fill = "red", color = "grey10", shape = 21, size = 3, alpha = 0.75) +
+      # geom_sf(data = site_pssb, fill = "blue", color = "grey10", shape = 21, size = 3, alpha = 0.75) +
+      geom_sf(data = site_buffer, color = "grey70", fill = "transparent", linewidth = 0.5) +
+      geom_sf(data = st_buffer(site, 550), color = "grey70", fill = "transparent", linewidth = 0.5) +
+      coord_sf(expand = FALSE) +
+      labs(x = "", y = "") +
+      theme_sleek() + theme(
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()
+      ); print(p_site)
+
+    ggsave(paste0("p_site_", buffer_radius, ".pdf"), p_site, width = 8, height = 6, dpi = 300)
+  }
   
-  # Roads
-  # S1100 - Primary road 
-  # Primary roads are limited-access highways that connect to other roads only at interchanges and not at at-grade intersections
-  # S1200 - Secondary Road
-  # Secondary roads are main arteries that are not limited access, usually in the U.S. highway, state highway, or county highway systems
-  # S1400 - Local Neighborhood Road, Rural Road, City Street
-  # Generally a paved non-arterial street, road, or byway that usually has a single lane of traffic in each direction.
-  # site_roads = st_intersection(roads_major, st_transform(site_buffer, crs = st_crs(roads_major)))
-  # dist_road_major = st_distance(st_transform(site, crs = st_crs(roads_major)), roads_major)
-  # dist_road_major = min(dist_road_major)
-  # dist_road_paved = st_distance(st_transform(site, crs = st_crs(roads_paved)), roads_paved) # NOTE: time intensive
-  # dist_road_paved = min(dist_road_paved)
+  vectors = list(
+    "site_buffer"        = site_buffer,
+    "interaction_zone"   = interaction_zone,
+    "riparian_zone"      = riparian_zone
+    # "emergence_zone"     = emergence_zone,
+    # "max_dispersal_zone" = max_dispersal_zone,
+    # "flowlines"          = flowlines
+  )
   
-  site_roads_paved = st_crop(roads_paved, st_transform(interaction_zone, crs = st_crs(roads_paved)))
-  site_roads_paved = st_intersection(st_transform(site_roads_paved, st_crs(interaction_zone)), interaction_zone) %>% st_transform(crs_standard)
-  site_roads_major = st_crop(roads_major, st_transform(interaction_zone, crs = st_crs(roads_major)))
-  site_roads_major = st_intersection(st_transform(site_roads_major, st_crs(interaction_zone)), interaction_zone) %>% st_transform(crs_standard)
-  # mapview(site, col.regions = "green") + 
-  #   mapview(site_pssb, col.regions = "blue") +
-  #   mapview(site_buffer, alpha.regions = 0, lwd = 3) +
-  #   mapview(flowlines, zcol = "f_code") +
-  #   mapview(site_roads_paved, zcol = "mtfcc")
+  site_zones[[s_id]] = vectors
   
-  # Density (m per square km) = total road length / buffer area (in m2) / 1e6
-  density_roads_paved = sum(st_length(site_roads_paved)) / area_interaction_zone
-  density_roads_major = sum(st_length(site_roads_major)) / area_interaction_zone
-  density_roads_paved = set_units(density_roads_paved, "m/km^2")
-  density_roads_major = set_units(density_roads_major, "m/km^2")
+  pb$tick()
+}
+
+# Calculate impervious projections --------------------------------------------------
+if (TRUE) {
   
-  ## Calculate stats for continuous raster data
+  message("Calculating ICLUS impervious projections")
+  # Baselines
+  imp_projection_results = data.frame()
+  i = 1
+  for (s_id in names(site_zones)) {
+    
+    if (s_id %in% sites_to_discard) next
+    
+    site_buffer = site_zones[[s_id]][["site_buffer"]]
+    interaction_zone = site_zones[[s_id]][["interaction_zone"]]
+    
+    # NLCD "ground-truth"
+    site_nlcd_impervious  = transform_crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer, interaction_zone)
+    stats_nlcd_impervious = rast_stats(site_nlcd_impervious)
+    
+    # Projections
+    message("Calculating projections for site ", s_id)
+    imp_projection_baselines = rbind(cbind(data.frame(site_id = s_id, scenario = "NLCD", year = "2023", stats_nlcd_impervious)))
+    for (scenario in names(rast_imp_iclus_projections)) {
+      for (year in as.character(seq(2020, 2100, 10))) {
+        r = rast_imp_iclus_projections[[scenario]][[year]]
+        r = disagg(r, fact = round(res(r)[1] / 30), method = "near")
+        r = transform_crop_and_mask(r, site_buffer, interaction_zone)
+        stats_imp_iclus_projections = rast_stats(r)
+        imp_projection_baselines = rbind(
+          imp_projection_baselines,
+          cbind(data.frame(site_id = s_id, scenario = scenario, year = year), stats_imp_iclus_projections)
+        )
+      }
+    }
+    imp_projection_results = rbind(imp_projection_results, imp_projection_baselines)
+    # print(imp_projection_baselines)
+    message(round(i / length(names(site_zones)), 2) * 100, "%")
+    i = i + 1
+  }
+  
+  # Difference in observed NLCD imperviousness (2023) and ICLUS projections
+  p = imp_projection_results %>%
+    filter(year %in% c("2020", "2023", "2030", "2050", "2100")) %>%
+    group_by(site_id) %>%
+    mutate(nlcd_sum_proportion = sum_proportion[scenario == "NLCD"]) %>%
+    mutate(diff_from_nlcd = sum_proportion - nlcd_sum_proportion) %>%
+    ungroup() %>%
+    filter(year %in% c("2020", "2030", "2050", "2100")) %>%
+    ggplot(aes(x = factor(year), y = diff_from_nlcd, fill = scenario)) +
+    geom_hline(yintercept = 0) +
+    geom_boxplot(position = "dodge") +
+    geom_text_repel(aes(label = site_id)) +
+    facet_wrap(~scenario) +
+    labs(title = "Difference in observed NLCD imperviousness (2023) and ICLUS projections"); print(p)
+  
+  # Remove outliers
+  s_id_outliers = c(216,213,207,210)
+  imp_diff = imp_projection_results %>%
+    filter(!(site_id %in% s_id_outliers)) %>%
+    filter(year %in% c("2020", "2023")) %>%
+    group_by(site_id) %>%
+    mutate(nlcd_sum_proportion = sum_proportion[scenario == "NLCD"]) %>%
+    mutate(diff_from_nlcd = sum_proportion - nlcd_sum_proportion) %>%
+    ungroup() %>%
+    filter(year %in% c("2020"))
+  
+  message("Difference in observed NLCD imperviousness (2023) and ICLUS projections after removing outliers")
+  print(tapply(imp_diff$diff_from_nlcd, imp_diff$scenario, summary))
+  
+  # NOTE: Sites with extremely high imp projections are also those that have underestimated imp
+  # coverage in 2020/30 projections compared to NLCD baseline, all along Renton WA 515 corridor
+  mapview(sites_aru %>% filter(site_id %in% s_id_outliers))
+  # Exclude these outliers from analysis
+  imp_projection_results_clean = imp_projection_results %>% filter(!(site_id %in% s_id_outliers))
+  
+  # Treat 2020 as baseline to compute % change per scenario, per site
+  imp_projections = imp_projection_results_clean %>%
+    select(site_id, scenario, year, sum_proportion) %>%
+    group_by(site_id, scenario) %>%
+    mutate(percent_change_sum_prop = ifelse(
+      scenario != "NLCD",
+      sum_proportion / sum_proportion[year == 2020],
+      NA_real_
+    )) %>%
+    ungroup() %>% arrange(site_id, scenario, year) %>%
+    filter(year != 2020, scenario != "NLCD") %>% select(-sum_proportion)
+  imp_projections$sum_proportion = NA
+  
+  nlcd_baselines = imp_projection_results_clean %>%
+    filter(scenario == "NLCD") %>%
+    select(site_id, scenario, year, sum_proportion) %>%
+    rename(original_scenario = scenario) %>% 
+    crossing(scenario = unique(imp_projections$scenario)) %>%
+    select(-original_scenario) %>% mutate(percent_change_sum_prop = 1.0)
+  
+  imp_projection_estimates = imp_projections %>%
+    left_join(
+      nlcd_baselines %>% select(site_id, scenario, baseline_sum = sum_proportion),
+      by = c("site_id", "scenario")
+    ) %>%
+    mutate(sum_proportion = ifelse(
+        is.na(sum_proportion),
+        baseline_sum * percent_change_sum_prop,
+        sum_proportion
+      )) %>%
+    select(-baseline_sum) %>% rbind(nlcd_baselines) %>% arrange(site_id, scenario, year)
+  
+  {
+    # dbg_site_id = "216"
+    # site_buffer = site_zones[[dbg_site_id]][["site_buffer"]]
+    # interaction_zone = site_zones[[dbg_site_id]][["interaction_zone"]]
+    # dbg_rast = transform_crop_and_mask(rast_data$rast_nlcd_impervious,
+    #                                    site_buffer,
+    #                                    interaction_zone)
+    # r_2020 = rast_imp_iclus_projections[["a1"]][["2020"]]
+    # r_2020 = disagg(r_2020, fact = round(res(r_2020)[1] / 30), method = "near")
+    # r_2020 = transform_crop_and_mask(r_2020, site_buffer, interaction_zone)
+    # r_2100 = rast_imp_iclus_projections[["a1"]][["2100"]]
+    # r_2100 = disagg(r_2100, fact = round(res(r_2100)[1] / 30), method = "near")
+    # r_2100 = transform_crop_and_mask(r_2100, site_buffer, interaction_zone)
+    # mapview(dbg_rast) + mapview(r_2020) + mapview(r_2100)
+  }
+  
+  imp_projection_estimates %>% arrange(desc(sum_proportion))
+  
+  p = imp_projection_estimates %>%
+    ggplot(aes(x = year, y = sum_proportion, color = scenario, group = interaction(site_id, scenario))) +
+    # geom_hline(yintercept = 1.0) +
+    geom_line(alpha = 0.25) +
+    facet_wrap(~scenario) +
+    stat_summary(aes(group = scenario, color = scenario), fun = mean, geom = "line", size = 1.2) +
+    labs(title = "Predicted impervious surface % per site from % change relative to ICLUS 2020"); print(p)
+  
+  # Cache ICLUS impervious projections ----------------------------------------
+  
+  if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+  out_filepath = file.path(out_cache_dir, paste0("imp_projections_", buffer_radius, "m.rds"))
+  saveRDS(imp_projection_estimates, out_filepath)
+  message(crayon::green("Cached", out_filepath))
+}
+
+## Calculate stats for continuous raster data
+geospatial_site_data = list()
+message("Calculating stats for continuous raster data within interaction zones")
+pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = nrow(sites_aru), clear = FALSE)
+for (s_id in names(site_zones)) {
+  
+  site_buffer = site_zones[[s_id]][["site_buffer"]]
+  interaction_zone = site_zones[[s_id]][["interaction_zone"]]
+  riparian_zone = site_zones[[s_id]][["riparian_zone"]]
+  area_usfs_riparian_zone = st_area(st_as_sf(riparian_zone))
+  if (length(area_usfs_riparian_zone) == 0) area_usfs_riparian_zone = 0
+  area_interaction_zone = st_area(interaction_zone)
   
   # NLCD imperviousness
   site_nlcd_impervious  = transform_crop_and_mask(rast_data$rast_nlcd_impervious, site_buffer, interaction_zone)
   stats_nlcd_impervious = rast_stats(site_nlcd_impervious)
-  # mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
+  mapview(site) + mapview(site_buffer, alpha.regions = 0, lwd = 2) + mapview(site_nlcd_impervious)
   
   # NASA GEDI foliage height diversity
   site_gedi_fhd  = transform_crop_and_mask(rast_data$rast_gedi_fhd, site_buffer, interaction_zone)
@@ -435,6 +636,35 @@ for (s in 1:nrow(sites_aru)) {
   # contagion = lsm_l_contag(r)$value
   aggregation = lsm_l_ai(r)$value
   
+  # Roads
+  # S1100 - Primary road 
+  # Primary roads are limited-access highways that connect to other roads only at interchanges and not at at-grade intersections
+  # S1200 - Secondary Road
+  # Secondary roads are main arteries that are not limited access, usually in the U.S. highway, state highway, or county highway systems
+  # S1400 - Local Neighborhood Road, Rural Road, City Street
+  # Generally a paved non-arterial street, road, or byway that usually has a single lane of traffic in each direction.
+  # site_roads = st_intersection(roads_major, st_transform(site_buffer, crs = st_crs(roads_major)))
+  # dist_road_major = st_distance(st_transform(site, crs = st_crs(roads_major)), roads_major)
+  # dist_road_major = min(dist_road_major)
+  # dist_road_paved = st_distance(st_transform(site, crs = st_crs(roads_paved)), roads_paved) # NOTE: time intensive
+  # dist_road_paved = min(dist_road_paved)
+  
+  site_roads_paved = st_crop(roads_paved, st_transform(interaction_zone, crs = st_crs(roads_paved)))
+  site_roads_paved = st_intersection(st_transform(site_roads_paved, st_crs(interaction_zone)), interaction_zone) %>% st_transform(crs_standard)
+  site_roads_major = st_crop(roads_major, st_transform(interaction_zone, crs = st_crs(roads_major)))
+  site_roads_major = st_intersection(st_transform(site_roads_major, st_crs(interaction_zone)), interaction_zone) %>% st_transform(crs_standard)
+  # mapview(site, col.regions = "green") + 
+  #   mapview(site_pssb, col.regions = "blue") +
+  #   mapview(site_buffer, alpha.regions = 0, lwd = 3) +
+  #   mapview(flowlines, zcol = "f_code") +
+  #   mapview(site_roads_paved, zcol = "mtfcc")
+  
+  # Density (m per square km) = total road length / buffer area (in m2) / 1e6
+  density_roads_paved = sum(st_length(site_roads_paved)) / area_interaction_zone
+  density_roads_major = sum(st_length(site_roads_major)) / area_interaction_zone
+  density_roads_paved = set_units(density_roads_paved, "m/km^2")
+  density_roads_major = set_units(density_roads_major, "m/km^2")
+  
   # Store all data for the site
   rasters = list(
     site_riparian_usfs,
@@ -480,15 +710,15 @@ for (s in 1:nrow(sites_aru)) {
   vectors = list(
     # "site_riparian_kc" = site_riparian_kc,
     "interaction_zone"   = interaction_zone,
-    "riparian_zone"      = riparian_zone,
-    "emergence_zone"     = emergence_zone,
-    "max_dispersal_zone" = max_dispersal_zone,
-    "flowlines"          = flowlines,
+    # "riparian_zone"      = riparian_zone,
+    # "emergence_zone"     = emergence_zone,
+    # "max_dispersal_zone" = max_dispersal_zone,
+    # "flowlines"          = flowlines,
     "roads_paved"        = site_roads_paved,
     "roads_major"        = site_roads_major
   )
   
-  geospatial_site_data[[as.character(site$site_id)]] = list(
+  geospatial_site_data[[s_id]] = list(
     rasters = rasters,
     raster_stats = raster_stats,
     nlcd_cover = list(
@@ -607,7 +837,8 @@ ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
 
 sites_lc_df = bind_rows(
   lapply(names(geospatial_site_data), function(site_id) { # OR rast_nlcd_landcover (interaction zone only)
-    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover, xy = TRUE)
+    if (site_id %in% c(sites_to_discard)) return(data.frame())
+    df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover_site_buffer, xy = TRUE)
     value_col = names(df)[3]
     df = df %>% rename(value = all_of(value_col))  # rename for ggplot
     df$site <- site_id
@@ -617,24 +848,34 @@ sites_lc_df = bind_rows(
 ) %>% mutate(site = factor(site, levels = site_order))
 present_levels = nlcd_metadata %>% filter(id %in% unique(sites_lc_df$value))
 
-# Order sites by decreasing amount of development
-site_order = sites_lc_df %>% group_by(site) %>%
-  summarise(developed_n = sum(grepl("^Developed", class)), .groups = "drop") %>%
-  arrange(desc(developed_n)) %>% pull(site)
+# Order sites by increasing amount of rast_nlcd_impervious_sum_proportion, nlcd_developed_variable_intensity, etc.
+site_order = site_data %>% arrange((rast_nlcd_impervious_sum_proportion)) %>% pull(site_id)
 sites_lc_df = sites_lc_df %>%
   mutate(site = factor(site, levels = site_order))
 
-ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_tile() +
+# Overwrite colors
+# scales::show_col(present_levels$color)
+# present_levels$color[1] = "#97B0BD"
+# present_levels$color[10] = "purple"
+# present_levels$color[11] = "purple"
+
+p_sites = ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_raster() +
   scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
-  facet_wrap(~site, scales = "free") +
+  facet_wrap(~site, scales = "free", ncol = 10, strip.position = "bottom") +
   theme_minimal() + theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank()
   ) +
-  labs(title = paste0("NLCD land cover configuration (", buffer_radius, " m buffer)"), x = "", y = "")
+  labs(title = paste0("NLCD land cover configuration (", buffer_radius, " m buffer)"), x = "", y = "") +
+  theme(
+    strip.text = element_text(size = 6),
+    panel.spacing = unit(0, "mm"),
+    plot.margin = margin(0, 0, 0, 0)
+  ); print(p_sites)
 
-# ggplot expects data.frame objects for plotting
+ggsave(paste0("site_landcover_", buffer_radius, "m.png"), p_sites, dpi = 300, width = 10, height = 5.3)
+
 raster_to_df = function(r, site_name) {
   df = as.data.frame(r, xy = TRUE)
   colnames(df)[3] = "class"
@@ -699,6 +940,6 @@ ggplot(site_data, aes(x = rast_nlcd_impervious_sum_proportion, y = bibi)) +
 
 if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
 out_filepath = file.path(out_cache_dir, paste0(
-  "NEW_site_data_", buffer_radius, "m.rds"))
+  "site_data_", buffer_radius, "m.rds"))
 saveRDS(site_data, out_filepath)
 message(crayon::green("Cached", out_filepath))
