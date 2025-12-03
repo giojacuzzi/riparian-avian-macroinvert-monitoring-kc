@@ -4,6 +4,8 @@ in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrate
 
 out_cache_dir = "data/cache/4_sem"
 
+logit_transform_bibi = TRUE
+
 exclude_agri_sites = TRUE
 
 # Load site variable data ------------------------------------------------------------
@@ -187,7 +189,7 @@ site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
 site_data_basin = site_data_basin %>% filter(!site_id %in% sites_to_exclude)
 detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
 
-# TODO: Exclude one of site 155 / 159 to prevent spatial autocorrelation
+# Exclude one of site 155 / 159 to prevent spatial autocorrelation
 sites_to_exclude = c(sites_to_exclude, "155") # ARU at sites 150 and 3097 destroyed mid-survey by water damage
 message("Excluding spatially correlated survey site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
 site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
@@ -225,8 +227,6 @@ site_group_richness =  presence_absence %>%
     rich_ripobl_inv  = sum(presence[common_name %in% sp_ripobl_inv]),
     rich_ripobl      = sum(presence[common_name %in% sp_ripobl])
   )
-
-# TODO: Rarefied species richness?
 
 ## Indicator species analysis
 library(indicspecies)
@@ -433,7 +433,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   sem = psem(m_bibi, m_all); plot(sem); print(summary(sem))
   
   # Riparian associates/obligates
-  {
+  if (FALSE) {
     m_ripasso_inv = glm(rich_ripasso_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
     sem = psem(m_bibi, m_ripasso_inv); plot(sem); print(summary(sem))
     
@@ -449,7 +449,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   sem = psem(m_bibi, m_inv_primary); plot(sem); print(summary(sem))
   
   # Invertivorous foraging guilds
-  {
+  if (FALSE) {
     # >= 10% invertivores
     m_aerial_inv = glm(rich_aerial_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
     sem = psem(m_bibi, m_aerial_inv); plot(sem); print(summary(sem))
@@ -479,15 +479,47 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # A priori list of species that:
   # - Are primarily insectivorous
-  # - Are reported to predate on aquatic 
-  m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
-  m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-  sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem))
+  # - Are reported to predate on aquatic
+  if (logit_transform_bibi) {
+    # Alternative: logit transformation
+    message("NOTE: Modeling B-IBI with logit transfomration")
+    n = nrow(d)
+    d$bibi = d$bibi / 100
+    d$bibi = (d$bibi * (n - 1) + 0.5) / n # Smithson & Verkuilen (2006) squeeze
+    d$bibi = qlogis(d$bibi)
+    m_bibi = lm(bibi ~ canopy_reach + imp_basin, data = d)
+    m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem))
+  } else {
+    message("NOTE: Modeling B-IBI assuming normal errors")
+    m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
+    m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    sem = psem(m_bibi, m_predator); plot(sem); print(summary(sem))
+  }
+  
+  # { # TODO: imp_reach --> canopy
+  #   m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
+  #   m_canopy = lm(canopy_reach ~ imp_reach, d)
+  #   m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+  #   sem = psem(m_bibi, m_canopy, m_predator); plot(sem); print(summary(sem))
+  # }
   
   if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
   out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
   saveRDS(sem, out_filepath)
   message(crayon::green("Cached", out_filepath))
+  
+  if (FALSE) {
+    # # BETA REGRESSION FOR BIBI
+    # # NOTE: beta and quasibinomial families not supported by piecewiseSEM
+    # library(glmmTMB)
+    # d$bibi_beta = d$bibi / 100
+    # n = nrow(d)
+    # d$bibi_beta = (d$bibi_beta * (n - 1) + 0.5) / n # Smithson & Verkuilen (2006) squeeze
+    # m_bibi_beta = glmmTMB(bibi_beta ~ canopy_reach + imp_basin, family = beta(), data = d)
+    # m_predator_beta = glm(rich_predator ~ bibi_beta + canopy_reach + imp_reach, d, family = poisson)
+    # sem_beta = psem(m_bibi_beta, m_predator_beta)
+  }
   
   if (FALSE) { # Alternative imp drives canopy
     m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
@@ -516,20 +548,42 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # Marginal effect plots
   {
-    p_bibi_imp = ggplot(ggpredict(m_bibi, "imp_basin"), aes(x = x, y = predicted)) +
-      geom_line(color = "red") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "red", alpha = 0.2) +
-      geom_point(data = d, aes(x = imp_basin, y = bibi), shape = 16, color = "red", alpha = 0.5) +
-      labs(x = "Impervious surface %", y = "B-IBI") + theme_sleek() + theme(aspect.ratio=1)
-    p_bird_bibi = ggplot(ggpredict(m_predator, "bibi"), aes(x = x, y = predicted)) +
-      geom_line(color = "blue") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "blue", alpha = 0.2) +
-      geom_point(data = d, aes(x = bibi, y = rich_predator), shape = 16, color = "blue", alpha = 0.5) +
-      labs(x = "B-IBI", y = "Predator richness") + theme_sleek() + theme(aspect.ratio=1)
+    pred_bibi_imp = ggpredict(m_bibi, "imp_basin")
+    pred_bird_bibi = ggpredict(m_predator, "bibi")
+    # TODO: back-transform for bibi if transformation applied
+    if (logit_transform_bibi) {
+      pred_bibi_imp = pred_bibi_imp %>%
+        mutate(
+          predicted = plogis(predicted) * 100, conf.low = plogis(conf.low) * 100, conf.high = plogis(conf.high) * 100
+        )
+      p_bibi_imp = ggplot(pred_bibi_imp, aes(x = x, y = predicted)) +
+        geom_line(color = "blue") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "blue", alpha = 0.2) +
+        geom_point(data = d, aes(x = imp_basin, y = plogis(bibi)*100), shape = 16, color = "blue", alpha = 0.5) +
+        labs(x = "Impervious surface %", y = "B-IBI") + theme_sleek() + theme(aspect.ratio=1)
+      pred_bird_bibi = pred_bird_bibi %>%
+        mutate(
+          x = plogis(x) * 100
+        )
+      p_bird_bibi = ggplot(pred_bird_bibi, aes(x = x, y = predicted)) +
+        geom_line(color = "orange") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "orange", alpha = 0.2) +
+        geom_point(data = d, aes(x = plogis(bibi)*100, y = rich_predator), shape = 16, color = "orange", alpha = 0.5) +
+        labs(x = "B-IBI", y = "Predator richness") + theme_sleek() + theme(aspect.ratio=1)
+    } else {
+      p_bibi_imp = ggplot(pred_bibi_imp, aes(x = x, y = predicted)) +
+        geom_line(color = "blue") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "blue", alpha = 0.2) +
+        geom_point(data = d, aes(x = imp_basin, y = bibi), shape = 16, color = "blue", alpha = 0.5) +
+        labs(x = "Impervious surface %", y = "B-IBI") + theme_sleek() + theme(aspect.ratio=1)
+      p_bird_bibi = ggplot(pred_bird_bibi, aes(x = x, y = predicted)) +
+        geom_line(color = "orange") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "orange", alpha = 0.2) +
+        geom_point(data = d, aes(x = bibi, y = rich_predator), shape = 16, color = "orange", alpha = 0.5) +
+        labs(x = "B-IBI", y = "Predator richness") + theme_sleek() + theme(aspect.ratio=1)
+    }
     p_bird_imp = ggplot(ggpredict(m_predator, "imp_reach [0:0.65 by=0.01]"), aes(x = x, y = predicted)) +
-      geom_line(color = "black") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "black", alpha = 0.2) +
-      geom_point(data = d, aes(x = imp_reach, y = rich_predator), shape = 16, color = "black", alpha = 0.5)
+      geom_line(color = "orange") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "orange", alpha = 0.2) +
+      geom_point(data = d, aes(x = imp_reach, y = rich_predator), shape = 16, color = "orange", alpha = 0.5)
     p_bird_canopy = ggplot(ggpredict(m_predator, "canopy_reach [0:1 by=0.01]"), aes(x = x, y = predicted)) +
-      geom_line(color = "forestgreen") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "forestgreen", alpha = 0.2) +
-      geom_point(data = d, aes(x = canopy_reach, y = rich_predator), shape = 16, color = "forestgreen", alpha = 0.5)
+      geom_line(color = "orange") + geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "orange", alpha = 0.2) +
+      geom_point(data = d, aes(x = canopy_reach, y = rich_predator), shape = 16, color = "orange", alpha = 0.5)
     
     (p_bibi_imp + p_bird_bibi) / (p_bird_imp + p_bird_canopy)
     
@@ -537,13 +591,13 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     
     # ggsave("marginal_effects.pdf", (p_bibi_imp / p_bird_bibi))
     
-    ggplot(d, aes(x = bibi, y = rich_predator)) +
-      geom_rect(aes(xmin = 0, xmax = 20, ymin = -Inf, ymax = Inf), fill = "red", alpha = 0.01) +
-      geom_rect(aes(xmin = 20, xmax = 40, ymin = -Inf, ymax = Inf), fill = "orange", alpha = 0.01) +
-      geom_rect(aes(xmin = 40, xmax = 60, ymin = -Inf, ymax = Inf), fill = "yellow", alpha = 0.01) +
-      geom_rect(aes(xmin = 60, xmax = 80, ymin = -Inf, ymax = Inf), fill = "green", alpha = 0.01) +
-      geom_rect(aes(xmin = 80, xmax = 100, ymin = -Inf, ymax = Inf), fill = "dodgerblue", alpha = 0.01) +
-      geom_point() + geom_text_repel(aes(label = site_id))
+    # ggplot(d, aes(x = bibi, y = rich_predator)) +
+    #   # geom_rect(aes(xmin = 0, xmax = 20, ymin = -Inf, ymax = Inf), fill = "red", alpha = 0.01) +
+    #   # geom_rect(aes(xmin = 20, xmax = 40, ymin = -Inf, ymax = Inf), fill = "orange", alpha = 0.01) +
+    #   # geom_rect(aes(xmin = 40, xmax = 60, ymin = -Inf, ymax = Inf), fill = "yellow", alpha = 0.01) +
+    #   # geom_rect(aes(xmin = 60, xmax = 80, ymin = -Inf, ymax = Inf), fill = "green", alpha = 0.01) +
+    #   # geom_rect(aes(xmin = 80, xmax = 100, ymin = -Inf, ymax = Inf), fill = "dodgerblue", alpha = 0.01) +
+    #   geom_point() + geom_text_repel(aes(label = site_id))
   }
   
   # Check over/underdispersion -- if overdispersed, fit negative binomial

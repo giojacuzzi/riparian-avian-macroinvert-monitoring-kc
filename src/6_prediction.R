@@ -3,11 +3,11 @@
 
 source("src/global.R")
 
+use_2023_observed_as_baseline = FALSE # TODO: 2023 values in plots are currently model predictions, not ground-truth
+
 # Load projections
 projections_reach     = readRDS("data/cache/3_calculate_vars/imp_projections_550m.rds")
 projections_watershed = readRDS("data/cache/3_calculate_vars/imp_projections_5000m.rds")
-
-# TODO: Compare projected 2020 imp to current 2024 imp at each site to find bias offset
 
 # Site-specific % change in ICLUS impervious surface coverage from 2020 was calculated for each decade and
 # multiplied with "ground truth" 2023 NLCD measurements to estimate future coverage at each site.
@@ -27,31 +27,40 @@ s = "a2"
 
 data_pred = projections_reach %>% filter(scenario == s) %>%
   mutate(imp_reach = sum_proportion)
+if (use_2023_observed_as_baseline) {
+  data_pred = data_pred %>% filter(year != "2023")
+}
 
-p_proj_imp_reach = ggplot(data_pred, aes(x = year, y = imp_reach, group = site_id)) +
-  geom_line(color = "black", alpha = 0.2) +
+p_proj_imp_reach = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = imp_reach, group = site_id)) +
+  # geom_line(color = "black", alpha = 0.2) +
+  geom_smooth(aes(group = site_id), method = "loess", se = FALSE, size = 0.5, color = alpha("black", 0.2)) +
   scale_y_continuous(limits = c(0,1)) +
+  scale_x_discrete(expand = c(0,0)) +
   stat_summary(aes(group = 1), fun = mean, geom = "line", color = "firebrick", size = 1.2) +
-  geom_text(
-    data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
-    aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
-  ) +
-  labs(x = "Year", y = "Projected reach impervious %")
+  # geom_text(
+  #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
+  #   aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
+  # ) +
+  labs(x = "Year", y = "", title = "Impervious % (reach)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 data_pred = data_pred %>% left_join(projections_watershed %>%
                                       rename(imp_basin = sum_proportion) %>%
                                       select(-percent_change_sum_prop),
                                     by = c("scenario", "site_id", "year"))
 
-p_proj_imp_basin = ggplot(data_pred, aes(x = year, y = imp_basin, group = site_id)) +
-  geom_line(color = "black", alpha = 0.2) +
+p_proj_imp_basin = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = imp_basin, group = site_id)) +
+  # geom_line(color = "black", alpha = 0.2) +
+  geom_smooth(aes(group = site_id), method = "loess", se = FALSE, size = 0.5, color = alpha("black", 0.2)) +
   scale_y_continuous(limits = c(0,1)) +
+  scale_x_discrete(expand = c(0,0)) +
   stat_summary(aes(group = 1), fun = mean, geom = "line", color = "firebrick", size = 1.2) +
-  geom_text(
-    data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
-    aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
-  ) +
-  labs(x = "Year", y = "Projected watershed impervious %")
+  # geom_text(
+  #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
+  #   aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
+  # ) +
+  labs(x = "Year", y = "", title = "Impervious % (watershed)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Predict canopy_reach from imp_reach using arcsinsqrt for proportions
 # ggplot(data, aes(x = imp_reach, y = canopy_reach)) +
@@ -69,15 +78,18 @@ data_pred = data_pred %>%
   ) %>% select(site_id, scenario, year, imp_basin, imp_reach, canopy_reach)
 summary(data_pred$canopy_reach)
 
-p_proj_canopy_reach = ggplot(data_pred, aes(x = year, y = canopy_reach, group = site_id)) +
-  geom_line(color = "black", alpha = 0.2) +
+p_proj_canopy_reach = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = canopy_reach, group = site_id)) +
+  # geom_line(color = "black", alpha = 0.2) +
+  geom_smooth(aes(group = site_id), method = "loess", se = FALSE, size = 0.5, color = alpha("black", 0.2)) +
+  scale_x_discrete(expand = c(0,0)) +
   scale_y_continuous(limits = c(0,1)) +
   stat_summary(aes(group = 1), fun = mean, geom = "line", color = "forestgreen", size = 1.2) +
-  geom_text(
-    data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
-    aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
-  ) +
-  labs(x = "Year", y = "Projected reach canopy %")
+  # geom_text(
+  #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
+  #   aes(label = site_id), hjust = -0.1, size = 2, color = "gray60"
+  # ) +
+  labs(x = "Year", y = "", title = "Canopy % (reach)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Plot time series environmental projections
 print(p_proj_imp_basin + p_proj_imp_reach + p_proj_canopy_reach)
@@ -86,17 +98,20 @@ print(p_proj_imp_basin + p_proj_imp_reach + p_proj_canopy_reach)
 data_pred = data_pred %>% mutate(bibi = predict(m_bibi, newdata = data.frame(
                         canopy_reach = canopy_reach,
                         imp_basin = imp_basin
-                      ))) # TODO: arcsinsqrt transformation?
+                      )))
 
-p_pred_bibi = ggplot(data_pred, aes(x = year, y = bibi, group = site_id)) +
-  geom_line(color = "black", alpha = 0.2) +
+p_pred_bibi = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = plogis(bibi) * 100, group = site_id)) +
+  # geom_line(color = "black", alpha = 0.2) +
+  geom_smooth(aes(group = site_id), method = "loess", se = FALSE, size = 0.5, color = alpha("black", 0.2)) +
   stat_summary(aes(group = 1), fun = mean, geom = "line", color = "royalblue", size = 1.2) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_y_continuous(breaks = c(0, 20, 40, 60, 80, 100), limits = c(0, 100), expand = c(0, 0)) +
   # geom_text(
   #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
   #   aes(label = site_id), hjust = -0.1, size = 3, color = "gray60"
   # ) +
-  labs(x = "Year", y = "Predicted B-IBI")
+  scale_x_discrete(expand = c(0, 0)) + 
+  labs(x = "Year", y = "Projected B-IBI") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Predict rich_predator from predicted bibi, predicted canopy_reach, and projected imp_reach
 data_pred = data_pred %>% mutate(rich_predator = predict(m_rich_predator, newdata = data.frame(
@@ -105,23 +120,26 @@ data_pred = data_pred %>% mutate(rich_predator = predict(m_rich_predator, newdat
   imp_reach = imp_reach
 ), type = "response"))
 
-p_pred_rich_predator = ggplot(data_pred, aes(x = year, y = rich_predator, group = site_id)) +
-  geom_line(color = "black", alpha = 0.2) +
+p_pred_rich_predator = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = rich_predator, group = site_id)) +
+  # geom_line(color = "black", alpha = 0.2) +
+  geom_smooth(aes(group = site_id), method = "loess", se = FALSE, size = 0.5, color = alpha("black", 0.2)) +
   stat_summary(aes(group = 1), fun = mean, geom = "line", color = "orange", size = 1.2) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
   # geom_text(
   #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
   #   aes(label = site_id), hjust = -0.1, size = 3, color = "gray60"
   # ) +
-  labs(x = "Year", y = "Predicted predator richness")
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12), breaks = seq(0,12,2)) + 
+  scale_x_discrete(expand = c(0, 0)) + 
+  labs(x = "Year", y = "Projected predator richness") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Plot time series predictions for envi
+# Plot time series predictions for responses
 print(p_pred_bibi + p_pred_rich_predator)
 
 # Calculate deltas from 2023 to 2100
 calc_delta = function(d, var, year_start = "2023", year_end = "2100") {
-  delta_name <- paste0("delta_", var)
-  delta_pct_name <- paste0("deltapcnt_", var)
+  delta_name = paste0("delta_", var)
+  delta_pct_name = paste0("deltapcnt_", var)
   
   d %>%
     filter(year %in% c(year_start, year_end)) %>%
@@ -138,6 +156,18 @@ calc_delta = function(d, var, year_start = "2023", year_end = "2100") {
     )
 }
 
+if (use_2023_observed_as_baseline) {
+  # Add observed 2023 data to data_pred
+  observed_2023 = data %>% mutate(
+    year = "2023",       # add year as character to match data_pred
+    scenario = "a2"      # same scenario
+  ) %>%
+    select(site_id, scenario, year, imp_basin, imp_reach, canopy_reach, bibi, rich_predator)
+  observed_2023 = observed_2023 %>% filter(site_id %in% unique(data_pred$site_id))
+  
+  data_pred = bind_rows(data_pred, observed_2023)
+}
+
 delta_vars = c("imp_basin", "imp_reach", "canopy_reach", "bibi", "rich_predator") %>%
   map(~ calc_delta(data_pred, .x)) %>% reduce(full_join, by = "site_id")
 
@@ -152,7 +182,7 @@ p_bibi_delta = ggplot(
   delta_vars %>%
     mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$bibi_2023)])) %>%
     pivot_longer(c(bibi_2023, bibi_2100), names_to = "year", values_to = "bibi"),
-  aes(x = site_id, y = bibi, group = site_id)) +
+  aes(x = site_id, y = plogis(bibi) * 100, group = site_id)) +
   # geom_rect(aes(ymin = 0, ymax = 20, xmin = -Inf, xmax = Inf), fill = "#FFCCCC", alpha = 0.1) +
   # geom_rect(aes(ymin = 20, ymax = 40, xmin = -Inf, xmax = Inf), fill = "#FFE5CC", alpha = 0.1) +
   # geom_rect(aes(ymin = 40, ymax = 60, xmin = -Inf, xmax = Inf), fill = "#FFFFCC", alpha = 0.1) +
@@ -166,6 +196,7 @@ p_bibi_delta = ggplot(
   geom_point(aes(color = year)) +
   scale_color_manual(values = c("bibi_2023" = "gray10", "bibi_2100" = "royalblue")) +
   scale_y_continuous(breaks = c(0, 20, 40, 60, 80, 100)) +
+  labs(x = "Site", y = "B-IBI", color = "") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid.major.y = element_line(color = "grey80", linewidth = 0.4),
         legend.position = "bottom")
@@ -177,7 +208,8 @@ p_rich_predator_delta = ggplot(delta_vars %>%
   geom_line() +
   geom_point(aes(color = year)) +
   scale_color_manual(values = c("rich_predator_2023" = "gray10", "rich_predator_2100" = "orange")) +
-  scale_y_continuous(breaks = seq(0, 11, by = 1), limits = c(0, 11)) +
+  scale_y_continuous(breaks = seq(0, 14, by = 1), limits = c(0, NA)) +
+  labs(x = "Site", y = "Predator richness", color = "") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
 
 print(p_bibi_delta + p_rich_predator_delta)
@@ -237,8 +269,8 @@ p_imp_rich = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predat
   geom_text_contour(aes(z = rich_predator), 
                           breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1),
                           stroke = 0.0, color = "gray20", check_overlap = FALSE, skip = 0) +
-  geom_point(data = delta_vars, aes(x = imp_reach_2100, y = imp_basin_2100), inherit.aes = FALSE, color = "firebrick") +
-  geom_point(data = delta_vars, aes(x = imp_reach_2023, y = imp_basin_2023), inherit.aes = FALSE, color = "gray10") +
+  geom_point(data = delta_vars, aes(x = imp_reach_2100, y = imp_basin_2100), inherit.aes = FALSE, color = alpha("firebrick", 0.5)) +
+  geom_point(data = delta_vars, aes(x = imp_reach_2023, y = imp_basin_2023), inherit.aes = FALSE, color = alpha("gray10", 0.5)) +
   coord_fixed(ratio = 1)
 print(p_imp_rich)
 
@@ -258,12 +290,12 @@ sites_2100 = data_pred %>%
 # Function that returns richness given imp_reach and site-specific values
 richness_for_site = function(imp_try, imp_basin_2100, m_canopy_reach, m_bibi, m_rich_predator) {
   # predict canopy
-  canopy_try <- (sin(predict(m_canopy_reach, newdata = data.frame(
+  canopy_try = (sin(predict(m_canopy_reach, newdata = data.frame(
     imp_reach_tr = asin(sqrt(imp_try))
   ))))^2
   
   # predict bibi
-  bibi_try <- predict(m_bibi, newdata = data.frame(
+  bibi_try = predict(m_bibi, newdata = data.frame(
     canopy_reach = canopy_try,
     imp_basin = imp_basin_2100
   ))
@@ -299,6 +331,9 @@ sites_2100 = sites_2100 %>% # Find canopy reach target values
   ) %>%
   ungroup()
 
+sites_2100 = sites_2100 %>% mutate(imp_reach_target_delta = imp_reach_2023 - imp_reach_target)
+sites_2100 = sites_2100 %>% mutate(canopy_reach_target_delta = canopy_reach_2023 - canopy_reach_target)
+
 sites_2100 = sites_2100 %>% arrange(imp_reach_2023) %>%
   mutate(site_id = factor(site_id, levels = site_id))
 
@@ -309,6 +344,7 @@ sites_2100_long = sites_2100 %>%
                        levels = c("imp_reach_2023", "imp_reach_target", "imp_reach_2100"),
                        labels = c("Current (2023)", "Restoration target", "No action (2100)")))
 
+# An interesting finding: the magnitude of restoration required is not necessarily contingent on the magnitude of future impairment
 p_restore_imp = ggplot(sites_2100_long, aes(y = site_id)) +
   geom_segment(data = sites_2100,
                aes(x = imp_reach_2023, xend = imp_reach_2100, y = site_id, yend = site_id),
@@ -317,13 +353,13 @@ p_restore_imp = ggplot(sites_2100_long, aes(y = site_id)) +
                aes(x = imp_reach_2023, xend = imp_reach_target, y = site_id, yend = site_id),
                color = "firebrick", linetype = "dotted") +
   geom_point(aes(x = imp_reach, color = type, shape = type)) +
-  scale_color_manual(values = c("Current (2023)" = "black", "Restoration target" = "forestgreen", "No action (2100)" = "grey40")) +
+  scale_color_manual(values = c("Current (2023)" = "black", "Restoration target" = "firebrick", "No action (2100)" = "grey40")) +
   scale_shape_manual(values = c("Current (2023)" = 19, "Restoration target" = 19, "No action (2100)" = 19)) +
   labs(x = "Impervious %", y = "Site ID", color = "", shape = "",
        title = "Reach-scale restoration efforts to maintain current predator richness by 2100 assuming unimpeded watershed urbanization") +
   theme(legend.position = "left")
 
-summary(sites_2100 %>% mutate(imp_reach_target_delta = imp_reach_2023 -imp_reach_target) %>% pull(imp_reach_target_delta))
+summary(sites_2100 %>% pull(imp_reach_target_delta))
 
 # Canopy as well
 p_restore_canopy = ggplot(sites_2100_long, aes(y = site_id)) +
@@ -338,6 +374,8 @@ p_restore_canopy = ggplot(sites_2100_long, aes(y = site_id)) +
   geom_point(aes(x = canopy_reach_2100), color = "gray40", shape = 19) +
   labs(x = "Canopy cover %", y = "", color = "", shape = "") +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), legend.position = "none")
+
+summary(sites_2100 %>% pull(canopy_reach_target_delta))
 
 print(p_restore_imp + p_restore_canopy)
 
