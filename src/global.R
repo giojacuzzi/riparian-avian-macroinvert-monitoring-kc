@@ -144,3 +144,5 @@ theme_sleek <- function(base_size = 11, base_family = "") {
       plot.subtitle = element_text(colour = "grey30", size = rel(.85))
     )
 }
+
+theme_set(theme_sleek())
