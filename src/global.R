@@ -24,6 +24,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     "ggnewscale",       # multiple scales
     "ggrepel",          # annotations
     "ggeffects",        # marginal effects
+    "metR",             # contours
     "patchwork",        # multipanel plots
     # statistics
     "DHARMa",           # modeling diagnostics
