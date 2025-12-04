@@ -110,8 +110,11 @@ p_pred_bibi = ggplot(data_pred %>% filter(year != "2023"), aes(x = year, y = plo
   #   aes(label = site_id), hjust = -0.1, size = 3, color = "gray60"
   # ) +
   scale_x_discrete(expand = c(0, 0)) + 
-  labs(x = "Year", y = "Projected B-IBI") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(x = "", y = "Projected B-IBI") +
+  theme(axis.text.x = element_blank(), #element_text(angle = 45, hjust = 1)
+        axis.ticks.x = element_blank(),
+        plot.margin = margin(0,0,0,0)
+        )
 
 # Predict rich_predator from predicted bibi, predicted canopy_reach, and projected imp_reach
 data_pred = data_pred %>% mutate(rich_predator = predict(m_rich_predator, newdata = data.frame(
@@ -129,12 +132,12 @@ p_pred_rich_predator = ggplot(data_pred %>% filter(year != "2023"), aes(x = year
   #   aes(label = site_id), hjust = -0.1, size = 3, color = "gray60"
   # ) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 12), breaks = seq(0,12,2)) + 
-  scale_x_discrete(expand = c(0, 0)) + 
+  scale_x_discrete(labels = function(x) ifelse(seq_along(x) %% 2 == 0, x, ""), expand = c(0, 0)) + 
   labs(x = "Year", y = "Projected predator richness") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(plot.margin = margin(0,0,0,0))
 
 # Plot time series predictions for responses
-print(p_pred_bibi + p_pred_rich_predator)
+# print(p_pred_bibi + p_pred_rich_predator)
 
 # Calculate deltas from 2023 to 2100
 calc_delta = function(d, var, year_start = "2023", year_end = "2100") {
@@ -180,7 +183,7 @@ summary(delta_vars$deltapcnt_rich_predator)
 
 p_bibi_delta = ggplot(
   delta_vars %>%
-    mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$bibi_2023)])) %>%
+    mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$bibi_2023, decreasing = TRUE)])) %>%
     pivot_longer(c(bibi_2023, bibi_2100), names_to = "year", values_to = "bibi"),
   aes(x = site_id, y = plogis(bibi) * 100, group = site_id)) +
   # geom_rect(aes(ymin = 0, ymax = 20, xmin = -Inf, xmax = Inf), fill = "#FFCCCC", alpha = 0.1) +
@@ -195,26 +198,210 @@ p_bibi_delta = ggplot(
   geom_line(color = "gray10") +
   geom_point(aes(color = year)) +
   scale_color_manual(values = c("bibi_2023" = "gray10", "bibi_2100" = "royalblue")) +
-  scale_y_continuous(breaks = c(0, 20, 40, 60, 80, 100)) +
-  labs(x = "Site", y = "B-IBI", color = "") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid.major.y = element_line(color = "grey80", linewidth = 0.4),
-        legend.position = "bottom")
+  scale_y_continuous(breaks = c(0, 20, 40, 60, 80, 100), limits = c(0, 100), expand = c(0,0)) +
+  labs(x = "", y = "", color = "") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.margin = margin(0,0,0,0),
+        panel.grid.major.y = element_line(color = "grey90", linewidth = 0.4),
+        legend.position = "none")
 
 p_rich_predator_delta = ggplot(delta_vars %>%
-         mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$rich_predator_2023)])) %>%
+         mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$rich_predator_2023, decreasing = TRUE)])) %>%
          pivot_longer(c(rich_predator_2023, rich_predator_2100), names_to = "year", values_to = "rich_predator"),
   aes(x = site_id, y = rich_predator, group = site_id)) +
   geom_line() +
   geom_point(aes(color = year)) +
   scale_color_manual(values = c("rich_predator_2023" = "gray10", "rich_predator_2100" = "orange")) +
-  scale_y_continuous(breaks = seq(0, 14, by = 1), limits = c(0, NA)) +
-  labs(x = "Site", y = "Predator richness", color = "") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
+  scale_y_continuous(breaks = seq(0, 14, by = 1), limits = c(0, 12), expand = c(0,0)) +
+  labs(x = "Site", y = "", color = "") +
+  theme(axis.text.x = element_text(size = 8, angle = 90, hjust = 1),
+        plot.margin = margin(0,0,0,0),
+        legend.position = "bottom"
+        )
 
-print(p_bibi_delta + p_rich_predator_delta)
+# Plot time series and delta projections for responses
+p_proj_responses = (p_pred_bibi + p_bibi_delta) / (p_pred_rich_predator + p_rich_predator_delta)
+print(p_proj_responses + plot_annotation(tag_levels = "A"))
 
-# ---------------------------------------------------------------------------------------------------
+# Watershed-only restoration (e.g. integrated watershed management plans) -----------------------------
+# Assuming imp_reach and canopy_reach values cannot be changed (e.g. local-scale restoration is
+# not feasible due to private land ownership), estimate per site what value of imp_basin
+# is needed to maintain the same amount of richness as in 2023
+
+# Filter to the 2023 richness and projected imp_basin in 2100
+sites_2100 = data_pred %>% filter(year %in% c("2023", "2100")) %>%
+  select(site_id, scenario, year, imp_reach, canopy_reach, imp_basin, bibi, rich_predator) %>%
+  pivot_wider(names_from = year, values_from = c(imp_reach, canopy_reach, imp_basin, bibi, rich_predator), names_sep = "_")
+
+# Function that returns richness given imp_reach and site-specific values
+richness_for_site_basin = function(imp_basin_try, imp_reach_2100, m_canopy_reach, m_bibi, m_rich_predator) {
+  # predict canopy from fixed reach scale 2100 imp
+  canopy_2100 = (sin(predict(m_canopy_reach, newdata = data.frame(
+    imp_reach_tr = asin(sqrt(imp_reach_2100))
+  ))))^2
+  # predict bibi
+  bibi_try = predict(m_bibi, newdata = data.frame(
+    canopy_reach = canopy_2100,
+    imp_basin = imp_basin_try
+  ))
+  # predict richness
+  predict(m_rich_predator, newdata = data.frame(
+    bibi = bibi_try,
+    canopy_reach = canopy_2100,
+    imp_reach = imp_reach_2100
+  ), type = "response")
+}
+
+# Solve for required imp_basin target
+sites_2100 = sites_2100 %>% rowwise() %>%
+  mutate(
+    imp_basin_target = tryCatch({
+      uniroot(
+        function(x)
+          richness_for_site_basin(imp_basin_try = x, imp_reach_2100 = imp_reach_2100, m_canopy_reach = m_canopy_reach, m_bibi = m_bibi, m_rich_predator = m_rich_predator) - rich_predator_2023,
+        lower = 0, upper = 1
+      )$root
+    },
+    error = function(e) NA)
+  ) %>% ungroup()
+
+# Compute deltas
+sites_2100 = sites_2100 %>% mutate(imp_basin_target_delta = imp_basin_2023 - imp_basin_target)
+
+# Summary statistics
+summary(sites_2100 %>% pull(imp_basin_target_delta))
+
+# NOTE: NA's suggest that no amount of basin level restoration can maintain richness levels
+# in the face of how degraded the stream reach becomes by 2100
+sites_2100 = sites_2100 %>% mutate(restoration_possible = ifelse(is.na(imp_basin_target), "No", "Yes"))
+
+# Plot
+sites_2100 = sites_2100 %>% arrange(imp_basin_2023) %>% mutate(site_id = factor(site_id, levels = site_id))
+sites_2100_basin_long = sites_2100 %>%
+  pivot_longer(
+    cols = c(imp_basin_2023, imp_basin_target, imp_basin_2100),
+    names_to = "type",
+    values_to = "imp_basin"
+  ) %>%
+  mutate(type = factor(
+    type,
+    levels = c("imp_basin_2023", "imp_basin_target", "imp_basin_2100"),
+    labels = c("Current (2023)", "Restoration to maintain richness", "No action (2100)")
+  ))
+p_restore_basin = ggplot(sites_2100_basin_long, aes(y = site_id)) +
+  geom_segment(data = sites_2100, aes(x = imp_basin_2023, xend = imp_basin_2100, y = site_id, yend = site_id, color = restoration_possible)) +
+  scale_color_manual(values = c("Yes" = "grey40", "No" = "firebrick")) +
+  new_scale_color() +
+  geom_segment(data = sites_2100, aes(x = imp_basin_2023, xend = imp_basin_target, y = site_id, yend = site_id), color = "forestgreen", linetype = "dotted") +
+  geom_point(aes(x = imp_basin, color = type, shape = type)) +
+  scale_color_manual(values = c("Current (2023)" = "black", "Restoration to maintain richness" = "forestgreen", "No action (2100)" = "grey40")) +
+  scale_shape_manual(values = c("Current (2023)" = 19, "Restoration to maintain richness" = 19, "No action (2100)" = 19)) +
+  labs(x = "Watershed impervious %", y = "", color = "", shape = "") +
+  theme(legend.position = "none")
+
+# Reach-only restoration (e.g. public lands, private land easements, land trusts) ---------------------
+# Assuming imp_basin values are inevitable in 2100, estimate per site what value of imp_reach
+# is needed to maintain the same amount of richness as in 2023
+
+# Filter to the 2023 richness and projected imp_basin in 2100
+sites_2100 = data_pred %>% filter(year %in% c("2023", "2100")) %>%
+  select(site_id, scenario, year, imp_reach, canopy_reach, imp_basin, bibi, rich_predator) %>%
+  pivot_wider(names_from = year, values_from = c(imp_reach, canopy_reach, imp_basin, bibi, rich_predator), names_sep = "_")
+
+# Function that returns richness given imp_reach and site-specific values
+richness_for_site_reach = function(imp_reach_try, imp_basin_2100, m_canopy_reach, m_bibi, m_rich_predator) {
+  # predict canopy
+  canopy_try = (sin(predict(m_canopy_reach, newdata = data.frame(
+    imp_reach_tr = asin(sqrt(imp_reach_try))
+  ))))^2
+  # predict bibi
+  bibi_try = predict(m_bibi, newdata = data.frame(
+    canopy_reach = canopy_try,
+    imp_basin = imp_basin_2100
+  ))
+  # predict richness
+  predict(m_rich_predator, newdata = data.frame(
+    bibi = bibi_try,
+    canopy_reach = canopy_try,
+    imp_reach = imp_reach_try
+  ), type = "response")
+}
+
+# Solve for required imp_reach target
+sites_2100 = sites_2100 %>% rowwise() %>%
+  mutate(
+    imp_reach_target = tryCatch({ # TODO: Some sites returning NA for imp_reach_target
+      # Is this because, given unimpeded basin urbanization, no possible reach-scale imperviousness reduction can restore 2023 richness levels?
+      uniroot(
+        function(x) richness_for_site_reach(x, imp_basin_2100, m_canopy_reach, m_bibi, m_rich_predator) - rich_predator_2023,
+        lower = 0, upper = 1
+      )$root
+    }, error = function(e) NA)
+  ) %>% ungroup()
+
+# Find canopy reach target values
+sites_2100 = sites_2100 %>% rowwise() %>%
+  mutate(
+    canopy_reach_target = (sin(predict(m_canopy_reach, newdata = data.frame(
+      imp_reach_tr = asin(sqrt(imp_reach_target))
+    ))))^2
+  ) %>% ungroup()
+
+sites_2100 = sites_2100 %>% mutate(imp_reach_target_delta = imp_reach_2023 - imp_reach_target)
+sites_2100 = sites_2100 %>% mutate(canopy_reach_target_delta = canopy_reach_2023 - canopy_reach_target)
+
+sites_2100 = sites_2100 %>% mutate(restoration_possible = ifelse(is.na(imp_reach_target), "No", "Yes"))
+
+
+sites_2100 = sites_2100 %>% arrange(imp_reach_2023) %>%
+  mutate(site_id = factor(site_id, levels = site_id))
+
+sites_2100_long = sites_2100 %>%
+  pivot_longer(cols = c(imp_reach_2023, imp_reach_target, imp_reach_2100), names_to = "type", values_to = "imp_reach") %>%
+  mutate(type = factor(type,
+                       levels = c("imp_reach_2023", "imp_reach_target", "imp_reach_2100"),
+                       labels = c("Current (2023)", "Restoration to maintain richness", "No action (2100)")))
+
+p_restore_reach = ggplot(sites_2100_long, aes(y = site_id)) +
+  geom_segment(data = sites_2100, aes(x = imp_reach_2023, xend = imp_reach_2100, y = site_id, yend = site_id, color = restoration_possible)) +
+  scale_color_manual(values = c("Yes" = "grey40", "No" = "firebrick")) +
+  new_scale_color() +
+  geom_segment(data = sites_2100, aes(x = imp_reach_2023, xend = imp_reach_target, y = site_id, yend = site_id), color = "forestgreen", linetype = "dotted") +
+  geom_point(aes(x = imp_reach, color = type, shape = type)) +
+  scale_color_manual(values = c("Current (2023)" = "black", "Restoration to maintain richness" = "forestgreen", "No action (2100)" = "grey40")) +
+  scale_shape_manual(values = c("Current (2023)" = 19, "Restoration to maintain richness" = 19, "No action (2100)" = 19)) +
+  labs(x = "Reach impervious %", y = "Site", color = "", shape = "") +
+  theme(legend.position = "bottom")
+
+summary(sites_2100 %>% pull(imp_reach_target_delta))
+
+# Plot both
+# 
+# Interesting points / findings:
+# - Reach-scale restoration includes illustrated reductions in impervious % as well as commensurate increases in canopy %.
+# - The magnitude of restoration required is not necessarily contingent on the magnitude of future impairment.
+# - For many sites, even dramatic restoration efforts at the watershed scale cannot
+# mitigate the overwhelming impacts of local-scale degradation within the reach.
+p_restore = p_restore_reach + p_restore_basin
+print(p_restore + plot_annotation(tag_levels = "A"))
+
+p_total = (p_proj_responses | p_restore) + plot_annotation(tag_levels = "A")
+print(p_total)
+ggsave("p_total.pdf", p_total, width = 13, height = 7)
+
+# Canopy as well
+p_restore_canopy = ggplot(sites_2100_long, aes(y = site_id)) +
+  geom_segment(data = sites_2100, aes(x = canopy_reach_2023, xend = canopy_reach_2100, y = site_id, yend = site_id), color = "gray40") +
+  geom_segment(data = sites_2100, aes(x = canopy_reach_2023, xend = canopy_reach_target, y = site_id, yend = site_id), color = "forestgreen", linetype = "dotted") +
+  geom_point(aes(x = canopy_reach_2023)) +
+  geom_point(aes(x = canopy_reach_target), color = "forestgreen") +
+  geom_point(aes(x = canopy_reach_2100), color = "gray40", shape = 19) +
+  labs(x = "Canopy cover %", y = "", color = "", shape = "") +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), legend.position = "none")
+
+summary(sites_2100 %>% pull(canopy_reach_target_delta))
+
+# Both reach and watershed restoration -----------------------------------------------------------------
 
 # Estimated % change in bird richness per site in 2050 as a function of % change in imp basin (A), imp local (B)
 # ggplot(delta_vars, aes(x = delta_imp_basin, y = deltapcnt_rich_predator)) +
@@ -265,117 +452,11 @@ p_imp_rich = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predat
   geom_raster(aes(fill = rich_predator), interpolate = TRUE) +
   scale_fill_gradient(low = alpha("red", 0.7), high = alpha("forestgreen", 0.7)) +
   geom_contour(color = "gray20", breaks = seq(floor(min(pred_grid$rich_predator)),
-                                             ceiling(max(pred_grid$rich_predator)), by = 1)) +
+                                              ceiling(max(pred_grid$rich_predator)), by = 1)) +
   geom_text_contour(aes(z = rich_predator), 
-                          breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1),
-                          stroke = 0.0, color = "gray20", check_overlap = FALSE, skip = 0) +
+                    breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1),
+                    stroke = 0.0, color = "gray20", check_overlap = FALSE, skip = 0) +
   geom_point(data = delta_vars, aes(x = imp_reach_2100, y = imp_basin_2100), inherit.aes = FALSE, color = alpha("firebrick", 0.5)) +
   geom_point(data = delta_vars, aes(x = imp_reach_2023, y = imp_basin_2023), inherit.aes = FALSE, color = alpha("gray10", 0.5)) +
-  coord_fixed(ratio = 1)
-print(p_imp_rich)
-
-# Assuming imp_basin values are inevitable in 2100, estimate per site what value of imp_reach
-# is needed to maintain the same amount of richness as in 2023
-
-# Filter to the 2023 richness and projected imp_basin in 2100
-sites_2100 = data_pred %>%
-  filter(year %in% c("2023", "2100")) %>%
-  select(site_id, scenario, year, imp_reach, canopy_reach, imp_basin, bibi, rich_predator) %>%
-  pivot_wider(
-    names_from = year,
-    values_from = c(imp_reach, canopy_reach, imp_basin, bibi, rich_predator),
-    names_sep = "_"
-  )
-
-# Function that returns richness given imp_reach and site-specific values
-richness_for_site = function(imp_try, imp_basin_2100, m_canopy_reach, m_bibi, m_rich_predator) {
-  # predict canopy
-  canopy_try = (sin(predict(m_canopy_reach, newdata = data.frame(
-    imp_reach_tr = asin(sqrt(imp_try))
-  ))))^2
-  
-  # predict bibi
-  bibi_try = predict(m_bibi, newdata = data.frame(
-    canopy_reach = canopy_try,
-    imp_basin = imp_basin_2100
-  ))
-  
-  # predict richness
-  predict(m_rich_predator, newdata = data.frame(
-    bibi = bibi_try,
-    canopy_reach = canopy_try,
-    imp_reach = imp_try
-  ), type = "response")
-}
-
-# Find imp reach target values
-sites_2100 = sites_2100 %>%
-  rowwise() %>%
-  mutate(
-    imp_reach_target = tryCatch({ # TODO: Some sites returning NA for imp_reach_target
-      # Is this because, given unimpeded basin urbanization, no possible reach-scale imperviousness reduction can restore 2023 richness levels?
-      uniroot(
-        function(x) richness_for_site(x, imp_basin_2100, m_canopy_reach, m_bibi, m_rich_predator) - rich_predator_2023,
-        lower = 0, upper = 1
-      )$root
-    }, error = function(e) NA)
-  ) %>%
-  ungroup()
-
-sites_2100 = sites_2100 %>% # Find canopy reach target values
-  rowwise() %>%
-  mutate(
-    canopy_reach_target = (sin(predict(m_canopy_reach, newdata = data.frame(
-      imp_reach_tr = asin(sqrt(imp_reach_target))
-    ))))^2
-  ) %>%
-  ungroup()
-
-sites_2100 = sites_2100 %>% mutate(imp_reach_target_delta = imp_reach_2023 - imp_reach_target)
-sites_2100 = sites_2100 %>% mutate(canopy_reach_target_delta = canopy_reach_2023 - canopy_reach_target)
-
-sites_2100 = sites_2100 %>% arrange(imp_reach_2023) %>%
-  mutate(site_id = factor(site_id, levels = site_id))
-
-sites_2100_long = sites_2100 %>%
-  pivot_longer(cols = c(imp_reach_2023, imp_reach_target, imp_reach_2100),
-               names_to = "type", values_to = "imp_reach") %>%
-  mutate(type = factor(type,
-                       levels = c("imp_reach_2023", "imp_reach_target", "imp_reach_2100"),
-                       labels = c("Current (2023)", "Restoration target", "No action (2100)")))
-
-# An interesting finding: the magnitude of restoration required is not necessarily contingent on the magnitude of future impairment
-p_restore_imp = ggplot(sites_2100_long, aes(y = site_id)) +
-  geom_segment(data = sites_2100,
-               aes(x = imp_reach_2023, xend = imp_reach_2100, y = site_id, yend = site_id),
-               color = "gray40") +
-  geom_segment(data = sites_2100,
-               aes(x = imp_reach_2023, xend = imp_reach_target, y = site_id, yend = site_id),
-               color = "firebrick", linetype = "dotted") +
-  geom_point(aes(x = imp_reach, color = type, shape = type)) +
-  scale_color_manual(values = c("Current (2023)" = "black", "Restoration target" = "firebrick", "No action (2100)" = "grey40")) +
-  scale_shape_manual(values = c("Current (2023)" = 19, "Restoration target" = 19, "No action (2100)" = 19)) +
-  labs(x = "Impervious %", y = "Site ID", color = "", shape = "",
-       title = "Reach-scale restoration efforts to maintain current predator richness by 2100 assuming unimpeded watershed urbanization") +
-  theme(legend.position = "left")
-
-summary(sites_2100 %>% pull(imp_reach_target_delta))
-
-# Canopy as well
-p_restore_canopy = ggplot(sites_2100_long, aes(y = site_id)) +
-  geom_segment(data = sites_2100,
-               aes(x = canopy_reach_2023, xend = canopy_reach_2100, y = site_id, yend = site_id),
-               color = "gray40") +
-  geom_segment(data = sites_2100,
-               aes(x = canopy_reach_2023, xend = canopy_reach_target, y = site_id, yend = site_id),
-               color = "forestgreen", linetype = "dotted") +
-  geom_point(aes(x = canopy_reach_2023)) +
-  geom_point(aes(x = canopy_reach_target), color = "forestgreen") +
-  geom_point(aes(x = canopy_reach_2100), color = "gray40", shape = 19) +
-  labs(x = "Canopy cover %", y = "", color = "", shape = "") +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), legend.position = "none")
-
-summary(sites_2100 %>% pull(canopy_reach_target_delta))
-
-print(p_restore_imp + p_restore_canopy)
+  coord_fixed(ratio = 1); print(p_imp_rich)
 
