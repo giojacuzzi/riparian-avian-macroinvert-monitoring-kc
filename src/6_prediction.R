@@ -3,7 +3,11 @@
 
 source("src/global.R")
 
-use_2023_observed_as_baseline = FALSE # TODO: 2023 values in plots are currently model predictions, not ground-truth
+# NOTE: 2023 values in plots are currently model predictions, not ground-truth
+# Deltas between 2023 observed response variables (canopy, bibi, richness) and 2100 predictions
+# may be positive OR negative because it includes residual error from component model fit
+# Canopy increasing reflects the presence of negative residuals in the 2023 data, not that the model actually predicts a gain in cover.
+use_2023_observed_as_baseline = FALSE
 
 # Load projections
 projections_reach     = readRDS("data/cache/3_calculate_vars/imp_projections_550m.rds")
@@ -20,6 +24,9 @@ m_canopy = sem[[1]]
 m_bibi   = sem[[2]]
 m_rich   = sem[[3]]
 data     = sem[[4]]
+
+# Only retain sites with projections
+data = data %>% filter(site_id %in% projections_reach$site_id) %>% arrange(site_id)
 
 # Select a scenario
 s = "a2"
@@ -152,7 +159,7 @@ if (use_2023_observed_as_baseline) {
   # Add observed 2023 data to data_pred
   observed_2023 = data %>% mutate(
     year = "2023",       # add year as character to match data_pred
-    scenario = "a2"      # same scenario
+    scenario = s         # same scenario
   ) %>%
     select(site_id, scenario, year, imp_basin, imp_reach, canopy_reach, bibi, rich_predator)
   observed_2023 = observed_2023 %>% filter(site_id %in% unique(data_pred$site_id))
