@@ -407,12 +407,25 @@ ggsave("p_total.pdf", p_total, width = 13, height = 7)
 
 site_restorations = data.frame(
   site_id = data$site_id,
-  no_reach = data$site_id %in% site_id_no_reach_restoration_possible,
-  no_watershed = data$site_id %in% site_id_no_watershed_restoration_possible
+  restore_need_watershed = data$site_id %in% site_id_no_reach_restoration_possible,
+  restore_need_reach     = data$site_id %in% site_id_no_watershed_restoration_possible
 )
 site_restorations = site_restorations %>% filter(site_id %in% delta_vars$site_id)
-site_restorations$restorable = !site_restorations$no_reach & !site_restorations$no_watershed
+site_restorations$restorable = !site_restorations$restore_need_watershed & !site_restorations$restore_need_reach
 site_restorations = site_restorations %>% left_join(delta_vars %>% select(site_id, imp_basin_2023, imp_basin_2100, imp_reach_2023, imp_reach_2100), by = "site_id")
+
+site_restorations$restore_need = with(site_restorations,
+                                     ifelse(restore_need_watershed, "restore_need_watershed",
+                                            ifelse(restore_need_reach, "restore_need_reach",
+                                                   "restorable single scale"))
+)
+
+site_restorations = site_restorations %>%
+  mutate(
+    delta_imp_basin = imp_basin_2023 - imp_basin_2100,
+    delta_imp_reach = imp_reach_2023 - imp_reach_2100,
+    delta_imp_max = pmax(abs(delta_imp_basin), abs(delta_imp_reach))
+  )
 
 ## Sensitivity analysis richness ~ imp
 pred_grid = expand.grid(
@@ -440,24 +453,36 @@ pred_grid = pred_grid %>%
                             ), type = "response")
   )
 
-# Richness depends on imperviousness at both the reach and basin scales.
-# As imp_basin increases, imp_reach must decrease to maintain the same richness, and vice-versa.
-# The slope of contour lines is < -1 (to maintain the same amount of richness, you can have more
+# Richness responds to imperviousness at both the reach and basin scales.
+# Tradeoff: As imp_basin increases, imp_reach must decrease to maintain the same richness, and vice-versa.
+# Responses are not symmetric between scales: The slope of contour lines is < -1 (to maintain the same amount of richness, you can have more
 # imp_basin than imp_reach), indicating that richness is more sensitive to imp_reach than imp_basin.
 # A larger change in imp_basin is needed to compensate for a smaller change in imp_reach.
 # Also, the slope gets steeper as impervious levels get smaller (bottom left corner), suggesting that
 # this sensitivity is more pronounced at lower levels of imperviousness (relatively pristine sites).
 # Therefore, management interventions reducing imp_reach have the largest potential benefit in less disturbed sites.
+# The distance between contours increases as imperviousness increases across both scales --> 1) declines in richness slow as a stream becomes
+# heavily degraded, and 2) greater amounts of restoration are needed to conserve richness at more imperiled sites (conversely, pristine or
+# moderately impacted streams benefit from relatively small interventions).
+# Streams that require multi-scale restoration are 1) projected to experience dramatic changes in
+# imperviousness along at one or both scales (their lines are very long), and/or 2) already have relatively
+# low levels of imperviousness at one or both scales, and so are limited in their "wiggle room / floor" for restoration adjustment along
+# one or both scales (axes)
 p_imp_rich = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predator)) +
   # geom_raster(aes(fill = rich_predator), interpolate = TRUE) +
   # scale_fill_gradient(low = alpha("red", 0.7), high = alpha("forestgreen", 0.7)) +
-  geom_contour(color = "gray20", breaks = seq(floor(min(pred_grid$rich_predator)),
-                                              ceiling(max(pred_grid$rich_predator)), by = 1)) +
+  geom_contour(aes(linetype = "Predator richness"), color = "gray70", breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1)) +
   geom_text_contour(aes(z = rich_predator),
                     breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1),
-                    stroke = 0.0, color = "gray20", check_overlap = FALSE, skip = 0) +
-  # geom_point(data = delta_vars, aes(x = imp_reach_2100, y = imp_basin_2100), inherit.aes = FALSE, color = alpha("firebrick", 0.5)) +
-  # geom_point(data = delta_vars, aes(x = imp_reach_2023, y = imp_basin_2023), inherit.aes = FALSE, color = alpha("gray10", 0.5)) +
-  geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2100, y = imp_basin_2100, color = restorable)) +
+                    stroke = 0.0, color = "gray70", check_overlap = FALSE, skip = 0) +
+  geom_segment(data = site_restorations,
+    aes(x = imp_reach_2023,  y = imp_basin_2023, xend = imp_reach_2100, yend = imp_basin_2100, color = restore_need),
+    inherit.aes = FALSE, alpha = 0.5
+  ) +
+  # geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2023, y = imp_basin_2023, color = restore_need)) +
+  geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2100, y = imp_basin_2100, color = restore_need), size = 2, alpha = 0.9) +
+  scale_linetype_manual(name = NULL, values = "solid") +
+  scale_color_manual(values = c("gray40", "magenta3", "lightseagreen")) +
+  labs(x = "Reach impervious %", y = "Watershed impervious %", color = "Restoration scale needed") +
   coord_fixed(ratio = 1); print(p_imp_rich)
 
