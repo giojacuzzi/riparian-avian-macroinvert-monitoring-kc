@@ -75,21 +75,20 @@ ggplot(pssb_data_scores_sites, aes(x = ept_richness_quantity, y = overall_score)
 # Load and process geospatial data ---------------------------------------------------
 message("Loading geospatial data")
 
-# TODO: Load ICLUS impervious surface projections
+# Load ICLUS impervious surface projections
 message("- ICLUS projection rasters")
 iclus_rast_filepaths = list.files(file.path(in_cache_geospatial_dir, "iclus"), pattern = "^is.*\\.tif$", full.names = TRUE, recursive = TRUE)
 
 rast_imp_iclus_projections = list()
-
 for (f in iclus_rast_filepaths) {
-  fname <- basename(f)
-  year <- str_extract(fname, "(?<=is)\\d{4}")           # 2100
-  scenario <- str_extract(fname, "(?<=\\d{4})[a-z0-9]+") # a1, a2, b1, b2
-  r <- rast(f)
+  filename = basename(f)
+  year = str_extract(filename, "(?<=is)\\d{4}")
+  scenario = str_extract(filename, "(?<=\\d{4})[a-z0-9]+")
+  r = rast(f)
   if (is.null(rast_imp_iclus_projections[[scenario]])) {
-    rast_imp_iclus_projections[[scenario]] <- list()
+    rast_imp_iclus_projections[[scenario]] = list()
   }
-  rast_imp_iclus_projections[[scenario]][[year]] <- r
+  rast_imp_iclus_projections[[scenario]][[year]] = r
 }
 
 # Load cached raster data
@@ -182,7 +181,7 @@ for (s in 1:nrow(sites_aru)) {
   # print(s)
   # print(s_id)
   
-  # Create a buffer around the ARU site # TODO: Center around ARU or PSSB?
+  # Create a buffer around the ARU site
   site = site_metadata %>% filter(site_id == s_id) %>% st_as_sf(coords = c("long_aru", "lat_aru"), crs = 4326) #st_as_sf(sites_aru[s,])
   # site_buffer = st_buffer(site, buffer_radius)
   site_buffer_proj = st_buffer(st_transform(site, crs_standard), dist = buffer_radius)
@@ -217,8 +216,7 @@ for (s in 1:nrow(sites_aru)) {
   
   flowlines = flowlines_trimmed
   
-  # 2. Buffer 50 m core emergence zone minimum from flowlines
-  # TODO: Buffer 100m to include adjacent edge habitats, as below?
+  # 2. Buffer 50 m core emergence zone minimum from flowlines, and buffer 100m to include adjacent edge habitats
   emergence_zone = st_make_valid(st_union(st_buffer(flowlines %>% st_transform(crs_standard), 100)))
   
   # Remove waterbodies from emergence zone
