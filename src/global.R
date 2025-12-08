@@ -21,6 +21,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     "tidyterra",        # raster data manipulation
     "tigris",           # political boundaries
     # visualization and plotting
+    "ggbeeswarm",       # beeswarm figures
     "ggnewscale",       # multiple scales
     "ggrepel",          # annotations
     "ggeffects",        # marginal effects
