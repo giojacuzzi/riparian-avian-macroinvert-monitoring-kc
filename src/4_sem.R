@@ -1,13 +1,15 @@
-source("src/global.R")
-
+# 4_sem.R ===================================================================
+# Fit piecewise structural equation models
+#
+# Input:
+exclude_agri_sites = TRUE # exclude outlier agricultural sites
+use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
+msom_path = "data/cache/models/reach_invert_predator.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
-
+# Output:
 out_cache_dir = "data/cache/4_sem"
 
-exclude_agri_sites = TRUE
-
-use_msom_richness_estimates = TRUE
-path_msom_richness_estimates = "data/cache/5_msom_results/msom_richness_estimates.rds"
+source("src/global.R")
 
 # Load site variable data ------------------------------------------------------------
 
@@ -42,40 +44,9 @@ ggplot(site_data_reach, aes(x = rast_nlcd_impervious_sum_proportion, y = rast_us
 # Load species detection history data ------------------------------------------------
 message("Loading species detection history data")
 
-# Load species detection history data
 detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
-
-# TODO: assess adequacy of sampling effort to detect total species richness via sample size-based rarefaction and extrapolation sampling curves for species richness (iNEXT)? Quantify sample completeness to determine the estimated proportion of species detected from the predicted species pool by plotting sample coverage with respect to the number of sampling units.
-if (FALSE) {
-  library(iNEXT)
-  
-  zero_detections <- detections$long %>%
-    group_by(common_name) %>%
-    summarise(total_detections = sum(n_detections, na.rm = TRUE)) %>%
-    filter(total_detections == 0) %>%
-    pull(common_name)
-  
-  detections_list <- detections$wide %>%
-    group_split(site_id) %>%                                 # Split by site
-    set_names(unique(detections$wide$site_id)) %>%            # Name list elements by site_id
-    map(~ {
-      df <- .x %>%
-        select(-site_id) %>%                                  # Remove site_id column
-        tibble::column_to_rownames("common_name")             # Set rownames as common_name
-      return(df)
-    })
-  detections_incidence <- detections_list %>%
-    map(~ as.data.frame((.x > 0) * 1))
-  
-  out.raw <- iNEXT(detections_incidence, q = 0, datatype="incidence_raw", endpoint=100)
-  out.raw
-  ggiNEXT(out.raw, type = 1) # sample size-based rarefaction/extrapolation curve
-  ggiNEXT(out.raw, type = 2) # sample completeness curve
-  ggiNEXT(out.raw, type = 3) # coverage-based rarefaction/extrapolation curve
-  
-}
 
 # NOTE: Very few aerial specialist foragers
 eltontraits %>% filter(for_strat_aerial >= 10) %>% pull(common_name)
@@ -165,6 +136,59 @@ sp_predator = setdiff(sp_predator, c(
 sp_ripasso_inv = c(sp_invert[sp_invert %in% c(sp_ripasso)])
 sp_ripobl_inv  = c(sp_invert[sp_invert %in% c(sp_ripobl)])
 
+# Load data for multi-species occupancy model --------------------------------------------------
+if (use_msom_richness_estimates) {
+  message("Loading data for multi-species occupancy model ", msom_path)
+  msom_data = readRDS(msom_path)
+  msom_summary = msom_data$msom_summary
+  msom         = msom_data$msom
+  groups       = msom_data$groups %>% arrange(common_name)
+  sites        = msom_data$sites
+  species      = msom_data$species
+  
+  ## Calculate estimated group richness per site
+  z = msom_data$msom$sims.list$z
+  group_idx = groups$group_idx
+  group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
+  samples = dim(z)[1]
+  J = dim(z)[2]
+  I = dim(z)[3]
+  G = max(group_idx)
+  
+  rich_group = array(NA, c(samples, J, G))
+  for (g in 1:G) {
+    species_in_g = which(group_idx == g)
+    rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+  }
+  rich_group_mean  = apply(rich_group, c(2,3), mean)
+  rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
+  rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
+  msom_richness_estimates <- lapply(1:G, function(g) {
+    group = group_names[g]
+    tibble(
+      site_id = sites
+    ) %>%
+      dplyr::mutate(
+        !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
+        !!paste0(group, "_rich_lower") := rich_group_lower[, g],
+        !!paste0(group, "_rich_upper") := rich_group_upper[, g]
+      )
+  })
+  names(msom_richness_estimates) = group_names
+  
+  rich_total = apply(z, c(1, 2), sum)
+  msom_richness_estimates$total = tibble(
+    site_id    = sites,
+    total_rich_mean  = apply(rich_total, 2, mean),
+    total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
+    total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
+  )
+}
+
+# if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
+# saveRDS(msom_richness_estimates, file = path_out)
+# message(crayon::green("Cached model and results to", path_out))
+
 # Exclude certain sites from analysis ------------------------------------------------
 
 # Inspect total detections per site
@@ -231,7 +255,6 @@ site_group_richness =  presence_absence %>%
 
 # Incorporate mean msom richness estimates
 if (use_msom_richness_estimates) {
-  msom_richness_estimates = readRDS(path_msom_richness_estimates)
   site_group_richness = left_join(site_group_richness, msom_richness_estimates$invert_predator, by = "site_id")
   site_group_richness = left_join(site_group_richness, msom_richness_estimates$`NA`, by = "site_id")
   site_group_richness = left_join(site_group_richness, msom_richness_estimates$total, by = "site_id")
@@ -244,42 +267,9 @@ library(indicspecies)
 spmat = presence_absence %>% pivot_wider(names_from = common_name, values_from = presence)
 d = left_join(spmat, site_data_reach, by = "site_id")
 spmat = spmat %>% select(-site_id) %>% as.data.frame()
-
 bibi_excellent = ifelse(d$bibi >= 80, 1, 0)
-
 indval = multipatt(spmat, bibi_excellent, control = how(nperm=999)) 
 summary(indval)
-
-## NMDS visualization
-# library(vegan)
-# nmds = metaMDS(presence_absence %>%
-#                  pivot_wider(names_from = common_name, values_from = presence, values_fill = 0) %>%
-#                  column_to_rownames("site_id"), distance = "bray", k = 3, trymax = 100)
-# nmds$stress # stress > 0.2 suggests weak fit
-# nmds_scores = as.data.frame(scores(nmds, display = "sites"))
-# nmds_scores$site_id = rownames(nmds_scores)
-# nmds_plot_data = nmds_scores %>% left_join(site_data_reach, by = "site_id")
-# species_scores = as.data.frame(scores(nmds, display = "species"))
-# species_scores$species = rownames(species_scores)
-# 
-# ggplot(nmds_plot_data, aes(NMDS1, NMDS2, color = bibi)) +
-#   geom_text(data = species_scores, aes(x = NMDS1, y = NMDS2, label = species), color = "gray", size = 3, vjust = -0.5, check_overlap = TRUE) +
-#   geom_point(size = 3, alpha = 0.8) +
-#   geom_text(aes(label = site_id), vjust = -0.5, size = 3, color = "black") +
-#   scale_color_continuous(type = "viridis") +
-#   labs(color = "B-IBI")
-# 
-# ggplot(species_scores, aes(x = 0, y = 0)) +
-#   geom_segment(aes(xend = NMDS1, yend = NMDS2),
-#                arrow = arrow(length = unit(0.25, "cm")),
-#                color = "darkgray", alpha = 0.8) +
-#   geom_text(aes(x = NMDS1, y = NMDS2, label = species),
-#             color = "black", size = 3, vjust = -0.5, check_overlap = TRUE) +
-#   geom_hline(yintercept = 0, linetype = "dashed", color = "gray70") +
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "gray70") +
-#   scale_x_continuous(limits = c(-2, 2)) +
-#   scale_y_continuous(limits = c(-2, 2)) +
-#   labs(title = "Species vectors")
 
 # Richness across AVONET guilds per site
 richness_by_trophic_niche = presence_absence %>% left_join(species_traits, by = "common_name") %>%
@@ -434,12 +424,12 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "riphab_basin"  = data_basin$nlcd_forest_and_wetlands,
     "site_id"       = data_reach$site_id
   )
-  pairwise_collinearity(d %>% select(where(is.numeric)))
-  
-  # TODO: Incorporate msom richness uncertainty
   if (use_msom_richness_estimates) {
     d = left_join(d, msom_richness_estimates$invert_predator, by = "site_id")
+    d = left_join(d, msom_richness_estimates$`NA`, by = "site_id")
+    d = left_join(d, msom_richness_estimates$total, by = "site_id")
   }
+  pairwise_collinearity(d %>% select(where(is.numeric)))
 
   # Exploratory models
   if (FALSE) {
@@ -491,7 +481,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     sem = psem(m_bibi, m_bark_inv_primary); plot(sem); print(summary(sem))
   }
   
-  ## Invertivore guild ========================================
+  ## SEM for invertivore guild ==========================================================
   # (species that are primarily insectivorous and are reported to predate on aquatic inverts)
   n = nrow(d)
   
@@ -505,33 +495,114 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   d$bibi = qlogis(d$bibi)
   m_bibi = lm(bibi ~ canopy_reach + imp_basin, data = d)
   
-  # Predator richness as a function of bibi, reach canopy, and reach impervious
-  m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-  
-  # Fit piecewise SEM with component models
-  sem = psem(m_canopy, m_bibi, m_predator); plot(sem); print(summary(sem))
-  
-  if (use_msom_richness_estimates) {
-    message("Using msom richness mean as response")
+  # Predator group richness as a function of bibi, reach canopy, and reach impervious
+  if (!use_msom_richness_estimates) {
+    message("Using naive observed richness as response variable")
+    m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
+    # Fit piecewise SEM with component models
+    sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
+    
+  } else {
+    message("Using msom richness mean as response variable")
     d_msom = d
     d_msom$rich_predator = d$invert_predator_rich_mean
     # NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
     m_predator = lm(rich_predator ~ bibi + canopy_reach + imp_reach, d_msom)
-    sem = psem(m_canopy, m_bibi, m_predator); plot(sem); print(summary(sem))
-    
-    # Tests to support assumption of normality
+    sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
+    coefs_predator = coefs(sem_predator) %>% clean_names() %>% rename(signif = x)
+    # Test to support assumption of normality
     shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
-    # qqnorm(residuals(m_predator))
-    # qqline(residuals(m_predator), col = "red")
-    # hist(residuals(m_predator), breaks = 10)
+    
+    # "Other" group richness
+    d_msom$rich_NA = d$NA_rich_mean
+    m_NA = lm(rich_NA ~ bibi + canopy_reach + imp_reach, d_msom)
+    sem_NA = psem(m_canopy, m_bibi, m_NA); plot(sem_NA); print(summary(sem_NA))
+    coefs_NA = coefs(sem_NA) %>% clean_names() %>% rename(signif = x)
+    
+    # Total group richness
+    d_msom$rich_total = d$total_rich_mean
+    m_total = lm(rich_total ~ bibi + canopy_reach + imp_reach, d_msom)
+    sem_total = psem(m_canopy, m_bibi, m_total); plot(sem_total); print(summary(sem_total))
+    coefs_total = coefs(sem_total) %>% clean_names() %>% rename(signif = x)
   }
   
   if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
   out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
-  saveRDS(sem, out_filepath)
+  saveRDS(sem_predator, out_filepath)
   message(crayon::green("Cached", out_filepath))
   
-  if (FALSE) { # Alternative scale hypotheses validations (compare AIC and R.squared)
+  # TODO: Also do full community model
+  
+  # Propagate uncertainty from MSOM --------------------------------------------------------
+  if (use_msom_richness_estimates) {
+    # Fit sem over all posterior draws to propagate uncertainty
+    for (g in 1:(G+1)) {
+      if (g > G) {
+        group_name = "total"
+      } else {
+        group_name = group_names[g]
+      }
+      message("Propagating MSOM uncertainty for '", group_name, "' group richness response")
+      z = msom$sims.list$z
+      draws = dim(z)[1]
+      stopifnot(all(groups$common_name == msom_data$species))
+      coeffs_draws = tibble()
+      pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
+      for (draw in 1:draws) {
+        # Calculate estimated group richness at each site
+        if (group_name == "total") {
+          rich_group_draw = data.frame(
+            site_id = msom_data$sites,
+            rich_group_draw = rich_group[draw, , 1] + rich_group[draw, , 2]
+          )
+        } else {
+          rich_group_draw = data.frame(
+            site_id = msom_data$sites,
+            rich_group_draw = rich_group[draw, , g]
+          )
+        }
+        d_msom = d %>% left_join(rich_group_draw, by = "site_id")
+        
+        # Fit the component model and SEM
+        m_rich_draw = lm(rich_group_draw ~ bibi + canopy_reach + imp_reach, d_msom)
+        sem_draw = psem(m_canopy, m_bibi, m_rich_draw)
+        
+        # Extract SEM coefficients and store
+        coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
+          filter(response == "rich_group_draw") %>%
+          mutate(draw = draw) %>% rename(signif = x)
+        coeffs_draws = rbind(coeffs_draws, coeffs_draw)
+        pb$tick()
+      }
+      rich_group_coefs = coeffs_draws %>%
+        group_by(predictor) %>%
+        summarise(
+          mean  = mean(std_estimate),
+          lower = quantile(std_estimate, 0.025),
+          upper = quantile(std_estimate, 0.975),
+          response = "rich_group_draw",
+          .groups = "drop"
+        ) %>% rename(std_estimate = mean)
+      if (group_name == "invert_predator") {
+        coefs_to_compare = coefs_predator
+      } else if (group_name == "NA") {
+        coefs_to_compare = coefs_NA
+      } else if (group_name == "total") {
+        coefs_to_compare = coefs_total
+      }
+      all_coefs = bind_rows(rich_group_coefs, coefs_to_compare)
+      all_coefs$group = group_name
+      p = ggplot(all_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
+        geom_vline(xintercept = 0, color = "gray") +
+        geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
+        geom_point() + labs(title = group_name); print(p)
+      
+      message("SEM coefficients including propagated uncertainty:")
+      print(all_coefs)
+    }
+  }
+  
+  if (FALSE) { # TODO: Alternative scale hypotheses validations (compare AIC and R.squared)
     m_reach_canopy = lm(canopy_reach ~ imp_reach, d)
     m_reach_bibi   = lm(bibi ~ canopy_reach + imp_reach, d)
     m_reach_rich   = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
@@ -567,7 +638,7 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
 #   "green-winged teal", "mallard", "gadwall", "wood duck", "common merganser", "blue-winged teal", "cackling goose", "caspian tern", "great blue heron", "red-winged blackbird", "american bittern", "green heron"
 # )) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)
 
-# Marginal effect plots
+# Marginal effect plots =======================================================================
 {
   ## Canopy reach as a function of impervious reach
   # Generate prediction values

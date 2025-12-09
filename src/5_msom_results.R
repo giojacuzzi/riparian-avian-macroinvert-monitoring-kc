@@ -1,59 +1,23 @@
-source("src/global.R")
-
+# 5_msom_results.R ===================================================================
+# Retrieve and visualize multi-species occupancy modeling results
+#
+# Input:
+msom_path = "data/cache/models/reach_invert_predator.rds"
+# Output:
 path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
 
-path = "data/cache/models/reach_invert_predator.rds"
+source("src/global.R")
 
-message("Loading data for model ", path)
-model_data = readRDS(path)
+# Load data for multi-species occupancy model --------------------------------------------------
+
+message("Loading data for multi-species occupancy model ", msom_path)
+model_data = readRDS(msom_path)
 
 msom_summary = model_data$msom_summary
 msom = model_data$msom
 groups = model_data$groups %>% arrange(common_name)
 sites = model_data$sites
 species = model_data$species
-
-## Calculate estimated group richness per site
-z = model_data$msom$sims.list$z
-group_idx = groups$group_idx
-group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
-samples = dim(z)[1]
-J = dim(z)[2]
-I = dim(z)[3]
-G = max(group_idx)
-
-rich_group = array(NA, c(samples, J, G))
-for (g in 1:G) {
-  species_in_g = which(group_idx == g)
-  rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
-}
-rich_group_mean  = apply(rich_group, c(2,3), mean)
-rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
-rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
-msom_richness_estimates <- lapply(1:G, function(g) {
-  group = group_names[g]
-  tibble(
-    site_id = sites
-  ) %>%
-    dplyr::mutate(
-      !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
-      !!paste0(group, "_rich_lower") := rich_group_lower[, g],
-      !!paste0(group, "_rich_upper") := rich_group_upper[, g]
-    )
-})
-names(msom_richness_estimates) = group_names
-
-rich_total = apply(z, c(1, 2), sum)
-msom_richness_estimates$total = tibble(
-  site_id    = sites,
-  total_rich_mean  = apply(rich_total, 2, mean),
-  total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
-  total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
-)
-
-if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
-saveRDS(msom_richness_estimates, file = path_out)
-message(crayon::green("Cached model and results to", path_out))
 
 ## Inspect group membership
 
@@ -204,7 +168,7 @@ ggplot(occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(gr
     geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
     geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
     labs(title = "Community level effect sizes for occurrence covariates",
-         subtitle = tools::file_path_sans_ext(basename(path)),
+         subtitle = tools::file_path_sans_ext(basename(msom_path)),
          x = "Coefficient estimate", y = "Parameter")
 
 species_effects = param_occ_data %>%
@@ -216,7 +180,7 @@ species_effects = species_effects %>% left_join(species_traits, by ="common_name
 
 species_effects = species_effects %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
 
-plt = ggplot() +
+ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
   geom_quasirandom(data = species_effects, aes(x = coef_mean, y = name, color = coef_overlap0),
     size = 3, width = 0.3, alpha = 0.75
@@ -225,13 +189,13 @@ plt = ggplot() +
   geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), shape = overlap0), size = 3.5) +
   # xlim(c(-2.5, 2.5)) +
   labs(title = "Effect sizes for occurrence covariates at community and species levels",
-       subtitle = tools::file_path_sans_ext(basename(path)),
+       subtitle = tools::file_path_sans_ext(basename(msom_path)),
        x = "Coefficient estimate", y = "Parameter") +
   geom_text_repel(
     data = species_effects,
     aes(x = coef_mean, y = name, label = common_name),
     size = 2, nudge_x = 0.02, direction = "y", hjust = 0.02, max.overlaps = 30
-  ) + theme(legend.position = "bottom"); print(plt)
+  ) + theme(legend.position = "bottom")
 
 ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
@@ -247,28 +211,26 @@ ggplot() +
   )
   
   
-label_species <- c("black-headed grosbeak", "belted kingfisher", "swainson's thrush", "western wood-pewee", "wilson's warbler", "house sparrow", "bewick's wren", "pacific wren", "black-throated gray warbler", "pileated woodpecker")
+label_species = c("black-headed grosbeak", "belted kingfisher", "swainson's thrush", "western wood-pewee", "wilson's warbler", "house sparrow", "bewick's wren", "pacific wren", "black-throated gray warbler", "pileated woodpecker")
 
-mu_list <- list(
+mu_list = list(
   mu.alpha1 = model_data$msom$sims.list[["mu.alpha1"]],
   mu.alpha2 = model_data$msom$sims.list[["mu.alpha2"]],
   mu.alpha3 = model_data$msom$sims.list[["mu.alpha3"]]
 )
 
 # Convert each to long format and combine
-mu_long <- bind_rows(
+mu_long = bind_rows(
   lapply(names(mu_list), function(mu_name) {
-    mat <- mu_list[[mu_name]]
-    df <- as.data.frame(mat)
-    df$samp <- 1:nrow(df)
-    df_long <- pivot_longer(df, cols = -samp, names_to = "species_group", values_to = "value")
-    df_long$parameter <- mu_name
+    mat = mu_list[[mu_name]]
+    df = as.data.frame(mat)
+    df$samp = 1:nrow(df)
+    df_long = pivot_longer(df, cols = -samp, names_to = "species_group", values_to = "value")
+    df_long$parameter = mu_name
     return(df_long)
   })
 )
-
-# Make species_group more readable (optional)
-mu_long$species_group <- factor(mu_long$species_group, labels = c("invert_predator", "NA"))
+mu_long$species_group = factor(mu_long$species_group, labels = c("invert_predator", "NA"))
 
 # Plot posterior densities
 ggplot(mu_long, aes(x = value, fill = species_group)) +
@@ -278,7 +240,7 @@ ggplot(mu_long, aes(x = value, fill = species_group)) +
   labs(x = "Posterior value", y = "Density", fill = "Group")
   
 # ===========================================================================================================
-p_occ = ggplot(species_effects, aes(x = coef_mean, y = name, group = group_label, color = group_label)) +
+ggplot(species_effects, aes(x = coef_mean, y = name, group = group_label, color = group_label)) +
   geom_vline(xintercept = 0, color = "gray80") +
   geom_vline(xintercept = 0.5, color = "gray90", linetype = "dashed") +
   geom_vline(xintercept = -0.5, color = "gray90", linetype = "dashed") +
@@ -289,13 +251,13 @@ p_occ = ggplot(species_effects, aes(x = coef_mean, y = name, group = group_label
   scale_shape_manual(values = c(19, 1)) +
   scale_color_manual(values = c("orange", "gray20")) +
   labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group") +
-  theme_sleek() + guides(shape = "none"); print(p_occ)
+  theme_sleek() + guides(shape = "none")
 
 
 binwidth = 0.04
 species_effects$coef_bin = round(species_effects$coef_mean / binwidth) * binwidth
 
-ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)) +
+p_occ = ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)) +
   geom_vline(xintercept = 0, color = "gray80") +
   geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`, color = as.factor(group_label)), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
   geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `25%`, xmax = `75%`, color = as.factor(group_label)), size = 1.0, width = 0, position = position_dodge(width = 0.5)) +
@@ -306,7 +268,7 @@ ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
   labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group", alpha = "coef_f") +
-  theme_sleek() + guides(shape = "none")
+  theme_sleek() + guides(shape = "none"); print(p_occ)
 
 
 param_detect_data = param_beta_data
@@ -322,7 +284,7 @@ detect_species_effects = detect_species_effects %>% left_join(species_traits, by
 detect_species_effects = detect_species_effects %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
 
 detect_species_effects$coef_bin = round(detect_species_effects$coef_mean / binwidth) * binwidth
-ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = group_label)) +
+p_detect = ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = group_label)) +
   geom_vline(xintercept = 0, color = "gray80") +
   geom_errorbar(data = detect_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`, color = as.factor(group_label)), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
   geom_errorbar(data = detect_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `25%`, xmax = `75%`, color = as.factor(group_label)), size = 1.0, width = 0, position = position_dodge(width = 0.5)) +
@@ -333,9 +295,9 @@ ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = group_label))
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
   labs(x = "Detection coefficient mean", y = "Detection predictor", color = "Diet group", alpha = "coef_f") +
-  theme_sleek() + guides(shape = "none")
+  theme_sleek() + guides(shape = "none"); print(p_detect)
 
-##################
+# Marginal responses --------------------------------------------------------------------
 
 param_name = "alpha1"
 param_data   = param_alpha_data %>% filter(param == param_name)
@@ -392,20 +354,20 @@ meta_summary = meta_preds %>% # calculate means and 95% BCIs
     psi_lower = quantile(psi, 0.025),
     psi_upper = quantile(psi, 0.975)
   )
-meta_summary <- meta_summary %>%
+meta_summary = meta_summary %>%
   left_join(
     groups %>% select(group_idx, group) %>% distinct(),
     by = "group_idx"
   )
 
-p = ggplot() +
+ggplot() +
   # geom_line(data = predictions, aes(x = idx, y = psi, group = common_name, color = group), alpha = 0.2) +
   geom_ribbon(data = meta_summary, aes(x = idx, ymin = psi_lower, ymax = psi_upper, fill = group, group = group), alpha = 0.2, inherit.aes = FALSE) +
   geom_line(data = meta_summary, aes(x = idx, y = psi_mean, color = group, group = group), linewidth = 1.2, inherit.aes = FALSE) +
   # scale_x_continuous(limits = c(bound_low, bound_high)) +
   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.25, 0.5, 0.75, 1.0)) +
   labs(x = param_data$name, y = "Occurrence probability") +
-  theme_sleek(); print(p)
+  theme_sleek()
 
 # ggplot(predictions %>% filter(common_name == "belted kingfisher"), aes(x = idx, y = psi)) +
 #   geom_line() +
