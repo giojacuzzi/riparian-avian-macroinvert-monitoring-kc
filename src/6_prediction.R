@@ -127,7 +127,7 @@ p_pred_rich_predator = ggplot(data_pred %>% filter(year != "2023"), aes(x = year
   #   data = data_pred %>% group_by(site_id) %>% filter(year == max(year)) %>% ungroup(),
   #   aes(label = site_id), hjust = -0.1, size = 3, color = "gray60"
   # ) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 12), breaks = seq(0,12,2)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, ceiling(max(data_pred$rich_predator))), breaks = seq(0,12,2)) + 
   scale_x_discrete(labels = function(x) ifelse(seq_along(x) %% 2 == 0, x, ""), expand = c(0, 0)) + 
   labs(x = "Year", y = "Projected predator richness") +
   theme(plot.margin = margin(0,0,0,0))
@@ -208,7 +208,7 @@ p_rich_predator_delta = ggplot(delta_vars %>%
   geom_line() +
   geom_point(aes(color = year)) +
   scale_color_manual(values = c("rich_predator_2023" = "gray10", "rich_predator_2100" = "orange")) +
-  scale_y_continuous(breaks = seq(0, 14, by = 1), limits = c(0, 12), expand = c(0,0)) +
+  scale_y_continuous(breaks = seq(0, 14, by = 1), limits = c(0, ceiling(max(data_pred$rich_predator))), expand = c(0,0)) +
   labs(x = "Site", y = "", color = "") +
   theme(axis.text.x = element_text(size = 8, angle = 90, hjust = 1),
         plot.margin = margin(0,0,0,0),
@@ -471,10 +471,10 @@ pred_grid = pred_grid %>%
 p_imp_rich = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predator)) +
   # geom_raster(aes(fill = rich_predator), interpolate = TRUE) +
   # scale_fill_gradient(low = alpha("red", 0.7), high = alpha("forestgreen", 0.7)) +
-  geom_contour(aes(linetype = "Predator richness"), color = "gray70", breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1)) +
+  geom_contour(aes(linetype = "Predator richness"), color = "gray80", breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1)) +
   geom_text_contour(aes(z = rich_predator),
                     breaks = seq(floor(min(pred_grid$rich_predator)), ceiling(max(pred_grid$rich_predator)), by = 1),
-                    stroke = 0.0, color = "gray70", check_overlap = FALSE, skip = 0) +
+                    stroke = 0.0, color = "gray80", check_overlap = FALSE, skip = 0) +
   geom_segment(data = site_restorations,
     aes(x = imp_reach_2023,  y = imp_basin_2023, xend = imp_reach_2100, yend = imp_basin_2100, color = restore_need),
     inherit.aes = FALSE, alpha = 0.5

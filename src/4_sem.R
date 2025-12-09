@@ -6,6 +6,9 @@ out_cache_dir = "data/cache/4_sem"
 
 exclude_agri_sites = TRUE
 
+use_msom_richness_estimates = TRUE
+path_msom_richness_estimates = "data/cache/5_msom_results/msom_richness_estimates.rds"
+
 # Load site variable data ------------------------------------------------------------
 
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
@@ -226,6 +229,16 @@ site_group_richness =  presence_absence %>%
     rich_ripobl      = sum(presence[common_name %in% sp_ripobl])
   )
 
+# Incorporate mean msom richness estimates
+if (use_msom_richness_estimates) {
+  msom_richness_estimates = readRDS(path_msom_richness_estimates)
+  site_group_richness = left_join(site_group_richness, msom_richness_estimates$invert_predator, by = "site_id")
+  site_group_richness = left_join(site_group_richness, msom_richness_estimates$`NA`, by = "site_id")
+  site_group_richness = left_join(site_group_richness, msom_richness_estimates$total, by = "site_id")
+}
+
+# TODO: Do all exploratory analyses below with mean richness estimates
+
 ## Indicator species analysis
 library(indicspecies)
 spmat = presence_absence %>% pivot_wider(names_from = common_name, values_from = presence)
@@ -422,6 +435,11 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     "site_id"       = data_reach$site_id
   )
   pairwise_collinearity(d %>% select(where(is.numeric)))
+  
+  # TODO: Incorporate msom richness uncertainty
+  if (use_msom_richness_estimates) {
+    d = left_join(d, msom_richness_estimates$invert_predator, by = "site_id")
+  }
 
   # Exploratory models
   if (FALSE) {
@@ -492,6 +510,21 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   
   # Fit piecewise SEM with component models
   sem = psem(m_canopy, m_bibi, m_predator); plot(sem); print(summary(sem))
+  
+  if (use_msom_richness_estimates) {
+    message("Using msom richness mean as response")
+    d_msom = d
+    d_msom$rich_predator = d$invert_predator_rich_mean
+    # NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
+    m_predator = lm(rich_predator ~ bibi + canopy_reach + imp_reach, d_msom)
+    sem = psem(m_canopy, m_bibi, m_predator); plot(sem); print(summary(sem))
+    
+    # Tests to support assumption of normality
+    shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
+    # qqnorm(residuals(m_predator))
+    # qqline(residuals(m_predator), col = "red")
+    # hist(residuals(m_predator), breaks = 10)
+  }
   
   if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
   out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
@@ -599,26 +632,47 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   bibi_grid = seq(1, 99, length.out = 300)
   bibi_logit = qlogis(((bibi_grid / 100) * (n - 1) + 0.5) / n) # apply squeeze
   d_pred_rich = data.frame(bibi = bibi_logit, canopy_reach = mean(d$canopy_reach), imp_reach = mean(d$imp_reach, na.rm = TRUE))
-  pred = predict(m_predator, newdata = d_pred_rich, type = "link", se.fit = TRUE)
-  d_pred_rich = d_pred_rich %>%
-    mutate(
-      fit = pred$fit, se  = pred$se.fit, low  = fit - 1.96 * se, high = fit + 1.96 * se,
-      # Back-transform Poisson response
-      rich = exp(fit), rich_low  = exp(low), rich_high = exp(high),
-      # Include bibi on original proportional scale
-      bibi = bibi_grid
-    )
+  if (use_msom_richness_estimates) {
+    pred = predict(m_predator, newdata = d_pred_rich, se.fit = TRUE) 
+    d_pred_rich = d_pred_rich %>%
+      mutate(
+        fit = pred$fit, se = pred$se.fit, low  = fit - 1.96 * se, high = fit + 1.96 * se,
+        # Back-transform Poisson response
+        rich = fit, rich_low  = low, rich_high = high,
+        # Include bibi on original proportional scale
+        bibi = bibi_grid
+      )
+  } else {
+    pred = predict(m_predator, newdata = d_pred_rich, type = "link", se.fit = TRUE) 
+    d_pred_rich = d_pred_rich %>%
+      mutate(
+        fit = pred$fit, se  = pred$se.fit, low  = fit - 1.96 * se, high = fit + 1.96 * se,
+        # Back-transform Poisson response
+        rich = exp(fit), rich_low  = exp(low), rich_high = exp(high),
+        # Include bibi on original proportional scale
+        bibi = bibi_grid
+      )
+  }
   
   # Back-transform observed B-IBI
   d$bibi_pcnt = (plogis(d$bibi) * n - 0.5) / (n - 1) * 100
   
   # Plot
-  p_bird_bibi = ggplot(d_pred_rich, aes(x = bibi, y = rich)) +
-    geom_ribbon(aes(ymin = rich_low, ymax = rich_high), fill = "orange", alpha = 0.2) +
-    geom_line(color = "orange", size = 1) +
-    geom_point(data = d, aes(x = bibi_pct_orig, y = rich_predator), color = "orange", alpha = 0.4) +
-    labs(x = "B-IBI", y = "Predator richness") +
-    theme_sleek() + theme(aspect.ratio = 1)
+  if (use_msom_richness_estimates) {
+    p_bird_bibi = ggplot(d_pred_rich, aes(x = bibi, y = rich)) +
+      geom_ribbon(aes(ymin = rich_low, ymax = rich_high), fill = "orange", alpha = 0.2) +
+      geom_line(color = "orange", size = 1) +
+      geom_point(data = d, aes(x = bibi_pct_orig, y = invert_predator_rich_mean), color = "orange", alpha = 0.4) +
+      labs(x = "B-IBI", y = "Estimated predator richness") +
+      theme_sleek() + theme(aspect.ratio = 1)
+  } else {
+    p_bird_bibi = ggplot(d_pred_rich, aes(x = bibi, y = rich)) +
+      geom_ribbon(aes(ymin = rich_low, ymax = rich_high), fill = "orange", alpha = 0.2) +
+      geom_line(color = "orange", size = 1) +
+      geom_point(data = d, aes(x = bibi_pct_orig, y = rich_predator), color = "orange", alpha = 0.4) +
+      labs(x = "B-IBI", y = "Observed predator richness") +
+      theme_sleek() + theme(aspect.ratio = 1)
+  }
   
   ## Plot all
   print(p_canopy_imp + p_bibi_imp + p_bird_bibi)

@@ -16,10 +16,12 @@ species = model_data$species
 ## Calculate estimated group richness per site
 z = model_data$msom$sims.list$z
 group_idx = groups$group_idx
+group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
 samples = dim(z)[1]
 J = dim(z)[2]
 I = dim(z)[3]
 G = max(group_idx)
+
 rich_group = array(NA, c(samples, J, G))
 for (g in 1:G) {
   species_in_g = which(group_idx == g)
@@ -28,22 +30,25 @@ for (g in 1:G) {
 rich_group_mean  = apply(rich_group, c(2,3), mean)
 rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
 rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
-msom_rich_predator = tibble(
+msom_richness_estimates <- lapply(1:G, function(g) {
+  group = group_names[g]
+  tibble(
+    site_id = sites
+  ) %>%
+    dplyr::mutate(
+      !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
+      !!paste0(group, "_rich_lower") := rich_group_lower[, g],
+      !!paste0(group, "_rich_upper") := rich_group_upper[, g]
+    )
+})
+names(msom_richness_estimates) = group_names
+
+rich_total = apply(z, c(1, 2), sum)
+msom_richness_estimates$total = tibble(
   site_id    = sites,
-  rich_mean  = rich_group_mean[,1],
-  rich_lower = rich_group_lower[,1],
-  rich_upper = rich_group_upper[,1]
-)
-msom_rich_other = tibble(
-  site_id    = sites,
-  rich_mean  = rich_group_mean[,2],
-  rich_lower = rich_group_lower[,2],
-  rich_upper = rich_group_upper[,2]
-)
-msom_richness_estimates = list(
-  predator = msom_rich_predator,
-  other = msom_rich_other,
-  species_group = tibble(species, group_idx)
+  total_rich_mean  = apply(rich_total, 2, mean),
+  total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
+  total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
 )
 
 if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)

@@ -21,6 +21,8 @@ detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
+# TODO: EXCLUDE SAME SITES THAT ARE EXCLUDED BY SEM
+
 # Format detection data as multidimensional array (site x survey x species)
 detections_long = detections$long %>% rename(site = site_id, survey = survey_num, species = common_name)
 # TODO: manually remove any species or surveys needed
