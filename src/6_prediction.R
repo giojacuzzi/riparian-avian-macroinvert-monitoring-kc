@@ -1,17 +1,22 @@
-# 6_predictions.R ---------------------------------------------------------------------------------------------
-# Use ICLUS impervious surface projections to predict future changes in B-IBI and predator richness across sites
-
-source("src/global.R")
-
+# 6_predictions.R ======================================================================
+# Use ICLUS impervious surface projections to predict future changes in B-IBI and predator
+# richness across sites
+#
+# Input
+path_sem = "data/cache/4_sem/sem_predator.rds"
+path_projections_reach = "data/cache/3_calculate_vars/imp_projections_550m.rds"
+path_projections_watershed = "data/cache/3_calculate_vars/imp_projections_5000m.rds"
+use_2023_observed_as_baseline = FALSE
 # NOTE: 2023 values in plots are currently model predictions, not ground-truth
 # Deltas between 2023 observed response variables (canopy, bibi, richness) and 2100 predictions
 # may be positive OR negative because it includes residual error from component model fit
 # Canopy increasing reflects the presence of negative residuals in the 2023 data, not that the model actually predicts a gain in cover.
-use_2023_observed_as_baseline = FALSE
 
 # Load projections
-projections_reach     = readRDS("data/cache/3_calculate_vars/imp_projections_550m.rds")
-projections_watershed = readRDS("data/cache/3_calculate_vars/imp_projections_5000m.rds")
+projections_reach     = readRDS(path_projections_reach)
+projections_watershed = readRDS(path_projections_watershed)
+
+source("src/global.R")
 
 # Site-specific % change in ICLUS impervious surface coverage from 2020 was calculated for each decade and
 # multiplied with "ground truth" 2023 NLCD measurements to estimate future coverage at each site.
@@ -19,7 +24,7 @@ projections_reach %>% group_by(scenario, year) %>% summarise(sum_sum_proportion 
 projections_watershed %>% group_by(scenario, year) %>% summarise(sum_sum_proportion = mean(sum_proportion, na.rm = TRUE))
 
 # Load sem for prediction and extract component models
-sem = readRDS("data/cache/4_sem/sem_predator.rds")
+sem = readRDS(path_sem)
 m_canopy = sem[[1]]
 m_bibi   = sem[[2]]
 m_rich   = sem[[3]]
@@ -28,7 +33,7 @@ data     = sem[[4]]
 # Only retain sites with projections
 data = data %>% filter(site_id %in% projections_reach$site_id) %>% arrange(site_id)
 
-# Select a scenario
+# Select a scenario (a1, a2, b1, b2)
 s = "a2"
 
 # Get projected imp_reach and imp_basin

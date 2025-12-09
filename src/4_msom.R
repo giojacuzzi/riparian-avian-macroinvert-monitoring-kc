@@ -1,31 +1,31 @@
-source("src/global.R")
-
+# 4_msom.R ======================================================================
+# Fit a bayesian multi-species occupancy model with jags
+#
+# Input
+model_file = "src/msom.txt"
+in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
 # site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
-
-# Spatial scale
-site_data = site_data_reach
-# Species grouping
-grouping = "invert_predator" # or "all"
-
-# -------------------------------------
-
+site_data = site_data_reach # spatial scale
+grouping = "invert_predator" # species grouping (or "all")
+# Output
 path_out = paste0("data/cache/models/reach_", grouping, ".rds")
 
-model_file = "src/msom.txt"
-
-in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
+source("src/global.R")
 
 # Load species detection history data
 detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
-# TODO: EXCLUDE SAME SITES THAT ARE EXCLUDED BY SEM
+# Retain only sites used in SEM modeling (see 4_sem.R)
+sites_to_exclude = c("257", "259", "150", "3097", "155")
+message("Excluding the following sites:", paste(sites_to_exclude, collapse = " "))
+detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
+detections$wide = detections$wide %>% filter(!site_id %in% sites_to_exclude)
 
 # Format detection data as multidimensional array (site x survey x species)
 detections_long = detections$long %>% rename(site = site_id, survey = survey_num, species = common_name)
-# TODO: manually remove any species or surveys needed
 detections_long$count = ifelse(detections_long$n_detections > 0, 1, 0)
 sites   = unique(detections_long$site)
 surveys = sort(unique(detections_long$survey))

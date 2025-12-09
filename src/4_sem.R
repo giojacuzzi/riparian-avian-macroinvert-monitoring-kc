@@ -1,12 +1,12 @@
 # 4_sem.R ===================================================================
 # Fit piecewise structural equation models
 #
-# Input:
+# Input
 exclude_agri_sites = TRUE # exclude outlier agricultural sites
 use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
 msom_path = "data/cache/models/reach_invert_predator.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
-# Output:
+# Output
 out_cache_dir = "data/cache/4_sem"
 
 source("src/global.R")
@@ -197,7 +197,7 @@ if (use_msom_richness_estimates) {
 #   arrange(desc(total_detections))
 # ggplot(total_detections_by_site, aes(x = reorder(site_id, total_detections), y = total_detections)) + geom_col()
 
-# # Exclude sites 257 and 259 that are dominated by agriculture
+# Exclude sites 257 and 259 that are dominated by agriculture
 if (exclude_agri_sites) {
   sites_to_exclude = c("257", "259")
   message("Excluding agricultural site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
