@@ -1,10 +1,56 @@
 source("src/global.R")
 
+path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
+
 path = "data/cache/models/reach_invert_predator.rds"
 
 message("Loading data for model ", path)
 model_data = readRDS(path)
-groups = model_data$groups
+
+msom_summary = model_data$msom_summary
+msom = model_data$msom
+groups = model_data$groups %>% arrange(common_name)
+sites = model_data$sites
+species = model_data$species
+
+## Calculate estimated group richness per site
+z = model_data$msom$sims.list$z
+group_idx = groups$group_idx
+samples = dim(z)[1]
+J = dim(z)[2]
+I = dim(z)[3]
+G = max(group_idx)
+rich_group = array(NA, c(samples, J, G))
+for (g in 1:G) {
+  species_in_g = which(group_idx == g)
+  rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+}
+rich_group_mean  = apply(rich_group, c(2,3), mean)
+rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
+rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
+msom_rich_predator = tibble(
+  site_id    = sites,
+  rich_mean  = rich_group_mean[,1],
+  rich_lower = rich_group_lower[,1],
+  rich_upper = rich_group_upper[,1]
+)
+msom_rich_other = tibble(
+  site_id    = sites,
+  rich_mean  = rich_group_mean[,2],
+  rich_lower = rich_group_lower[,2],
+  rich_upper = rich_group_upper[,2]
+)
+msom_richness_estimates = list(
+  predator = msom_rich_predator,
+  other = msom_rich_other,
+  species_group = tibble(species, group_idx)
+)
+
+if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
+saveRDS(msom_richness_estimates, file = path_out)
+message(crayon::green("Cached model and results to", path_out))
+
+## Inspect group membership
 
 ggplot(groups %>%
          left_join(species_traits, by = "common_name") %>%
@@ -20,6 +66,8 @@ ggplot(groups %>%
     labels = c("Resident", "Partial migrant", "Long-distance migrant")
   ) +
   labs(x = "Group", y = "Proportion", fill = "Migration")
+
+## Retrieve baseline responses
 
 community_baselines = model_data$msom_summary %>%
   filter(Reduce(`|`, lapply(
@@ -50,14 +98,6 @@ ggplot(community_baselines, aes(x = prob, y = param, color = group)) +
 u - occupancy probability across sites
 v - true positive detection probability given presence
 ") + theme(legend.position = "bottom")
-
-species = model_data$species
-
-## DEBUG
-# site_richness = model_data$msom_summary %>% filter(startsWith(param, "Nsite")) %>% select(param, mean) %>% mutate(species_idx = str_extract(param, "(?<=\\[)[0-9]+") %>% as.integer()) %>%
-#   mutate(common_name = species[species_idx]) %>%
-#   left_join(groups, by = "common_name")
-## DEBUG
 
 species_baselines = model_data$msom_summary %>%
   filter(grepl("^[uvwb]\\[", param)) %>%
@@ -287,7 +327,7 @@ ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = group_label))
   # geom_text_repel(data = detect_species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
-  labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group", alpha = "coef_f") +
+  labs(x = "Detection coefficient mean", y = "Detection predictor", color = "Diet group", alpha = "coef_f") +
   theme_sleek() + guides(shape = "none")
 
 ##################
@@ -362,20 +402,20 @@ p = ggplot() +
   labs(x = param_data$name, y = "Occurrence probability") +
   theme_sleek(); print(p)
 
-ggplot(predictions %>% filter(common_name == "belted kingfisher"), aes(x = idx, y = psi)) +
-  geom_line() +
-  scale_x_continuous(limits = c(bound_low, bound_high)) +
-  scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
-
-ggplot(predictions %>% filter(common_name == "wilson's warbler"), aes(x = idx, y = psi)) +
-  geom_line() +
-  scale_x_continuous(limits = c(bound_low, bound_high)) +
-  scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
-
-ggplot(predictions %>% filter(common_name == "bewick's wren"), aes(x = idx, y = psi)) +
-  geom_line() +
-  scale_x_continuous(limits = c(bound_low, bound_high)) +
-  scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
+# ggplot(predictions %>% filter(common_name == "belted kingfisher"), aes(x = idx, y = psi)) +
+#   geom_line() +
+#   scale_x_continuous(limits = c(bound_low, bound_high)) +
+#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
+# 
+# ggplot(predictions %>% filter(common_name == "wilson's warbler"), aes(x = idx, y = psi)) +
+#   geom_line() +
+#   scale_x_continuous(limits = c(bound_low, bound_high)) +
+#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
+# 
+# ggplot(predictions %>% filter(common_name == "bewick's wren"), aes(x = idx, y = psi)) +
+#   geom_line() +
+#   scale_x_continuous(limits = c(bound_low, bound_high)) +
+#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
 
 # ggplot(predictions, aes(x = idx, y = psi, group = common_name)) +
 #   geom_line(aes(color = group)) +

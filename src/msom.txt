@@ -33,8 +33,14 @@ model{
   
     # Covariate effects on detection (unconfirmed true-positive)
     mu.beta1[g]    ~ dnorm(0,0.01)
+    mu.beta2[g]    ~ dnorm(0,0.01)
+    mu.beta3[g]    ~ dnorm(0,0.01)
     sigma.beta1[g] ~ dunif(0,5)
+    sigma.beta2[g] ~ dunif(0,5)
+    sigma.beta3[g] ~ dunif(0,5)
     tau.beta1[g]  <- pow(sigma.beta1[g],-2)
+    tau.beta2[g]  <- pow(sigma.beta2[g],-2)
+    tau.beta3[g]  <- pow(sigma.beta3[g],-2)
   
   } # G groups
 
@@ -50,6 +56,8 @@ model{
       # Unconfirmed true positive detection
       v[i]     ~ dnorm(mu.v[group[i]], tau.v[group[i]])
       beta1[i] ~ dnorm(mu.beta1[group[i]],tau.beta1[group[i]])
+      beta2[i] ~ dnorm(mu.beta2[group[i]],tau.beta2[group[i]])
+      beta3[i] ~ dnorm(mu.beta3[group[i]],tau.beta3[group[i]])
   
   } # I species
   
@@ -65,7 +73,7 @@ model{
                   ## Observation model, assumming no false positives (e.g. Zipkin et al. 2009)
                   
                   # p11 is true-positive detection probability given z = 1
-                  logit(p11[j,k,i]) <- v[i] + beta1[i]*x_beta1[j,k]
+                  logit(p11[j,k,i]) <- v[i] + beta1[i]*x_beta1[j,k] + beta2[i]*x_beta2[j,k] + beta3[i]*x_beta3[j,k]
                 
                   p[j,k,i] <- z[j,i] * p11[j,k,i]
                   
@@ -95,14 +103,4 @@ model{
   # Deviance of simulated and observed data for posterior predictive check
   D_obs <- -2 * sum(d_obs[1:J,1:Kmax,1:I])
   D_sim <- -2 * sum(d_sim[1:J,1:Kmax,1:I])
-  
-  # Estimated number of occuring sites per species (among the sampled population of sites)
-  for (i in 1:I) {
-    Nocc[i] <- sum(z[ ,i])
-  }
-  
-  # Estimated number of occuring species per site (among the species that were detected anywhere)
-  for (j in 1:J) {
-    Nsite[j] <- sum(z[j, ])
-  }
 }

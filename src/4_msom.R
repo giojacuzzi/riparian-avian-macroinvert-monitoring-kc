@@ -1,7 +1,7 @@
 source("src/global.R")
 
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
-site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
+# site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
 
 # Spatial scale
 site_data = site_data_reach
@@ -62,18 +62,14 @@ param_alpha_data = param_alpha_data %>% rowwise() %>% mutate(scaled = list(scale
 n_alpha_params = nrow(param_alpha_data)
 
 # NOTE: For now, just use survey number as a detection covariate (replace with yday eventually)
-x_yday = matrix(
-  rep(as.vector(scale(surveys)), each = J),
-  nrow = J,
-  ncol = K,
-  byrow = FALSE
-)
 detect_data = list(
-  yday = x_yday
+  yday   = surveys,
+  canopy = site_data$canopy,
+  imp    = site_data$imp
 )
 # Store beta parameter ID, variable name, and standardize data to have mean 0, standard deviation 1
 param_beta_data = tibble(param = paste0("beta", seq_along(detect_data)), name = names(detect_data))
-param_beta_data$scaled = list(detect_data[["yday"]])
+param_beta_data = param_beta_data %>% rowwise() %>% mutate(scaled = list(scale(detect_data[[name]]))) %>% ungroup()
 n_beta_params = nrow(param_beta_data)
 
 # Package data for MSOM -----------------------------------------------------------------------------------
@@ -90,16 +86,12 @@ msom_data = list(
 
 # Add covariates to msom_data
 for (a in seq_len(n_alpha_params)) { # Add alpha covariates
-  msom_data[[paste0("x_", param_alpha_data$param[a])]] <- as.vector(param_alpha_data$scaled[[a]])
-}
-for (b in seq_len(n_beta_params)) {
-  vec <- as.vector(param_beta_data$scaled[[b]])
-  msom_data[[paste0("x_", param_beta_data$param[b])]] <- array(
-    vec,
-    dim = c(J,K)
-  )
+  msom_data[[paste0("x_", param_alpha_data$param[a])]] = as.vector(param_alpha_data$scaled[[a]])
 }
 
+msom_data[["x_beta1"]] = array(rep(as.vector(param_beta_data$scaled[[1]]), each = J), dim = c(J,K))
+msom_data[["x_beta2"]] = array(rep(as.vector(param_beta_data$scaled[[2]]), K), dim = c(J,K))
+msom_data[["x_beta3"]] = array(rep(as.vector(param_beta_data$scaled[[3]]), K), dim = c(J,K))
 str(msom_data)
 
 # Initialize latent occupancy state z[i] as 1 if a detection occurred at site i, and 0 otherwise
@@ -124,15 +116,12 @@ msom = jags(data = msom_data,
             parameters.to.save = c( # monitored parameters
               "mu.u", "sigma.u", "u",
               "mu.v", "sigma.v", "v",
-              # "mu.w", "sigma.w", "w",
-              # "mu.b", "sigma.b", "b",
               paste0("mu.alpha", 1:n_alpha_params), paste0("sigma.alpha", 1:n_alpha_params), paste0("alpha", 1:n_alpha_params),
               paste0("mu.beta",  1:n_beta_params),  paste0("sigma.beta",  1:n_beta_params),  paste0("beta",  1:n_beta_params),
-              "D_obs", "D_sim",
-              "Nocc", "Nsite"
+              "D_obs", "D_sim", "z"
             ),
             model.file = model_file,
-            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: < 1 hr
+            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
             # n.chains = 3, n.adapt = 1000, n.iter = 10000, n.burnin = 2000, n.thin = 1, parallel = TRUE, # TODO: ETA
             DIC = FALSE, verbose=TRUE)
 
@@ -141,11 +130,11 @@ message("Finished running JAGS (", round(msom$mcmc.info$elapsed.mins / 60, 2), "
 message("MCMC information:")
 print(data.frame(
   n.chains = msom$mcmc.info$n.chains,
-  n.adapt = msom$mcmc.info$n.adapt[1],
-  n.iter = msom$mcmc.info$n.iter,
+  n.adapt  = msom$mcmc.info$n.adapt[1],
+  n.iter   = msom$mcmc.info$n.iter,
   n.burnin = msom$mcmc.info$n.burnin,
-  n.thin = msom$mcmc.info$n.thin,
-  samples = msom$mcmc.info$n.samples
+  n.thin   = msom$mcmc.info$n.thin,
+  samples  = msom$mcmc.info$n.samples
 ))
 
 message("Model size: ", format(utils::object.size(msom), units = "MB"))
