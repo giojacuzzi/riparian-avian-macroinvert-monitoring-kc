@@ -485,9 +485,84 @@ p_imp_rich = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predat
     inherit.aes = FALSE, alpha = 0.5
   ) +
   # geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2023, y = imp_basin_2023, color = restore_need)) +
-  geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2100, y = imp_basin_2100, color = restore_need), size = 2, alpha = 0.9) +
+  geom_point(data = site_restorations, inherit.aes = FALSE, aes(x = imp_reach_2100, y = imp_basin_2100, color = restore_need, shape = restore_need), size = 2, alpha = 0.9) +
   scale_linetype_manual(name = NULL, values = "solid") +
-  scale_color_manual(values = c("gray40", "magenta3", "lightseagreen")) +
+  # scale_color_manual(values = c("gray40", "magenta3", "lightseagreen")) +
+  scale_color_manual(values = c("gray40", "firebrick", "firebrick")) +
   labs(x = "Reach impervious %", y = "Watershed impervious %", color = "Restoration scale needed") +
   coord_fixed(ratio = 1); print(p_imp_rich)
+
+#######
+
+# lollipop_df <- site_restorations %>%
+#   mutate(
+#     delta_reach = imp_reach_2100 - imp_reach_2023,
+#     delta_basin = imp_basin_2100 - imp_basin_2023,
+#     
+#     y_reach = imp_reach_2023 + delta_reach,
+#     y_basin = imp_basin_2023 + delta_basin
+#   )
+# 
+# df_reach <- lollipop_df %>%
+#   arrange(y_reach) %>%
+#   mutate(site_order = factor(rev(row_number())))
+# 
+# p_reach =
+#   ggplot(df_reach, aes(y = site_order)) +
+#   geom_segment(
+#     aes(
+#       x = imp_reach_2023,
+#       xend = y_reach,
+#       yend = site_order,
+#       color = restore_need
+#     ),
+#     alpha = 0.5,
+#     linewidth = 0.9
+#   ) +
+#   geom_point(
+#     aes(x = y_reach, color = restore_need, shape = restore_need),
+#     size = 2,
+#     alpha = 0.9
+#   ) +
+#   scale_color_manual(values = c("gray40", "firebrick", "firebrick")) +
+#   labs(
+#     x = "Sites (ordered by reach delta)",
+#     y = "Reach impervious %",
+#     color = "Restoration scale needed",
+#     shape = "Restoration scale needed"
+#   ) +
+#   scale_x_continuous(limits = c(0, 1)) +
+#   theme_void() + theme(legend.position = "none"); print(p_reach)
+# 
+# df_basin <- lollipop_df %>%
+#   arrange(y_basin) %>%
+#   mutate(site_order = factor(rev(row_number())))
+# 
+# p_basin =
+#   ggplot(df_basin, aes(x = site_order)) +
+#   geom_segment(
+#     aes(
+#       y = imp_basin_2023,
+#       yend = y_basin,
+#       xend = site_order,
+#       color = restore_need
+#     ),
+#     alpha = 0.5,
+#     linewidth = 0.9
+#   ) +
+#   geom_point(
+#     aes(y = y_basin, color = restore_need, shape = restore_need),
+#     size = 2,
+#     alpha = 0.9
+#   ) +
+#   scale_y_continuous(limits = c(0, 1)) +
+#   scale_color_manual(values = c("gray40", "firebrick", "firebrick")) +
+#   theme_void() + theme(legend.position = "none"); print(p_basin)
+# 
+#  (p_reach + plot_spacer()) / (p_imp_rich + p_basin) +
+#   plot_layout(
+#     widths = c(1, 1),
+#     heights = c(1, 1),
+#     guides = "collect"
+#   ) & theme(plot.margin = unit(c(5,5,5,5), "pt"))
 

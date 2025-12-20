@@ -59,7 +59,7 @@ validation_data = validation_files %>%
 
 if (use_platt_scaling) {
   calibration_results = data.frame()
-  for (label in validation_files$label) {
+  for (label in unique(validation_files$label)) {
     message("Calculating species-specific threshold for \"", label, "\"")
     
     # Obtain validation data for this label
@@ -188,7 +188,17 @@ if (use_platt_scaling) {
       "northern flicker",
       "pacific wren",
       "pacific-slope flycatcher",
-      "violet-green swallow"
+      "violet-green swallow",
+      "steller's jay",
+      "spotted towhee",
+      "song sparrow",
+      "pine siskin",
+      "downy woodpecker",
+      "dark-eyed junco",
+      "cedar waxwing",
+      "bushtit",
+      "bewick's wren",
+      "american crow"
     )) {
       threshold = threshold_min_classifier_score
     }
@@ -223,8 +233,7 @@ species_names = read_lines(path_species_list) %>% as_tibble() %>%
   separate(value, into = c("scientific_name", "common_name"), sep = "_") %>%
   mutate(scientific_name = tolower(scientific_name), common_name = tolower(common_name))
 
-# Manually exclude any species determined not present at any site
-# TODO
+# Manually exclude any species determined not present (or indefinitive) at all sites
 detections = prediction_data %>% filter(!common_name %in% c(
   "fox sparrow",
   "lincoln's sparrow",
@@ -243,7 +252,42 @@ detections = prediction_data %>% filter(!common_name %in% c(
   "ruddy duck",
   "bufflehead",
   "american pipit",
-  "ruby-crowned kinglet"
+  "ruby-crowned kinglet",
+  "american bittern",
+  "american coot",
+  "blue-winged teal",
+  "cackling goose",
+  "california gull",
+  "california quail",
+  "california scrub-jay",
+  "caspian tern",
+  "chipping sparrow",
+  "cinnamon teal",
+  "gadwall",
+  "common merganser",
+  "double-crested cormorant",
+  "european starling",
+  "golden-crowned sparrow",
+  "great blue heron",
+  "hooded merganser",
+  "lesser scaup",
+  "northern harrier",
+  "ring-billed gull",
+  "ring-necked duck",
+  "rock pigeon",
+  "savannah sparrow",
+  "sooty grouse",
+  "turkey vulture",
+  "virginia rail",
+  "white-throated sparrow",
+  "barn owl",
+  "green-winged teal",
+  "red-winged blackbird",
+  "sharp-shinned hawk",
+  "red-tailed hawk",
+  "wood duck",
+  "hermit warbler",
+  "white-crowned sparrow"
 ))
 
 species_names = species_names %>% filter(common_name %in% detections$common_name)
@@ -264,8 +308,12 @@ if (use_platt_scaling) {
   # Manually exclude detections of specific species for which completely manual validation is necessary via Inf threshold
   species_thresholds[species_thresholds$common_name %in% c(
     "american dipper",
+    "brown creeper",
+    "common nighthawk",
     "common yellowthroat",
     "macgillivray's warbler",
+    "killdeer",
+    "hermit thrush",
     "orange-crowned warbler",
     "red-eyed vireo",
     "cassin's vireo",
@@ -273,8 +321,27 @@ if (use_platt_scaling) {
     "vaux's swift",
     "merlin",
     "spotted sandpiper",
-    "northern pygmy-owl"
+    "northern pygmy-owl",
+    "band-tailed pigeon",
+    "eurasian collared-dove",
+    "glaucous-winged gull",
+    "red crossbill",
+    "rufous hummingbird",
+    "mallard",
+    "green heron",
+    "mourning dove",
+    "western screech-owl",
+    "varied thrush",
+    "osprey",
+    "great horned owl",
+    "brown-headed cowbird",
+    "chestnut-backed chickadee",
+    "yellow-rumped warbler"
   ), "threshold"] = Inf
+  
+  # # Set min classifier score for other manually reviewed but prevalent species
+  # species_thresholds[species_thresholds$common_name %in% c(
+  # ), "threshold"] = threshold_min_classifier_score
   
   # Enforce the minimum threshold
   species_thresholds = species_thresholds %>% mutate(threshold = pmax(threshold, threshold_min_classifier_score))
@@ -329,6 +396,14 @@ detections = detections %>%
   summarise(n_surveys = n_distinct(date), .groups = "drop") %>%
   filter(n_surveys >= threshold_min_detected_days) %>%
   inner_join(detections, by = c("site_id", "common_name"))
+
+# If a species was manually validated as present, accept all detections at that site above the minimum threshold
+if (TRUE) {
+confirmed_site_species = v %>% distinct(site_id, common_name)
+unvalidated_detections_at_confirmed_sites = detections %>% inner_join(confirmed_site_species, by = c("site_id", "common_name")) %>%
+  filter(confidence >= threshold_min_classifier_score)
+detections = detections %>% bind_rows(unvalidated_detections_at_confirmed_sites)
+}
 
 # Determine detected species and detections per site ----------------------------------------
 

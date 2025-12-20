@@ -3,7 +3,7 @@
 #
 # Input
 exclude_agri_sites = TRUE # exclude outlier agricultural sites
-use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
+use_msom_richness_estimates = FALSE # use richness estimates from the msom instead of naive observed values
 msom_path = "data/cache/models/reach_invert_predator.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 # Output
@@ -124,13 +124,6 @@ sp_ripobl  = species_traits %>% filter(rip_obl_rich2002 == "X")  %>% pull(common
 #
 # Diets for each species obtained from Birds of the World, unless otherwise noted in raw data
 sp_predator = species_traits %>% filter(invert_predator == "invert_predator") %>% pull(common_name) %>% sort()
-
-# TODO: FINALIZE VALIDATIONS
-sp_predator = setdiff(sp_predator, c(
-  "black-capped chickadee", 
-  "chestnut-backed chickadee"
-))
-#####
 
 # Riparian associate invertivores
 sp_ripasso_inv = c(sp_invert[sp_invert %in% c(sp_ripasso)])
@@ -371,12 +364,18 @@ ggplot(left_join(presence_absence %>% filter(common_name == "black-headed grosbe
 ggplot(left_join(presence_absence %>% filter(common_name == "golden-crowned kinglet"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
+ggplot(left_join(presence_absence %>% filter(common_name == "common yellowthroat"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
+
+ggplot(left_join(presence_absence %>% filter(common_name == "black-capped chickadee"), site_data_reach, by = "site_id"),
+       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
+
 # Urban adapted species
 ggplot(left_join(presence_absence %>% filter(common_name == "bewick's wren"), site_data_reach, by = "site_id"),
        aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
 
 ggplot(left_join(presence_absence %>% filter(common_name == "song sparrow"), site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
+       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
 
 # Structural equation modeling -----------------------------------------------------------------------------
 
