@@ -15,6 +15,123 @@ use_platt_scaling = TRUE
 display_plots = TRUE
 tp_min_prob = 0.95 # Desired minimum probability of true positive
 
+# Species determined not present (or indefinitive) at any site through manual validation (these will be excluded from detection history)
+sp_absent_all_sites = c(
+  "fox sparrow",
+  "lincoln's sparrow",
+  "barn swallow",
+  "cliff swallow",
+  "house wren",
+  "marsh wren",
+  "northern rough-winged swallow",
+  "purple martin",
+  "townsend's warbler",
+  "tree swallow",
+  "western meadowlark",
+  "brewer's blackbird",
+  "marbled murrelet",
+  "pied-billed grebe",
+  "ruddy duck",
+  "bufflehead",
+  "northern shoveler",
+  "american wigeon",
+  "american pipit",
+  "ruby-crowned kinglet",
+  "american bittern",
+  "american coot",
+  "blue-winged teal",
+  "cackling goose",
+  "california gull",
+  "california quail",
+  "california scrub-jay",
+  "caspian tern",
+  "chipping sparrow",
+  "cinnamon teal",
+  "gadwall",
+  "common merganser",
+  "double-crested cormorant",
+  "european starling",
+  "golden-crowned sparrow",
+  "great blue heron",
+  "hooded merganser",
+  "lesser scaup",
+  "northern harrier",
+  "ring-billed gull",
+  "ring-necked duck",
+  "rock pigeon",
+  "savannah sparrow",
+  "sooty grouse",
+  "turkey vulture",
+  "virginia rail",
+  "white-throated sparrow",
+  "barn owl",
+  "green-winged teal",
+  "red-winged blackbird",
+  "sharp-shinned hawk",
+  "wood duck",
+  "hermit warbler",
+  "white-crowned sparrow",
+  "yellow warbler"
+)
+
+# Species for which exhaustive manual validation is possible or necessary (only detections from a manually validaded species-site combination will be retained)
+sp_manually_validated = c(
+  "american dipper",
+  "brown creeper",
+  "common nighthawk",
+  "common yellowthroat",
+  "cooper's hawk",
+  "red-tailed hawk",
+  "macgillivray's warbler",
+  "killdeer",
+  "hermit thrush",
+  "orange-crowned warbler",
+  "red-eyed vireo",
+  "cassin's vireo",
+  "red-breasted sapsucker",
+  "vaux's swift",
+  "merlin",
+  "spotted sandpiper",
+  "northern pygmy-owl",
+  "band-tailed pigeon",
+  "eurasian collared-dove",
+  "glaucous-winged gull",
+  "red crossbill",
+  "rufous hummingbird",
+  "mallard",
+  "green heron",
+  "mourning dove",
+  "western screech-owl",
+  "varied thrush",
+  "osprey",
+  "great horned owl",
+  "brown-headed cowbird",
+  "chestnut-backed chickadee",
+  "yellow-rumped warbler"
+)
+
+# Species with no negatives in validation data (detections will be filtered with minimum threshold)
+sp_noneg_validations = c(
+  "swainson's thrush",
+  "black-throated gray warbler",
+  "hammond's flycatcher",
+  "hutton's vireo",
+  "northern flicker",
+  "pacific wren",
+  "pacific-slope flycatcher",
+  "violet-green swallow",
+  "steller's jay",
+  "spotted towhee",
+  "song sparrow",
+  "pine siskin",
+  "downy woodpecker",
+  "dark-eyed junco",
+  "cedar waxwing",
+  "bushtit",
+  "bewick's wren",
+  "american crow"
+)
+
 # OUTPUTS:
 calibration_tag = ifelse(use_platt_scaling, "calibrated", "naive")
 out_detect_hist_data = paste0("data/cache/1_preprocess_agg_pam_data/detections_", calibration_tag, "_", threshold_min_classifier_score, ".rds")
@@ -180,26 +297,7 @@ if (use_platt_scaling) {
     )
     
     # Enforce minimum threshold for classes with no negatives in validation data
-    if (label %in% c(
-      "swainson's thrush",
-      "black-throated gray warbler",
-      "hammond's flycatcher",
-      "hutton's vireo",
-      "northern flicker",
-      "pacific wren",
-      "pacific-slope flycatcher",
-      "violet-green swallow",
-      "steller's jay",
-      "spotted towhee",
-      "song sparrow",
-      "pine siskin",
-      "downy woodpecker",
-      "dark-eyed junco",
-      "cedar waxwing",
-      "bushtit",
-      "bewick's wren",
-      "american crow"
-    )) {
+    if (label %in% sp_noneg_validations) {
       threshold = threshold_min_classifier_score
     }
     
@@ -234,61 +332,7 @@ species_names = read_lines(path_species_list) %>% as_tibble() %>%
   mutate(scientific_name = tolower(scientific_name), common_name = tolower(common_name))
 
 # Manually exclude any species determined not present (or indefinitive) at all sites
-detections = prediction_data %>% filter(!common_name %in% c(
-  "fox sparrow",
-  "lincoln's sparrow",
-  "barn swallow",
-  "cliff swallow",
-  "house wren",
-  "marsh wren",
-  "northern rough-winged swallow",
-  "purple martin",
-  "townsend's warbler",
-  "tree swallow",
-  "western meadowlark",
-  "brewer's blackbird",
-  "marbled murrelet",
-  "pied-billed grebe",
-  "ruddy duck",
-  "bufflehead",
-  "american pipit",
-  "ruby-crowned kinglet",
-  "american bittern",
-  "american coot",
-  "blue-winged teal",
-  "cackling goose",
-  "california gull",
-  "california quail",
-  "california scrub-jay",
-  "caspian tern",
-  "chipping sparrow",
-  "cinnamon teal",
-  "gadwall",
-  "common merganser",
-  "double-crested cormorant",
-  "european starling",
-  "golden-crowned sparrow",
-  "great blue heron",
-  "hooded merganser",
-  "lesser scaup",
-  "northern harrier",
-  "ring-billed gull",
-  "ring-necked duck",
-  "rock pigeon",
-  "savannah sparrow",
-  "sooty grouse",
-  "turkey vulture",
-  "virginia rail",
-  "white-throated sparrow",
-  "barn owl",
-  "green-winged teal",
-  "red-winged blackbird",
-  "sharp-shinned hawk",
-  "red-tailed hawk",
-  "wood duck",
-  "hermit warbler",
-  "white-crowned sparrow"
-))
+detections = prediction_data %>% filter(!common_name %in% sp_absent_all_sites)
 
 species_names = species_names %>% filter(common_name %in% detections$common_name)
 
@@ -306,38 +350,7 @@ if (use_platt_scaling) {
     ) %>% mutate(threshold = coalesce(threshold_calibrated, threshold)) %>% select(-threshold_calibrated)
   
   # Manually exclude detections of specific species for which completely manual validation is necessary via Inf threshold
-  species_thresholds[species_thresholds$common_name %in% c(
-    "american dipper",
-    "brown creeper",
-    "common nighthawk",
-    "common yellowthroat",
-    "macgillivray's warbler",
-    "killdeer",
-    "hermit thrush",
-    "orange-crowned warbler",
-    "red-eyed vireo",
-    "cassin's vireo",
-    "red-breasted sapsucker",
-    "vaux's swift",
-    "merlin",
-    "spotted sandpiper",
-    "northern pygmy-owl",
-    "band-tailed pigeon",
-    "eurasian collared-dove",
-    "glaucous-winged gull",
-    "red crossbill",
-    "rufous hummingbird",
-    "mallard",
-    "green heron",
-    "mourning dove",
-    "western screech-owl",
-    "varied thrush",
-    "osprey",
-    "great horned owl",
-    "brown-headed cowbird",
-    "chestnut-backed chickadee",
-    "yellow-rumped warbler"
-  ), "threshold"] = Inf
+  species_thresholds[species_thresholds$common_name %in% sp_manually_validated, "threshold"] = Inf
   
   # # Set min classifier score for other manually reviewed but prevalent species
   # species_thresholds[species_thresholds$common_name %in% c(
@@ -346,7 +359,7 @@ if (use_platt_scaling) {
   # Enforce the minimum threshold
   species_thresholds = species_thresholds %>% mutate(threshold = pmax(threshold, threshold_min_classifier_score))
   message("Final species thresholds:")
-  print(species_thresholds, n = nrow(species_names))
+  print(species_thresholds %>% arrange(common_name), n = nrow(species_names))
   detections = prediction_data %>% left_join(species_thresholds %>% select(common_name, threshold), by = "common_name") %>%
     filter(confidence >= threshold) %>% select(-threshold)
 
