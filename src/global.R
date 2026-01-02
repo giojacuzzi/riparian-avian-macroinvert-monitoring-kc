@@ -21,6 +21,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     "tidyterra",        # raster data manipulation
     "tigris",           # political boundaries
     # visualization and plotting
+    "ggplot2",
     "ggbeeswarm",       # beeswarm figures
     "ggnewscale",       # multiple scales
     "ggrepel",          # annotations
@@ -46,7 +47,30 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
 
 # Set ggplot theme -----------------------------------------------------------------------
 
-theme_set(theme_minimal())
+theme_sleek <- function(base_size = 11, base_family = "") {
+  half_line <- base_size/2
+  theme_light(base_size = base_size, base_family = base_family) +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.ticks.length = unit(half_line / 2.2, "pt"),
+      strip.background = element_rect(fill = NA, colour = NA),
+      strip.text.x = element_text(colour = "grey30"),
+      strip.text.y = element_text(colour = "grey30"),
+      axis.text = element_text(colour = "grey30"),
+      axis.title = element_text(colour = "grey30"),
+      legend.title = element_text(colour = "grey30", size = rel(0.9)),
+      panel.border = element_rect(fill = NA, colour = "grey70", linewidth = 1),
+      legend.key.size = unit(0.9, "lines"),
+      legend.text = element_text(size = rel(0.7), colour = "grey30"),
+      legend.key = element_rect(colour = NA, fill = NA),
+      legend.background = element_rect(colour = NA, fill = NA),
+      plot.title = element_text(colour = "grey30", size = rel(1)),
+      plot.subtitle = element_text(colour = "grey30", size = rel(.85))
+    )
+}
+
+theme_set(theme_sleek())
 
 # Load species trait data ----------------------------------------------------------------
 
@@ -124,27 +148,10 @@ sites_aru = site_metadata %>%
 sites_pssb = site_metadata %>%
   st_as_sf(coords = c("long_pssb", "lat_pssb"), crs = 4326)
 
-theme_sleek <- function(base_size = 11, base_family = "") {
-  half_line <- base_size/2
-  theme_light(base_size = base_size, base_family = base_family) +
-    theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      axis.ticks.length = unit(half_line / 2.2, "pt"),
-      strip.background = element_rect(fill = NA, colour = NA),
-      strip.text.x = element_text(colour = "grey30"),
-      strip.text.y = element_text(colour = "grey30"),
-      axis.text = element_text(colour = "grey30"),
-      axis.title = element_text(colour = "grey30"),
-      legend.title = element_text(colour = "grey30", size = rel(0.9)),
-      panel.border = element_rect(fill = NA, colour = "grey70", linewidth = 1),
-      legend.key.size = unit(0.9, "lines"),
-      legend.text = element_text(size = rel(0.7), colour = "grey30"),
-      legend.key = element_rect(colour = NA, fill = NA),
-      legend.background = element_rect(colour = NA, fill = NA),
-      plot.title = element_text(colour = "grey30", size = rel(1)),
-      plot.subtitle = element_text(colour = "grey30", size = rel(.85))
-    )
-}
+# Site exclusions --------------------------------------------------------
+sites_to_exclude = c(
+  "257", "259",  # Exclude sites 257 and 259 that are dominated by agriculture
+  "150", "3097", # ARU at sites 150 and 3097 destroyed mid-survey by water damage
+  "155"          # Exclude site 155 to prevent spatial autocorrelation with nearby site 159
+)
 
-theme_set(theme_sleek())

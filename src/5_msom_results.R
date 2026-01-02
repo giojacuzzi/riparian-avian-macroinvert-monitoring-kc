@@ -36,6 +36,15 @@ ggplot(groups %>%
   ) +
   labs(x = "Group", y = "Proportion", fill = "Migration")
 
+ggplot(groups %>%
+         left_join(species_traits, by = "common_name") %>%
+         mutate(primary_lifestyle = as.factor(primary_lifestyle)) %>%
+         count(group, primary_lifestyle) %>% group_by(group) %>%
+         mutate(prop = n / sum(n)) %>% ungroup(),
+       aes(x = group, y = prop, fill = primary_lifestyle)) +
+  geom_col(position = "fill") + 
+  scale_y_continuous(labels = scales::percent_format())
+
 ## Retrieve baseline responses
 
 community_baselines = model_data$msom_summary %>%
@@ -264,7 +273,7 @@ p_occ = ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)
   geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), group = as.factor(group_label)), size = 3, position = position_dodge(width = 0.5)) +
   geom_beeswarm(aes(color = group_label, alpha = coef_f),
     dodge.width = 0.5, shape = 16, cex = 1, priority = "density", size = 1.1, side=1L) +
-  # geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
+  geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
   labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group", alpha = "coef_f") +
@@ -402,3 +411,4 @@ p_bibi = ggplot(predictions, aes(x = idx, y = psi, group = common_name)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_x_continuous(limits = c(bound_low, bound_high)) +
   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)); print(p_bibi)
+

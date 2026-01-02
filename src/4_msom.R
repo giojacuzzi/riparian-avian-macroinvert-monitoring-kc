@@ -19,8 +19,7 @@ detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
 # Retain only sites used in SEM modeling (see 4_sem.R)
-sites_to_exclude = c("257", "259", "150", "3097", "155")
-message("Excluding the following sites:", paste(sites_to_exclude, collapse = " "))
+message("Excluding the following sites: ", paste(sites_to_exclude, collapse = " "))
 detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
 detections$wide = detections$wide %>% filter(!site_id %in% sites_to_exclude)
 
@@ -74,6 +73,8 @@ param_beta_data = tibble(param = paste0("beta", seq_along(detect_data)), name = 
 param_beta_data = param_beta_data %>% rowwise() %>% mutate(scaled = list(scale(detect_data[[name]]))) %>% ungroup()
 n_beta_params = nrow(param_beta_data)
 
+stop()
+
 # Package data for MSOM -----------------------------------------------------------------------------------
 
 msom_data = list(
@@ -123,8 +124,8 @@ msom = jags(data = msom_data,
               "D_obs", "D_sim", "z"
             ),
             model.file = model_file,
-            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
-            # n.chains = 3, n.adapt = 1000, n.iter = 10000, n.burnin = 2000, n.thin = 1, parallel = TRUE, # TODO: ETA
+            # n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
+            n.chains = 3, n.adapt = 2000, n.iter = 40000, n.burnin = 20000, n.thin = 5, parallel = TRUE, # TODO: 49 hr
             DIC = FALSE, verbose=TRUE)
 
 message("Finished running JAGS (", round(msom$mcmc.info$elapsed.mins / 60, 2), " hr)")
@@ -147,7 +148,7 @@ msom_summary = summary(msom)
 msom_summary = msom_summary %>% as_tibble() %>%
   mutate(param = rownames(summary(msom)), overlap0 = as.factor(overlap0)) %>% relocate(param, .before = 1) %>%
   mutate(prob = plogis(mean), prob_lower95 = plogis(`2.5%`), prob_upper95 = plogis(`97.5%`))
-rhat_threshold = 1.1
+rhat_threshold = 1.01
 suspected_nonconvergence = msom_summary %>% filter(Rhat >= rhat_threshold) %>% filter(!str_starts(param, "z\\[") & !str_starts(param, "psi\\["))
 suspected_nonconvergence = suspected_nonconvergence %>% mutate(
   index = str_extract(param, "(?<=\\[)\\d+(?=\\])"),
@@ -170,10 +171,10 @@ message("Baysian p-value (deviance): ", round(p_val,3))
 
 if (FALSE) {
   # "Examine trace plots for good mixing and convergence among chains. Each chain is displayed in a different colour. This means random paths exploring a lot of the parameter space on the y-axis without a clear pattern and each chain converging on the same value."
-  MCMCtrace(msom$samples, ISB = FALSE, pdf = F, exact = TRUE, post_zm = TRUE, type = 'trace', Rhat = TRUE, n.eff = TRUE)
+  MCMCvis::MCMCtrace(msom$samples, ISB = FALSE, pdf = TRUE, exact = TRUE, post_zm = TRUE, type = 'trace', Rhat = TRUE, n.eff = TRUE)
   
   # "Examine density plots for not super-wide or with irregular peaks. The more parameter space the density plots include, the higher the uncertainty in a parameter estimate. The density curves don’t have to be normal but shouldn’t have multiple peaks and each chain colour should have approximately the same peak."
-  MCMCtrace(msom$samples, ISB = FALSE, pdf = F, exact = TRUE, post_zm = TRUE, type = 'density', Rhat = TRUE, n.eff = TRUE, ind = TRUE)
+  MCMCvis::MCMCtrace(msom$samples, ISB = FALSE, pdf = TRUE, exact = TRUE, post_zm = TRUE, type = 'density', Rhat = TRUE, n.eff = TRUE, ind = TRUE)
 }
 
 # Inspect the mean and 95% BCI of hyperparameter estimates

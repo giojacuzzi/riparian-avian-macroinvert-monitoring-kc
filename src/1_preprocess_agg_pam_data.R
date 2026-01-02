@@ -142,6 +142,9 @@ source("src/global.R")
 message("Loading classifier prediction data")
 prediction_data = read_feather(path_prediction_data) %>% rename(site_id = site) %>% mutate(common_name = tolower(common_name))
 
+# Exclude sites from consideration
+prediction_data = prediction_data %>% filter(!site_id %in% sites_to_exclude)
+
 # Helper functions --------------------------------------------------------------------------------
 
 conf_to_logit = function(c) {
@@ -173,6 +176,23 @@ validation_data = validation_files %>%
   unnest(data) %>% ungroup() %>% select(-path_validation) %>%
   # Extract confidence score from audio segment file name
   mutate(confidence = as.numeric(str_extract(begin_file, "^[0-9.]+")))
+
+validation_data = validation_data %>% separate(begin_file,
+                                               into = c("confidence_str", "x2", "site_id", "date_str", "time_start", "time_start_s", "time_end_s"),
+                                               sep = "_",
+                                               remove = FALSE) %>%
+  mutate(
+    confidence = as.numeric(confidence_str),
+    site_id = as.character(site_id),
+    date = ymd(date_str),
+    season = as.character(year(date)),
+    time_start_dt = ymd_hms(paste(date_str, time_start)),
+    time_start_s = as.numeric(str_remove(time_start_s, "s")),
+    time = time_start_dt + seconds(time_start_s)
+  )
+
+# Exclude sites
+validation_data = validation_data %>% filter(!site_id %in% sites_to_exclude)
 
 if (use_platt_scaling) {
   calibration_results = data.frame()
@@ -372,19 +392,7 @@ if (use_platt_scaling) {
 }
 
 # Remove putative detections for which we have ground-truth validation data
-validation_data = validation_data %>% separate(begin_file,
-                                               into = c("confidence_str", "x2", "site_id", "date_str", "time_start", "time_start_s", "time_end_s"),
-                                               sep = "_",
-                                               remove = FALSE) %>%
-  mutate(
-    confidence = as.numeric(confidence_str),
-    site_id = as.character(site_id),
-    date = ymd(date_str),
-    season = as.character(year(date)),
-    time_start_dt = ymd_hms(paste(date_str, time_start)),
-    time_start_s = as.numeric(str_remove(time_start_s, "s")),
-    time = time_start_dt + seconds(time_start_s)
-  ) %>%
+validation_data = validation_data %>%
   select(label_truth, label_predicted, confidence, begin_file, time, season, date, site_id) %>%
   rename(common_name = label_predicted, file = begin_file) %>% arrange(desc(confidence))
 
@@ -420,13 +428,13 @@ detections = detections %>% bind_rows(unvalidated_detections_at_confirmed_sites)
 
 # Determine detected species and detections per site ----------------------------------------
 
-species_names = species_names %>%
-  filter(common_name %in% sort(unique(detections$common_name)))
+species_names = sort(unique(detections$common_name))
 
-message(nrow(species_names), " species detected:")
+message(length(species_names), " species detected:")
 species_summary = detections %>% group_by(common_name) %>%
   summarise(
     n_sites = n_distinct(site_id),
+    naive_occ = n_sites / length(unique(detections$site_id)),
     n_detections = n()
   ) %>% arrange(desc(n_sites))
 print(species_summary, n = nrow(species_summary))
@@ -496,32 +504,32 @@ species_site_survey_wide = species_site_survey_wide %>%
 
 # Visualize assemblage composition across sites ----------------------------------------
 
-# Load species trait metadata
-avonet = readxl::read_xlsx(path_avonet_traits, sheet = "AVONET2_eBird") %>%
-janitor::clean_names() %>%
-  rename(scientific_name = species2, family = family2, order = order2) %>%
-  mutate(scientific_name = tolower(scientific_name)) %>%
-  filter(scientific_name %in% species_names$scientific_name) %>%
-  select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
-species_metadata = left_join(species_names, avonet, by = "scientific_name")
-
-# Summarize number of species per site and trophic niche
-trophic_niche_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
-  group_by(site_id, common_name, trophic_niche) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
-  group_by(site_id, trophic_niche) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
-print(ggplot(trophic_niche_per_site %>% left_join(site_summary, by = "site_id"),
-       aes(x = species_count, y = reorder(site_id, n_species), fill = trophic_niche)) +
-  geom_bar(stat = "identity") +
-  theme_minimal())
-
-# Summarize number of species per site and primary lifestyle
-primary_lifestyle_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
-  group_by(site_id, common_name, primary_lifestyle) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
-  group_by(site_id, primary_lifestyle) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
-print(ggplot(primary_lifestyle_per_site %>% left_join(site_summary, by = "site_id"),
-       aes(x = species_count, y = reorder(site_id, n_species), fill = primary_lifestyle)) +
-  geom_bar(stat = "identity") +
-  theme_minimal())
+# # Load species trait metadata
+# avonet = readxl::read_xlsx(path_avonet_traits, sheet = "AVONET2_eBird") %>%
+# janitor::clean_names() %>%
+#   rename(scientific_name = species2, family = family2, order = order2) %>%
+#   mutate(scientific_name = tolower(scientific_name)) %>%
+#   filter(scientific_name %in% species_names$scientific_name) %>%
+#   select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
+# species_metadata = left_join(species_names, avonet, by = "scientific_name")
+# 
+# # Summarize number of species per site and trophic niche
+# trophic_niche_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
+#   group_by(site_id, common_name, trophic_niche) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
+#   group_by(site_id, trophic_niche) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
+# print(ggplot(trophic_niche_per_site %>% left_join(site_summary, by = "site_id"),
+#        aes(x = species_count, y = reorder(site_id, n_species), fill = trophic_niche)) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal())
+# 
+# # Summarize number of species per site and primary lifestyle
+# primary_lifestyle_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
+#   group_by(site_id, common_name, primary_lifestyle) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
+#   group_by(site_id, primary_lifestyle) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
+# print(ggplot(primary_lifestyle_per_site %>% left_join(site_summary, by = "site_id"),
+#        aes(x = species_count, y = reorder(site_id, n_species), fill = primary_lifestyle)) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal())
 
 # Cache putative species detection history and diversity data ------------------------------
 
@@ -532,6 +540,7 @@ detect_hist_data = list(
   wide = species_site_survey_wide
 )
 
+stop()
 if (!dir.exists(dirname(out_detect_hist_data))) dir.create(dirname(out_detect_hist_data), recursive = TRUE)
 saveRDS(detect_hist_data, out_detect_hist_data)
 message(crayon::green("Cached", out_detect_hist_data))

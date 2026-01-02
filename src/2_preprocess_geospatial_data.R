@@ -53,7 +53,7 @@ mapview(study_area, alpha.regions = 0, lwd = 2) +
   mapview(sites_pssb, col.region = "blue", layer.name = "PSSB")
 
 # Load ICLUS impervious surface projections ------------------------------------------------
-# https://catalog.data.gov/dataset/iclus-v1-3-estimated-percent-impervious-surface-for-the-conterminous-usa12?utm_source=chatgpt.com
+# https://catalog.data.gov/dataset/iclus-v1-3-estimated-percent-impervious-surface-for-the-conterminous-usa12
 
 iclus_scenarios = c("a1", "a2", "b1", "b2")
 iclus_years = as.character(seq(2020, 2100, 10))

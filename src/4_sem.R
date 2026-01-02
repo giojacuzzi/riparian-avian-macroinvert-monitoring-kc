@@ -2,8 +2,7 @@
 # Fit piecewise structural equation models
 #
 # Input
-exclude_agri_sites = TRUE # exclude outlier agricultural sites
-use_msom_richness_estimates = FALSE # use richness estimates from the msom instead of naive observed values
+use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
 msom_path = "data/cache/models/reach_invert_predator.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 # Output
@@ -190,26 +189,7 @@ if (use_msom_richness_estimates) {
 #   arrange(desc(total_detections))
 # ggplot(total_detections_by_site, aes(x = reorder(site_id, total_detections), y = total_detections)) + geom_col()
 
-# Exclude sites 257 and 259 that are dominated by agriculture
-if (exclude_agri_sites) {
-  sites_to_exclude = c("257", "259")
-  message("Excluding agricultural site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
-  site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
-  site_data_basin = site_data_basin %>% filter(!site_id %in% sites_to_exclude)
-  detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
-}
-
-# Exclude sites with incomplete surveys
-sites_to_exclude = setdiff(unique(site_data_reach$site_id), unique(detections$long$site_id))
-sites_to_exclude = c(sites_to_exclude, "150", "3097") # ARU at sites 150 and 3097 destroyed mid-survey by water damage
-message("Excluding incomplete survey site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
-site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
-site_data_basin = site_data_basin %>% filter(!site_id %in% sites_to_exclude)
-detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
-
-# Exclude one of site 155 / 159 to prevent spatial autocorrelation
-sites_to_exclude = c(sites_to_exclude, "155") # ARU at sites 150 and 3097 destroyed mid-survey by water damage
-message("Excluding spatially correlated survey site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
+message("Excluding site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
 site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
 site_data_basin = site_data_basin %>% filter(!site_id %in% sites_to_exclude)
 detections$long = detections$long %>% filter(!site_id %in% sites_to_exclude)
@@ -392,37 +372,61 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   # 5 km represents the catchment landscape (roughly basin)
   data_basin = site_data_basin
   d = data.frame(
-    "rich_all"         = data_reach$rich_all,
-    "rich_inv"         = data_reach$rich_inv,
-    "rich_inv_primary" = data_reach$rich_inv_primary,
-    "rich_aerial_inv"  = data_reach$rich_aerial_inv,
-    "rich_foliage_inv" = data_reach$rich_foliage_inv,
-    "rich_ground_inv"  = data_reach$rich_ground_inv,
-    "rich_bark_inv"    = data_reach$rich_bark_inv,
-    "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
-    "rich_foliage_inv_primary"  = data_reach$rich_foliage_inv_primary,
-    "rich_ground_inv_primary"  = data_reach$rich_ground_inv_primary,
-    "rich_bark_inv_primary"  = data_reach$rich_bark_inv_primary,
-    "rich_predator"        = data_reach$rich_predator,
-    "rich_ripasso"     = data_reach$rich_ripasso,
-    "rich_ripobl"      = data_reach$rich_ripobl,
-    "rich_ripasso_inv"     = data_reach$rich_ripasso_inv,
-    "rich_ripobl_inv"      = data_reach$rich_ripobl_inv,
+    # "rich_all"         = data_reach$rich_all,
+    # "rich_inv"         = data_reach$rich_inv,
+    # "rich_inv_primary" = data_reach$rich_inv_primary,
+    # "rich_aerial_inv"  = data_reach$rich_aerial_inv,
+    # "rich_foliage_inv" = data_reach$rich_foliage_inv,
+    # "rich_ground_inv"  = data_reach$rich_ground_inv,
+    # "rich_bark_inv"    = data_reach$rich_bark_inv,
+    # "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
+    # "rich_foliage_inv_primary"  = data_reach$rich_foliage_inv_primary,
+    # "rich_ground_inv_primary"  = data_reach$rich_ground_inv_primary,
+    # "rich_bark_inv_primary"  = data_reach$rich_bark_inv_primary,
+    # "rich_predator"        = data_reach$rich_predator,
+    # "rich_ripasso"     = data_reach$rich_ripasso,
+    # "rich_ripobl"      = data_reach$rich_ripobl,
+    # "rich_ripasso_inv"     = data_reach$rich_ripasso_inv,
+    # "rich_ripobl_inv"      = data_reach$rich_ripobl_inv,
     "bibi"          = data_reach$bibi,
+    # Environmental variables
     "imp_reach"     = data_reach$rast_nlcd_impervious_sum_proportion,
     "imp_basin"     = data_basin$rast_nlcd_impervious_sum_proportion,
-    "fhd_reach"     = data_reach$rast_gedi_fhd_mean,
-    "fhd_basin"     = data_basin$rast_gedi_fhd_mean,
-    "canopy_reach"  = data_reach$rast_usfs_canopycover_sum_proportion,
-    "canopy_basin"  = data_basin$rast_usfs_canopycover_sum_proportion,
     "ed_reach"      = data_reach$edge_density,
     "ed_basin"      = data_basin$edge_density,
+    "agg_reach"      = data_reach$aggregation,
+    "agg_basin"      = data_basin$aggregation,
+    
+    "roads_reach"      = data_reach$density_roads_paved,
+    "roads_basin"      = data_basin$density_roads_paved,
+    
     "forest_reach"  = data_reach$nlcd_forest,
     "forest_basin"  = data_basin$nlcd_forest,
     "riphab_reach"  = data_reach$nlcd_forest_and_wetlands,
     "riphab_basin"  = data_basin$nlcd_forest_and_wetlands,
+    
+    "canopy_reach"  = data_reach$rast_usfs_canopycover_sum_proportion,
+    "canopy_basin"  = data_basin$rast_usfs_canopycover_sum_proportion,
+    
+    "height_reach"  = data_reach$rast_gedi_height_mean,
+    "height_basin"  = data_basin$rast_gedi_height_mean,
+    
+    "fhd_reach"     = data_reach$rast_gedi_fhd_mean,
+    "fhd_basin"     = data_basin$rast_gedi_fhd_mean,
     "site_id"       = data_reach$site_id
   )
+  
+  # Print environmental variable summaries
+  num_cols <- names(d)[sapply(d, is.numeric)]
+  for (col in num_cols) {
+    cat("\n", col, "\n")
+    cat("  Mean:", mean(d[[col]], na.rm = TRUE), "\n")
+    cat("  SD:  ", sd(d[[col]], na.rm = TRUE), "\n")
+    cat("  Min: ", min(d[[col]], na.rm = TRUE), "\n")
+    cat("  Max: ", max(d[[col]], na.rm = TRUE), "\n")
+  }
+  
+  
   if (use_msom_richness_estimates) {
     d = left_join(d, msom_richness_estimates$invert_predator, by = "site_id")
     d = left_join(d, msom_richness_estimates$`NA`, by = "site_id")
