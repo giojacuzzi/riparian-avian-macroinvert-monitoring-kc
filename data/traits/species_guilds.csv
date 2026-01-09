@@ -1,5 +1,5 @@
 ﻿common_name,habitat_1,habitat_2,habitat_3,habitat_4,range,insectivore,riparian_dependent_breeding,riparian_obligate_breeding,rip_obl_rich2002,rip_dep_rich2002,rip_asso_rich2002,foraging_guild_cornell,breeding_guild
-American Barn Owl,Grasslands,Open Space Developed,Marsh,,Year-Round,,,,,,,aerial dive,ground hawker
+Barn Owl,Grasslands,Open Space Developed,Marsh,,Year-Round,,,,,,,aerial dive,ground hawker
 American Bittern,Woody and Herbaceous Wetlands,Marsh,,,Breeding,,,,,,,stalking,water ambusher
 American Coot,Open Water,,,,Year-Round,,,,,,,surface dive,freshwater diver
 American Crow,Medium Intensity Urban,High Intensity Developed,Low Intensity Developed,Open Space Developed,Year-Round,,,,,,,ground forager,ground forager
@@ -46,6 +46,7 @@ Clark's Nutcracker,,,,,,,,,,,,foliage gleaner,
 Cliff Swallow,Riparian,Woodland,Grasslands,,Breeding,Yes,,,,,,aerial forager,
 Common Merganser,Open Water,,,,Year-Round,,,,,,,surface dive,
 Common Raven,Forest,High Intensity Developed,Grasslands,Low Intensity Developed,Year-Round,,,,,,,ground forager,
+Common Nighthawk,Grasslands,,,,,Yes,,,,,,aerial forager,
 Common Yellowthroat,Riparian,Low Intensity Developed,Grasslands,,Breeding,Yes,Yes,Yes,X,,X,foliage gleaner,
 Cooper's Hawk,Riparian,Medium Intensity Urban,Forest,,Breeding,,Yes,,,X,X,aerial forager,
 Dark-eyed Junco,Evergreen Forest,Low Intensity Developed,Woodland,Deciduous Forest,Year-Round,,,,,,,ground forager,

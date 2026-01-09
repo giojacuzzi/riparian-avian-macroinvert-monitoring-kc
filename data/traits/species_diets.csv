@@ -1,4 +1,4 @@
-common_name,scientific_name,benthic_macroinverts,ephemeroptera,plecoptera,trichoptera,diptera,odonata,bivalvia,gastropoda,source
+common_name,scientific_name,benthic_macroinverts,ephemeroptera,plecoptera,trichoptera,diptera,odonata,bivalvia,gastropoda,review_source
 american bittern,botaurus lentiginosus,predator,,,,,odonata,,,https://birdsoftheworld.org/
 american coot,fulica americana,predator,,,,diptera,odonata,,gastropoda,https://birdsoftheworld.org/
 american crow,corvus brachyrhynchos,,,,,,,,,https://birdsoftheworld.org/
@@ -15,9 +15,9 @@ barn owl,tyto alba,,,,,,,,,https://birdsoftheworld.org/
 barn swallow,hirundo rustica,predator,,,,Tipulidae,odonata,,,https://birdsoftheworld.org/
 barred owl,strix varia,,,,,,,,,https://birdsoftheworld.org/
 belted kingfisher,megaceryle alcyon,predator,ephemeroptera,,,,,,,https://www.usgs.gov/publications/habitat-suitability-index-models-belted-kingfisher
-bewick's wren,thryomanes bewickii,,,,,,,,,https://birdsoftheworld.org/
+bewick's wren,thryomanes bewickii,predator,,,,diptera,,,,https://birdsoftheworld.org/
 black-capped chickadee,poecile atricapillus,,,,,,,,,https://birdsoftheworld.org/
-black-headed grosbeak,pheucticus melanocephalus,predator,,,,,,,,https://doi.org/10.1002/ecs2.3148
+black-headed grosbeak,pheucticus melanocephalus,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 black-throated gray warbler,setophaga nigrescens,,,,,,,,,https://birdsoftheworld.org/
 blue-winged teal,spatula discors,predator,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
 brewer's blackbird,euphagus cyanocephalus,predator,,,,diptera,,,,https://birdsoftheworld.org/
@@ -31,9 +31,9 @@ california quail,callipepla californica,,,,,,,,,https://birdsoftheworld.org/
 california scrub-jay,aphelocoma californica,,,,,,,,,https://birdsoftheworld.org/
 canada goose,branta canadensis,,,,,,,,,https://birdsoftheworld.org/
 caspian tern,hydroprogne caspia,,,,,,,,,https://birdsoftheworld.org/
-cassin's vireo,vireo cassinii,,,,,,,,,https://birdsoftheworld.org/
-cedar waxwing,bombycilla cedrorum,predator,ephemeroptera,plecoptera,,,odonata,,,https://birdsoftheworld.org/
-chestnut-backed chickadee,poecile rufescens,,,,,,,,,https://birdsoftheworld.org/
+cassin's vireo,vireo cassinii,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
+cedar waxwing,bombycilla cedrorum,predator,ephemeroptera,plecoptera,,diptera,odonata,,,https://doi.org/10.2307/4088908
+chestnut-backed chickadee,poecile rufescens,predator,,,,diptera,,,,https://doi.org/10.2307/1369468
 chipping sparrow,spizella passerina,,,,,,,,,https://birdsoftheworld.org/
 cinnamon teal,spatula cyanoptera,predator,,,,Chironomidae,odonata,,gastropoda,https://birdsoftheworld.org/
 cliff swallow,petrochelidon pyrrhonota,predator,ephemeroptera,,,"Chironomidae, Simuliidae",odonata,,,https://birdsoftheworld.org/
@@ -42,7 +42,7 @@ common nighthawk,chordeiles minor,predator,ephemeroptera,,trichoptera,diptera,,,
 common raven,corvus corax,predator,,,,Tipulidae,,,,https://birdsoftheworld.org/
 common yellowthroat,geothlypis trichas,predator,ephemeroptera,,trichoptera,diptera,,,,https://birdsoftheworld.org/
 cooper's hawk,accipiter cooperii,,,,,,,,,https://birdsoftheworld.org/
-dark-eyed junco,junco hyemalis,,,,,,,,,https://birdsoftheworld.org/
+dark-eyed junco,junco hyemalis,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 double-crested cormorant,nannopterum auritum,,,,,,,,,https://birdsoftheworld.org/
 downy woodpecker,dryobates pubescens,,,,,,,,,https://birdsoftheworld.org/
 eurasian collared-dove,streptopelia decaocto,,,,,,,,,https://birdsoftheworld.org/
@@ -58,35 +58,35 @@ great horned owl,bubo virginianus,,,,,,,,,https://birdsoftheworld.org/
 green heron,butorides virescens,predator,ephemeroptera,,,,odonata,,,https://birdsoftheworld.org/
 green-winged teal,anas crecca,predator,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
 hairy woodpecker,dryobates villosus,,,,,,,,,https://birdsoftheworld.org/
-hammond's flycatcher,empidonax hammondii,predator,,,,Tipulidae,,,,https://birdsoftheworld.org/
+hammond's flycatcher,empidonax hammondii,predator,,,,Tipulidae,,,,https://doi.org/10.1525/cond.2012.100209
 hermit thrush,catharus guttatus,predator,ephemeroptera,,,,,,,https://birdsoftheworld.org/
 hermit warbler,setophaga occidentalis,predator,,plecoptera,,diptera,,,,https://birdsoftheworld.org/
 hooded merganser,lophodytes cucullatus,predator,,,trichoptera,,odonata,bivalvia,,https://birdsoftheworld.org/
 house finch,haemorhous mexicanus,,,,,,,,,https://birdsoftheworld.org/
-house sparrow,passer domesticus,,,,,,,,,https://birdsoftheworld.org/
+house sparrow,passer domesticus,predator,,,,diptera,,,,https://birdsoftheworld.org/
 house wren,troglodytes aedon,predator,ephemeroptera,,,,,,,https://birdsoftheworld.org/
-hutton's vireo,vireo huttoni,,,,,,,,,https://birdsoftheworld.org/
+hutton's vireo,vireo huttoni,predator,,,,diptera,,,,https://birdsoftheworld.org/
 killdeer,charadrius vociferus,predator,,,,diptera,,,,https://birdsoftheworld.org/
 lesser scaup,aythya affinis,predator,,,,Chironomidae,,bivalvia,gastropoda,https://birdsoftheworld.org/
 lincoln's sparrow,melospiza lincolnii,predator,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
-macgillivray's warbler,geothlypis tolmiei,,,,,,,,,https://birdsoftheworld.org/
+macgillivray's warbler,geothlypis tolmiei,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 mallard,anas platyrhynchos,predator,,,trichoptera,Chironomidae,,,gastropoda,https://birdsoftheworld.org/
 marbled murrelet,brachyramphus marmoratus,,,,,,,,,https://birdsoftheworld.org/
 marsh wren,cistothorus palustris,predator,,,,diptera,odonata,,,https://birdsoftheworld.org/
 merlin,falco columbarius,predator,,,,,odonata,,,https://birdsoftheworld.org/
 mourning dove,zenaida macroura,,,,,,,,,https://birdsoftheworld.org/
-northern flicker,colaptes auratus,,,,,,,,,https://birdsoftheworld.org/
+northern flicker,colaptes auratus,predator,,,,diptera,,,,https://birdsoftheworld.org/
 northern harrier,circus hudsonius,,,,,,,,,https://birdsoftheworld.org/
 northern pygmy-owl,glaucidium gnoma,predator,,,,,odonata,,,https://birdsoftheworld.org/
 northern rough-winged swallow,stelgidopteryx serripennis,predator,,,,diptera,,,,https://birdsoftheworld.org/
 northern shoveler,spatula clypeata,predator,,,,Chironomidae,,,,https://birdsoftheworld.org/
 olive-sided flycatcher,contopus cooperi,predator,,,,diptera,,,,https://doi.org/10.3389/fevo.2021.633160
-orange-crowned warbler,leiothlypis celata,,,,,,,,,https://birdsoftheworld.org/
+orange-crowned warbler,leiothlypis celata,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 osprey,pandion haliaetus,,,,,,,,,https://birdsoftheworld.org/
-pacific wren,troglodytes pacificus,predator,,,,Stratiomyidae,,,,https://birdsoftheworld.org/
-pacific-slope flycatcher,empidonax difficilis,predator,,,,diptera,,,,https://birdsoftheworld.org/
+pacific wren,troglodytes pacificus,predator,,,,Stratiomyidae,,,,https://esj-journals.onlinelibrary.wiley.com/doi/10.1046/j.1440-1703.2001.00448.x
+pacific-slope flycatcher,empidonax difficilis,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 pied-billed grebe,podilymbus podiceps,predator,,,,,odonata,bivalvia,gastropoda,https://birdsoftheworld.org/
-pileated woodpecker,dryocopus pileatus,,,,,,,,,https://birdsoftheworld.org/
+pileated woodpecker,dryocopus pileatus,predator,,,,diptera,,,,https://birdsoftheworld.org/
 pine siskin,spinus pinus,,,,,,,,,https://birdsoftheworld.org/
 purple finch,haemorhous purpureus,,,,,,,,,https://birdsoftheworld.org/
 purple martin,progne subis,predator,ephemeroptera,,trichoptera,"Chironomidae, Tipulidae",odonata,,,https://birdsoftheworld.org/
@@ -99,34 +99,34 @@ red-winged blackbird,agelaius phoeniceus,predator,,,,Stratiomyidae,odonata,,,htt
 ring-billed gull,larus delawarensis,predator,ephemeroptera,,trichoptera,diptera,odonata,,,https://birdsoftheworld.org/
 ring-necked duck,aythya collaris,predator,,,trichoptera,Chironomidae,odonata,bivalvia,gastropoda,https://birdsoftheworld.org/
 rock pigeon,columba livia,,,,,,,,,https://birdsoftheworld.org/
-ruby-crowned kinglet,corthylio calendula,predator,,,,diptera,,,,https://birdsoftheworld.org/
+ruby-crowned kinglet,corthylio calendula,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 ruddy duck,oxyura jamaicensis,predator,ephemeroptera,,trichoptera,"Chironomidae, Culicidae",odonata,,,https://birdsoftheworld.org/
 rufous hummingbird,selasphorus rufus,predator,,,,Chironomidae,,,,https://birdsoftheworld.org/
 savannah sparrow,passerculus sandwichensis,predator,,,,"Chironomidae, Coelopidae",odonata,,,https://birdsoftheworld.org/
 sharp-shinned hawk,accipiter striatus,,,,,,,,,https://birdsoftheworld.org/
-song sparrow,melospiza melodia,predator,ephemeroptera,,,"Chironomidae, Tipulidae",,,gastropoda,https://doi.org/10.1002/ecs2.3148
+song sparrow,melospiza melodia,predator,ephemeroptera,,,"Chironomidae, Tipulidae",,,gastropoda,
 sooty grouse,dendragapus fuliginosus,,,,,,,,,https://birdsoftheworld.org/
 spotted sandpiper,actitis macularius,predator,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
 spotted towhee,pipilo maculatus,predator,,,,diptera,,,,https://birdsoftheworld.org/
 steller's jay,cyanocitta stelleri,,,,,,,,,https://birdsoftheworld.org/
 swainson's thrush,catharus ustulatus,predator,,,,diptera,,,,https://birdsoftheworld.org/
-townsend's warbler,setophaga townsendi,,,,,,,,,https://birdsoftheworld.org/
+townsend's warbler,setophaga townsendi,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 tree swallow,tachycineta bicolor,predator,ephemeroptera,plecoptera,trichoptera,diptera,odonata,bivalvia,,https://birdsoftheworld.org/
 turkey vulture,cathartes aura,,,,,,,,,https://birdsoftheworld.org/
-varied thrush,ixoreus naevius,,,,,,,,,https://birdsoftheworld.org/
+varied thrush,ixoreus naevius,predator,,,,diptera,,,,https://digitalcommons.humboldt.edu/etd/1334/
 vaux's swift,chaetura vauxi,predator,ephemeroptera,,,diptera,,,,https://birdsoftheworld.org/
 veery,catharus fuscescens,predator,,,,diptera,,,,https://birdsoftheworld.org/
 violet-green swallow,tachycineta thalassina,predator,,,,diptera,,,,https://birdsoftheworld.org/
 virginia rail,rallus limicola,predator,,,,diptera,odonata,,gastropoda,https://birdsoftheworld.org/
-warbling vireo,vireo gilvus,predator,,,,,,,,https://doi.org/10.1002/ecs2.3148
+warbling vireo,vireo gilvus,predator,,,,Chironomidae,,,,"https://doi.org/10.1525/cond.2012.100209, https://www.biodiversitylibrary.org/bibliography/109146, http://hdl.handle.net/1993/7173"
 western meadowlark,sturnella neglecta,,,,,,,,,https://birdsoftheworld.org/
 western screech-owl,megascops kennicottii,,,,,,,,,https://birdsoftheworld.org/
-western tanager,piranga ludoviciana,predator,,,,Tipulidae,odonata,,,https://birdsoftheworld.org/
+western tanager,piranga ludoviciana,predator,,,,Tipulidae,odonata,,,https://doi.org/10.1525/cond.2012.100209
 western wood-pewee,contopus sordidulus,predator,ephemeroptera,,,diptera,odonata,,,https://birdsoftheworld.org/
-white-crowned sparrow,zonotrichia leucophrys,,,,,,,,,https://birdsoftheworld.org/
+white-crowned sparrow,zonotrichia leucophrys,predator,,,,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 white-throated sparrow,zonotrichia albicollis,predator,,,,diptera,odonata,,,https://birdsoftheworld.org/
 willow flycatcher,empidonax traillii,predator,,,,"Tabanidae, Syrphidae",odonata,,,https://birdsoftheworld.org/
-wilson's warbler,cardellina pusilla,predator,ephemeroptera,plecoptera,trichoptera,diptera,,,,https://birdsoftheworld.org/
+wilson's warbler,cardellina pusilla,predator,ephemeroptera,plecoptera,trichoptera,diptera,,,,https://doi.org/10.1525/cond.2012.100209
 wood duck,aix sponsa,,,,,,,,,https://birdsoftheworld.org/
-yellow warbler,setophaga petechia,predator,,,,Chironomidae,,,,https://doi.org/10.1002/ecs2.3148
-yellow-rumped warbler,setophaga coronata,predator,,,trichoptera,"Tipulidae, Muscidae",,,,https://birdsoftheworld.org/
+yellow warbler,setophaga petechia,predator,,,,Chironomidae,,,,"https://doi.org/10.1002/ecs2.3148, https://doi.org/10.1525/cond.2012.100209, https://doi.org/10.1525/cond.2012.100209"
+yellow-rumped warbler,setophaga coronata,predator,,,trichoptera,"Tipulidae, Muscidae",,,,"https://doi.org/10.1002/ecs2.3148, https://doi.org/10.1525/cond.2012.100210, https://doi.org/10.1525/cond.2012.100209"
