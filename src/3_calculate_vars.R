@@ -13,10 +13,8 @@ source("src/global.R")
 
 # site buffer:
 # ~550 m insect emergence 90% flux range falloff
-# 5km basin/watershed
-buffer_radius = set_units(5000, m)
-
-sites_to_discard = c("257", "259", "150", "155", "3097")
+# 5000 m (5 km) basin/watershed
+buffer_radius = set_units(550, m)
 
 # Load ARU and PSSB site locations and define study area -----------------------------
 message("Loading ARU and PSSB site locations")
@@ -71,6 +69,10 @@ pssb_data_scores_sites = pssb_data_scores_all %>% filter(site_id %in% sites_aru$
 message("Pearson's R (sites): ", round(cor(pssb_data_scores_sites$ept_richness_quantity, pssb_data_scores_sites$overall_score), 3))
 ggplot(pssb_data_scores_sites, aes(x = ept_richness_quantity, y = overall_score)) +
   geom_point()
+
+cor.test(pssb_data_scores_sites$ept_richness_quantity,
+         pssb_data_scores_sites$overall_score,
+         method = "pearson")
 
 # Load and process geospatial data ---------------------------------------------------
 message("Loading geospatial data")
@@ -339,7 +341,7 @@ if (TRUE) {
   i = 1
   for (s_id in names(site_zones)) {
     
-    if (s_id %in% sites_to_discard) next
+    if (s_id %in% sites_to_exclude) next
     
     site_buffer = site_zones[[s_id]][["site_buffer"]]
     interaction_zone = site_zones[[s_id]][["interaction_zone"]]
@@ -619,20 +621,42 @@ for (s_id in names(site_zones)) {
   r[] = as.integer(r[])
   site_nlcd_landcover_major = r
   
-  # Simple landcover classes for edge density
+  # Reclassify simple landcover classes for landscape configuration metrics
   r = site_nlcd_landcover
   # Reclassify specific values
-  r[r == 11] <- 1 # Open water
-  r[r %in% c(21, 22, 23, 24)] <- 2 # Developed 
-  r[r %in% c(41, 42, 43, 90)] <- 3 # Forested
-  # Set all other values to 0
-  r[!r %in% c(1, 2, 3, NA)] <- 4 # Other
+  r[r %in% c(41, 42, 43, 90, 95)] = 1 # "Riparian habitat" (Forested or Wetland)
+  r[r %in% c(21, 22, 23, 24)]     = 2 # Developed
+  r[r == 11]                      = 3 # Open water
+  r[!r %in% c(1, 2, 3, NA)]       = 4 # Other
   
-  # Landscape level edge density
-  edge_density = lsm_l_ed(r)$value
-  units(edge_density) = "m/ha"
-  # contagion = lsm_l_contag(r)$value
-  aggregation = lsm_l_ai(r)$value
+  ## Landscape configuration metrics
+  
+  ed = lsm_l_ed(r)$value # Edge density
+  units(ed) = "m/ha"
+  edge_density = lsm_c_ed(r)
+  ed_riphab = edge_density %>% filter(class == 1) %>% pull(value)
+  ed_dev    = edge_density %>% filter(class == 2) %>% pull(value)
+  if (length(ed_riphab) == 0) ed_riphab = 0
+  if (length(ed_dev) == 0)    ed_dev = 0
+  units(ed_riphab) = "m/ha"
+  units(ed_dev)    = "m/ha"
+
+  agg = lsm_l_ai(r)$value
+  aggregation = lsm_c_ai(r) # Aggregation of a class, 0 maximally disaggregated, 100 maximally aggregated
+  agg_riphab = aggregation %>% filter(class == 1) %>% pull(value) # Riparian habitat
+  agg_dev    = aggregation %>% filter(class == 2) %>% pull(value) # Developed
+  if (length(agg_riphab) == 0) agg_riphab = NA
+  if (length(agg_dev) == 0)    agg_dev = NA
+  
+  pd = lsm_l_pd(r)$value
+  patch_density = lsm_c_pd(r) # Fragmentation of a class, increases as landscape gets more patchy
+  pd_riphab = patch_density %>% filter(class == 1) %>% pull(value)
+  pd_dev    = patch_density %>% filter(class == 2) %>% pull(value)
+  if (length(pd_riphab) == 0) pd_riphab = 0
+  if (length(pd_dev) == 0)    pd_dev = 0
+
+  # mapview(as.factor(site_nlcd_landcover), col.region = nlcd_metadata %>%
+  #           filter(id %in% unique(values(site_nlcd_landcover))) %>% select(id, class, color) %>% pull(color))
   
   # Roads
   # S1100 - Primary road 
@@ -725,8 +749,15 @@ for (s_id in names(site_zones)) {
     ),
     vectors = vectors,
     f_code = f_code,
-    edge_density = edge_density,
-    aggregation = aggregation,
+    ed        = ed,
+    ed_riphab = ed_riphab,
+    ed_dev    = ed_dev,
+    agg        = agg,
+    agg_riphab = agg_riphab,
+    agg_dev    = agg_dev,
+    pd        = pd,
+    pd_riphab = pd_riphab,
+    pd_dev    = pd_dev,
     tree_species_richness = tree_species_richness,
     # dist_road_major = dist_road_major,
     # dist_road_paved = dist_road_paved,
@@ -758,11 +789,16 @@ additional_metrics = do.call(rbind, lapply(names(geospatial_site_data), function
   data.frame(
     site_id               = i,
     f_code                = geospatial_site_data[[i]]$f_code,
-    edge_density          = geospatial_site_data[[i]]$edge_density,
-    aggregation           = geospatial_site_data[[i]]$aggregation,
+    ed                    = geospatial_site_data[[i]]$ed,
+    ed_riphab             = geospatial_site_data[[i]]$ed_riphab,
+    ed_dev                = geospatial_site_data[[i]]$ed_dev,
+    agg                   = geospatial_site_data[[i]]$agg,
+    agg_riphab            = geospatial_site_data[[i]]$agg_riphab,
+    agg_dev               = geospatial_site_data[[i]]$agg_dev,
+    pd                    = geospatial_site_data[[i]]$pd,
+    pd_riphab             = geospatial_site_data[[i]]$pd_riphab,
+    pd_dev                = geospatial_site_data[[i]]$pd_dev,
     tree_species_richness = geospatial_site_data[[i]]$tree_species_richness,
-    # dist_road_major       = geospatial_site_data[[i]]$dist_road_major,
-    # dist_road_paved       = geospatial_site_data[[i]]$dist_road_paved,
     density_roads_paved   = geospatial_site_data[[i]]$density_roads_paved,
     density_roads_major   = geospatial_site_data[[i]]$density_roads_major,
     area_riparian_usfs    = geospatial_site_data[[i]]$area_riparian_usfs,
@@ -835,7 +871,7 @@ ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
 
 sites_lc_df = bind_rows(
   lapply(names(geospatial_site_data), function(site_id) { # OR rast_nlcd_landcover (interaction zone only)
-    if (site_id %in% c(sites_to_discard)) return(data.frame())
+    if (site_id %in% c(sites_to_exclude)) return(data.frame())
     df = as.data.frame(geospatial_site_data[[site_id]]$rasters$rast_nlcd_landcover_site_buffer, xy = TRUE)
     value_col = names(df)[3]
     df = df %>% rename(value = all_of(value_col))  # rename for ggplot

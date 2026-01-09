@@ -29,6 +29,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     "metR",             # contours
     "patchwork",        # multipanel plots
     # statistics
+    "car",              # variance inflation factors
     "DHARMa",           # modeling diagnostics
     "jagsUI",           # hierarchical bayesian MSOM
     "landscapemetrics", # landscape metrics
@@ -128,11 +129,59 @@ if (!exists("species_traits", envir = .GlobalEnv)) {
   species_traits = left_join(species_traits, eltontraits, by = "common_name")
   species_traits = left_join(species_traits, diets,       by = c("common_name", "scientific_name"))
   species_traits = left_join(species_traits, guilds,      by = "common_name")
+
+  # Invertivorous species with diets containing macroinvert taxa and foraging behavior either directly in the stream, gleaning from foliage, or in the air (plus documented predation of benthic macroinverts, i.e. dipper, sandpiper, kingfisher), which are all foraging groups with documented predation of aquatic macroinvertebrates.
+  # 1) species with documented predation of aquatic macroinvertebrates, as well as primarily invertivorous species with diets containing B-IBI macroinvert taxa and foraging behavior directly in the stream, gleaning from foliage, or in the air.
+  # These criteria include species that forage in-stream for aquatic macroinvertebrate larvae as a primary source of nutrition (X), as well as aerial insectivores and foliage gleaners that supplement their diets with emergent macroinvertebrates and have shown positive responses to aquatic subsidies (Y, Z), while excluding primarily terrestrial, bark-probing, and generalist foragers that have shown little evidence for responses to aquatic subsidies (A).
+  
+  # All grouping (full community):
   species_traits = species_traits %>% mutate(
-    invert_predator = ifelse(
-      benthic_macroinverts == "predator" & diet_5cat == "Invertebrate",
-      "invert_predator", "NA"
-    ))
+    group_all = "all"
+  )
+  
+  # Migrant group:
+  species_traits = species_traits %>% mutate(
+    group_migrant = case_when(
+      trophic_niche == "Invertivore" & migration == 3 ~ "migrant",
+      TRUE                                            ~ "other"
+    )
+  )
+  
+  # Diet group:
+  species_traits = species_traits %>% mutate(
+    group_diet = case_when(
+      # Documented predators of aquatic insect larvae and/or emergent adult forms...
+      (common_name %in% c("american dipper", "belted kingfisher", "killdeer", "marsh wren", "pacific wren", "spotted sandpiper")) |
+      # ...OR invertivore with diet containing B-IBI taxa
+        # https://pugetsoundstreambenthos.org/About-BIBI.aspx
+        # B-IBI is calculated from stream site samples of the following insect orders...
+        # - Ephemeroptera, mayflies
+        # - Plecoptera, stoneflies
+        # - Trichoptera, caddisflies
+        # - Diptera, true flies and midges (with aquatic larvae e.g. Chironomidae, Simuliidae, Tipulidae)
+        # ... and classes of mollusks:
+        # - Bivalvia, freshwater clams (e.g. Unionidae, Sphaeriidae)
+        # - Gastropoda, freshwater snails (e.g. Lymnaeidae, Planorbidae)
+        # - aquatic worms
+      trophic_niche == "Invertivore" & benthic_macroinverts == "predator" &
+      # ...foraging in stream or within riparian vegetation
+      (primary_lifestyle %in% c("Aerial", "Insessorial", "Aquatic")) &
+      (!foraging_guild_cornell %in% c("bark forager", "ground forager")) ~ "diet",
+      TRUE                                                               ~ "other"
+    )
+  )
+  
+  # Foraging group:
+  species_traits = species_traits %>% mutate(
+    group_forage = case_when(
+      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("aerial forager", "soaring", "flycatching", "hovering", "aerial dive")) ~ "aerial",
+      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("foliage gleaner"))                                                     ~ "gleaner",
+      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("ground forager"))                                                      ~ "ground",
+      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("bark forager"))                                                        ~ "bark",
+      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("dabbler", "probing", "stalking", "surface dive"))                      ~ "aquatic",
+      TRUE                                                                                                                                    ~ "other"
+    )
+  )
 }
 
 # Geospatial data ----------------------------------------------------------------
@@ -155,3 +204,9 @@ sites_to_exclude = c(
   "155"          # Exclude site 155 to prevent spatial autocorrelation with nearby site 159
 )
 
+# Pairwise collinearity ---------------------------------------------
+pairwise_collinearity = function(vars, threshold = 0.0) {
+  cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
+  cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
+  return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
+}

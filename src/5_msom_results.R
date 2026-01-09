@@ -1,12 +1,18 @@
 # 5_msom_results.R ===================================================================
-# Retrieve and visualize multi-species occupancy modeling results
+# Visualize multi-species occupancy modeling results and estimate site-specific richness
 #
 # Input
-msom_path = "data/cache/models/reach_invert_predator.rds"
+msom_path = "data/cache/models/NEW_invert_predator.rds"
 # Output
 path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
 
 source("src/global.R")
+
+# Naive occupancy -----------
+
+# in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
+# detections = readRDS(in_cache_detections)
+# detections$long$common_name = tolower(detections$long$common_name)
 
 # Load data for multi-species occupancy model --------------------------------------------------
 
@@ -18,6 +24,50 @@ msom = model_data$msom
 groups = model_data$groups %>% arrange(common_name)
 sites = model_data$sites
 species = model_data$species
+
+#  Calculate estimated group richness per site ---------------------------
+# z = msom$sims.list$z
+# group_idx = groups$group_idx
+# group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
+# samples = dim(z)[1]
+# J = dim(z)[2]
+# I = dim(z)[3]
+# G = max(group_idx)
+# 
+# rich_group = array(NA, c(samples, J, G))
+# for (g in 1:G) {
+#   species_in_g = which(group_idx == g)
+#   rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+# }
+# rich_group_mean  = apply(rich_group, c(2,3), mean)
+# rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
+# rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
+# msom_richness_estimates = lapply(1:G, function(g) {
+#   group = group_names[g]
+#   tibble(
+#     site_id = sites
+#   ) %>%
+#     dplyr::mutate(
+#       !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
+#       !!paste0(group, "_rich_lower") := rich_group_lower[, g],
+#       !!paste0(group, "_rich_upper") := rich_group_upper[, g]
+#     )
+# })
+# names(msom_richness_estimates) = group_names
+# 
+# rich_total = apply(z, c(1, 2), sum)
+# msom_richness_estimates$total = tibble(
+#   site_id    = sites,
+#   total_rich_mean  = apply(rich_total, 2, mean),
+#   total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
+#   total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
+# )
+
+# if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
+# saveRDS(msom_richness_estimates, file = path_out)
+# message(crayon::green("Cached site-specific richness estimates to", path_out))
+
+# Visualize results ---------------------
 
 ## Inspect group membership
 
@@ -259,9 +309,25 @@ ggplot(species_effects, aes(x = coef_mean, y = name, group = group_label, color 
   geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), group = as.factor(group_label)), size = 3, position = position_dodge(width = 0.5)) +
   scale_shape_manual(values = c(19, 1)) +
   scale_color_manual(values = c("orange", "gray20")) +
-  labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group") +
+  labs(x = "Occupancy coefficient mean", y = "", color = "Diet group") +
   theme_sleek() + guides(shape = "none")
 
+print(ggplot(species_effects %>% filter(name == "bibi"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group_label)) +
+  geom_vline(xintercept = 0, color = "gray80") +
+  geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) +
+  geom_point())
+
+stop()
+
+# Some species without documented diets containing target taxa nevertheless exhibited positive trends in occupancy in response to B-IBI
+# EX: Spiders are preferred prey of Chestnut-backed chickadee, Black-headed Grosbeak, which may benefit from B-IBI
+# These (black-throated gray) species have shown trophic links to aquatic resources: https://doi.org/10.1002/ecs2.3148
+# EX: Belted Kingfisher, which feeds supplementally but is not an invertivore
+
+# TODO: Compare species rarity between groups -- do inverts have proportionally more rare species?
+
+# “The most widespread species (PSF, GCK, CY) show negative mean responses to B-IBI, while less common species tend to show weak or uncertain positive responses.”
+# The more common species provide more information, and disproportionately influence the hyperparameter
 
 binwidth = 0.04
 species_effects$coef_bin = round(species_effects$coef_mean / binwidth) * binwidth
@@ -273,11 +339,13 @@ p_occ = ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)
   geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), group = as.factor(group_label)), size = 3, position = position_dodge(width = 0.5)) +
   geom_beeswarm(aes(color = group_label, alpha = coef_f),
     dodge.width = 0.5, shape = 16, cex = 1, priority = "density", size = 1.1, side=1L) +
-  geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
+  # geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
-  labs(x = "Occupancy coefficient mean", y = "Occupancy predictor", color = "Diet group", alpha = "coef_f") +
-  theme_sleek() + guides(shape = "none"); print(p_occ)
+  labs(x = "Occupancy coefficient mean", y = "", color = "Diet group", alpha = "coef_f") +
+  theme_sleek() + guides(shape = "none") + theme(
+    legend.position = "bottom"
+  ); print(p_occ)
 
 
 param_detect_data = param_beta_data
@@ -303,8 +371,10 @@ p_detect = ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = gr
   # geom_text_repel(data = detect_species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
-  labs(x = "Detection coefficient mean", y = "Detection predictor", color = "Diet group", alpha = "coef_f") +
-  theme_sleek() + guides(shape = "none"); print(p_detect)
+  labs(x = "Detection coefficient mean", y = "Predictor", color = "Diet group", alpha = "coef_f") +
+  theme_sleek() + guides(shape = "none") + theme(
+    legend.position = "none"
+  ); print(p_detect)
 
 # Marginal responses --------------------------------------------------------------------
 
@@ -410,5 +480,10 @@ p_bibi = ggplot(predictions, aes(x = idx, y = psi, group = common_name)) +
   scale_fill_manual(values = c("orange", "gray20")) +
   scale_color_manual(values = c("orange", "gray20")) +
   scale_x_continuous(limits = c(bound_low, bound_high)) +
-  scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)); print(p_bibi)
+  scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)) + theme(
+    legend.position = "none"
+  ); print(p_bibi)
+
+# Combo plots
+p_detect + p_occ + p_bibi
 

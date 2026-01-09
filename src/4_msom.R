@@ -4,14 +4,15 @@
 # Input
 model_file = "src/msom.txt"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
-site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
-# site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
-site_data = site_data_reach # spatial scale
 grouping = "invert_predator" # species grouping (or "all")
 # Output
-path_out = paste0("data/cache/models/reach_", grouping, ".rds")
+path_out = paste0("data/cache/models/NEW_", grouping, ".rds")
 
 source("src/global.R")
+
+site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")  %>% filter(!site_id %in% sites_to_exclude)
+site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds") %>% filter(!site_id %in% sites_to_exclude)
+site_data = site_data_reach # spatial scale
 
 # Load species detection history data
 detections = readRDS(in_cache_detections)
@@ -52,12 +53,36 @@ G = length(unique(groups$group_idx))
 # Model data covariates
 site_data = site_data %>% slice(match(sites, site_id)) # match site order in y
 
+## DEBUG
+d = data.frame(
+  bibi = site_data_reach$bibi,
+  canopy_reach = site_data_reach$rast_usfs_canopycover_sum_proportion,
+  canopy_basin = site_data_basin$rast_usfs_canopycover_sum_proportion,
+  imp_reach = site_data_reach$rast_nlcd_impervious_sum_proportion,
+  imp_basin = site_data_basin$rast_nlcd_impervious_sum_proportion
+)
+pairwise_collinearity(d)
+d$site_id = site_data_reach$site_id
+
+vif(lm(site_id ~ bibi + rast_usfs_canopycover_sum_proportion + rast_nlcd_impervious_sum_proportion, data = site_data_reach))
+vif(lm(site_id ~ bibi + canopy_reach + canopy_basin + imp_reach + imp_basin, data = d))
+
+site_data$canopy_basin = site_data_basin$rast_usfs_canopycover_sum_proportion
+site_data$imp_basin = site_data_basin$rast_nlcd_impervious_sum_proportion
+## DEBUG
+
 # Store alpha parameter ID, variable name, and standardize data to have mean 0, standard deviation 1
 site_data = site_data %>% rename(
   canopy = rast_usfs_canopycover_sum_proportion,
   imp = rast_nlcd_impervious_sum_proportion
 )
-param_alpha_names = c("bibi", "canopy", "imp")
+param_alpha_names = c(
+  "bibi",
+  "canopy",
+  "imp",
+  "canopy_basin",
+  "imp_basin"
+)
 param_alpha_data = tibble(param = paste0("alpha", 1:length(param_alpha_names)), name  = param_alpha_names)
 param_alpha_data = param_alpha_data %>% rowwise() %>% mutate(scaled = list(scale(site_data[[name]]))) %>% ungroup()
 n_alpha_params = nrow(param_alpha_data)
@@ -72,8 +97,6 @@ detect_data = list(
 param_beta_data = tibble(param = paste0("beta", seq_along(detect_data)), name = names(detect_data))
 param_beta_data = param_beta_data %>% rowwise() %>% mutate(scaled = list(scale(detect_data[[name]]))) %>% ungroup()
 n_beta_params = nrow(param_beta_data)
-
-stop()
 
 # Package data for MSOM -----------------------------------------------------------------------------------
 
@@ -124,8 +147,8 @@ msom = jags(data = msom_data,
               "D_obs", "D_sim", "z"
             ),
             model.file = model_file,
-            # n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
-            n.chains = 3, n.adapt = 2000, n.iter = 40000, n.burnin = 20000, n.thin = 5, parallel = TRUE, # TODO: 49 hr
+            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
+            # n.chains = 3, n.adapt = 2000, n.iter = 40000, n.burnin = 20000, n.thin = 5, parallel = TRUE, # TODO: 49 hr
             DIC = FALSE, verbose=TRUE)
 
 message("Finished running JAGS (", round(msom$mcmc.info$elapsed.mins / 60, 2), " hr)")
@@ -148,7 +171,7 @@ msom_summary = summary(msom)
 msom_summary = msom_summary %>% as_tibble() %>%
   mutate(param = rownames(summary(msom)), overlap0 = as.factor(overlap0)) %>% relocate(param, .before = 1) %>%
   mutate(prob = plogis(mean), prob_lower95 = plogis(`2.5%`), prob_upper95 = plogis(`97.5%`))
-rhat_threshold = 1.01
+rhat_threshold = 1.1
 suspected_nonconvergence = msom_summary %>% filter(Rhat >= rhat_threshold) %>% filter(!str_starts(param, "z\\[") & !str_starts(param, "psi\\["))
 suspected_nonconvergence = suspected_nonconvergence %>% mutate(
   index = str_extract(param, "(?<=\\[)\\d+(?=\\])"),

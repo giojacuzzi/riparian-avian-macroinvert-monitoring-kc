@@ -3,7 +3,7 @@
 #
 # Input
 use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
-msom_path = "data/cache/models/reach_invert_predator.rds"
+msom_path = "data/cache/models/NEW_invert_predator.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 # Output
 out_cache_dir = "data/cache/4_sem"
@@ -47,140 +47,6 @@ detections = readRDS(in_cache_detections)
 detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
-# NOTE: Very few aerial specialist foragers
-eltontraits %>% filter(for_strat_aerial >= 10) %>% pull(common_name)
-
-# Get AVONET invertivore community subset
-# "Invertivore = species obtaining at least 60% of food resources from invertebrates in terrestrial systems, including insects, worms, arachnids, etc."
-invertivores_avonet = species_traits %>% filter(trophic_niche == "Invertivore") %>% pull(common_name) %>% sort()
-# "Aquatic Predator = species obtaining at least 60% of food resources from vertebrate and invertebrate animals in aquatic systems, including fish, crustacea, molluscs, etc."
-species_traits %>% filter(trophic_niche == "Aquatic predator") %>% pull(common_name)
-
-# Get Eltontraits invertivore community subset
-# "Percent use of: Invertebrates-general, aquatic invertebrates, shrimp, krill, squid, crustacaeans, molluscs, cephalapod, polychaetes, gastropods, orthoptera, terrestrial Invertebrates, ground insects, insect larvae, worms, orthopterans, flying insects"
-species_invert_ETdietGt10 = species_traits %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # nearly all species
-# "Assignment to the dominant among five diet categories based on the summed scores of constituent individual diets."
-invertivores_eltontraits = species_traits %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
-
-setdiff(invertivores_eltontraits, invertivores_avonet)
-setdiff(invertivores_avonet, invertivores_eltontraits)
-
-# Insectivores
-sp_invert = species_traits %>% filter(diet_inv >= 10) %>% pull(common_name) %>% sort() # most species
-sp_invert_primary = species_traits %>% filter(diet_5cat == "Invertebrate") %>% pull(common_name) %>% sort()
-
-# Foraging guild: Aerial insectivores (e.g. swallows, swifts, flycatchers)
-# primarily capture prey while they are flying in the air
-sp_g_aerial_invert = species_traits %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
-  filter(common_name %in% sp_invert) %>% pull(common_name)
-
-sp_g_aerial_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("aerial forager", "flycatching")) %>%
-  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
-
-sp_g_foliage_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
-  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
-
-sp_g_ground_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
-  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
-
-sp_g_bark_invert_primary = species_traits %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
-  filter(common_name %in% sp_invert_primary) %>% pull(common_name)
-
-# Foraging guild: Foliage gleaners (e.g. warblers, vireos)
-# typically capture insects located on vegetation or woody substrate
-sp_g_foliage_invert = species_traits %>% filter(foraging_guild_cornell %in% c("foliage gleaner")) %>%
-  filter(common_name %in% sp_invert) %>% pull(common_name)
-
-# Foraging guild: Ground foragers (e.g. american robin)
-# procure prey within forest leaf-litter and at the soil surface
-sp_g_ground_invert = species_traits %>% filter(foraging_guild_cornell %in% c("ground forager")) %>%
-  filter(common_name %in% sp_invert) %>% pull(common_name)
-
-# Foraging guild: Bark-probers (e.g. brown creeper, red-breated nuthatch, woodpeckers and sapsuckers)
-# extract prey from under bark or by boring into wood
-sp_g_bark_invert = species_traits %>% filter(foraging_guild_cornell %in% c("bark forager")) %>%
-  filter(common_name %in% sp_invert) %>% pull(common_name)
-
-# Riparian associates
-sp_ripasso = species_traits %>% filter(rip_asso_rich2002 == "X") %>% pull(common_name) %>% sort()
-# Riparian obligats
-sp_ripobl  = species_traits %>% filter(rip_obl_rich2002 == "X")  %>% pull(common_name) %>% sort()
-
-# A priori list of species that:
-# - Are primarily invertivores
-# - Are reported to forage on aquatic macroinvertebrate taxa measured in B-IBI
-#
-# https://pugetsoundstreambenthos.org/About-BIBI.aspx
-# B-IBI is calculated from stream site samples of the following insect orders...
-# - Ephemeroptera, mayflies
-# - Plecoptera, stoneflies
-# - Trichoptera, caddisflies
-# - Diptera, true flies and midges (with aquatic larvae e.g. Chironomidae, Simuliidae, Tipulidae)
-# ... and classes of mollusks:
-# - Bivalvia, freshwater clams (e.g. Unionidae, Sphaeriidae)
-# - Gastropoda, freshwater snails (e.g. Lymnaeidae, Planorbidae)
-# - aquatic worms
-#
-# Diets for each species obtained from Birds of the World, unless otherwise noted in raw data
-sp_predator = species_traits %>% filter(invert_predator == "invert_predator") %>% pull(common_name) %>% sort()
-
-# Riparian associate invertivores
-sp_ripasso_inv = c(sp_invert[sp_invert %in% c(sp_ripasso)])
-sp_ripobl_inv  = c(sp_invert[sp_invert %in% c(sp_ripobl)])
-
-# Load data for multi-species occupancy model --------------------------------------------------
-if (use_msom_richness_estimates) {
-  message("Loading data for multi-species occupancy model ", msom_path)
-  msom_data = readRDS(msom_path)
-  msom_summary = msom_data$msom_summary
-  msom         = msom_data$msom
-  groups       = msom_data$groups %>% arrange(common_name)
-  sites        = msom_data$sites
-  species      = msom_data$species
-  
-  ## Calculate estimated group richness per site
-  z = msom_data$msom$sims.list$z
-  group_idx = groups$group_idx
-  group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
-  samples = dim(z)[1]
-  J = dim(z)[2]
-  I = dim(z)[3]
-  G = max(group_idx)
-  
-  rich_group = array(NA, c(samples, J, G))
-  for (g in 1:G) {
-    species_in_g = which(group_idx == g)
-    rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
-  }
-  rich_group_mean  = apply(rich_group, c(2,3), mean)
-  rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
-  rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
-  msom_richness_estimates <- lapply(1:G, function(g) {
-    group = group_names[g]
-    tibble(
-      site_id = sites
-    ) %>%
-      dplyr::mutate(
-        !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
-        !!paste0(group, "_rich_lower") := rich_group_lower[, g],
-        !!paste0(group, "_rich_upper") := rich_group_upper[, g]
-      )
-  })
-  names(msom_richness_estimates) = group_names
-  
-  rich_total = apply(z, c(1, 2), sum)
-  msom_richness_estimates$total = tibble(
-    site_id    = sites,
-    total_rich_mean  = apply(rich_total, 2, mean),
-    total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
-    total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
-  )
-}
-
-# if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
-# saveRDS(msom_richness_estimates, file = path_out)
-# message(crayon::green("Cached model and results to", path_out))
-
 # Exclude certain sites from analysis ------------------------------------------------
 
 # Inspect total detections per site
@@ -203,221 +69,169 @@ presence_absence = detections$long %>% group_by(site_id, common_name) %>%
   summarise(presence = if_else(sum(n_detections, na.rm = TRUE) > 0, 1, 0), .groups = "drop")
 
 # Summarize richness of different groups by site
-site_group_richness =  presence_absence %>%
+site_group_richness = presence_absence %>%
   group_by(site_id) %>%
   summarise(
-    rich_all         = sum(presence),
-    rich_inv         = sum(presence[common_name %in% sp_invert]),
-    rich_inv_primary = sum(presence[common_name %in% sp_invert_primary]),
-    # Foraging guilds
-    rich_aerial_inv  = sum(presence[common_name %in% sp_g_aerial_invert]),
-    rich_foliage_inv = sum(presence[common_name %in% sp_g_foliage_invert]),
-    rich_ground_inv  = sum(presence[common_name %in% sp_g_ground_invert]),
-    rich_bark_inv    = sum(presence[common_name %in% sp_g_bark_invert]),
-    rich_aerial_inv_primary  = sum(presence[common_name %in% sp_g_aerial_invert_primary]),
-    rich_foliage_inv_primary  = sum(presence[common_name %in% sp_g_foliage_invert_primary]),
-    rich_ground_inv_primary  = sum(presence[common_name %in% sp_g_ground_invert_primary]),
-    rich_bark_inv_primary  = sum(presence[common_name %in% sp_g_bark_invert_primary]),
-    rich_predator     = sum(presence[common_name %in% sp_predator]),
-    # Riparian habitat association
-    rich_ripasso_inv = sum(presence[common_name %in% sp_ripasso_inv]),
-    rich_ripasso     = sum(presence[common_name %in% sp_ripasso]),
-    rich_ripobl_inv  = sum(presence[common_name %in% sp_ripobl_inv]),
-    rich_ripobl      = sum(presence[common_name %in% sp_ripobl])
+    obs_all = sum(presence) # observed richness of all species
   )
 
 # Incorporate mean msom richness estimates
 if (use_msom_richness_estimates) {
-  site_group_richness = left_join(site_group_richness, msom_richness_estimates$invert_predator, by = "site_id")
-  site_group_richness = left_join(site_group_richness, msom_richness_estimates$`NA`, by = "site_id")
-  site_group_richness = left_join(site_group_richness, msom_richness_estimates$total, by = "site_id")
+  
+  message("Loading data for multi-species occupancy model ", msom_path)
+  msom_data = readRDS(msom_path)
+  
+  msom_summary = msom_data$msom_summary
+  msom    = msom_data$msom
+  groups  = msom_data$groups %>% arrange(common_name)
+  sites   = msom_data$sites
+  species = msom_data$species
+  
+  z = msom$sims.list$z
+  group_idx = groups$group_idx
+  group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
+  samples = dim(z)[1]
+  J = dim(z)[2]
+  I = dim(z)[3]
+  G = max(group_idx)
+  
+  rich_group = array(NA, c(samples, J, G))
+  for (g in 1:G) {
+    
+    species_in_g = which(group_idx == g)
+    
+    # DEBUG: Alternate groupings
+    # species_in_g = which(species %in% (species_traits %>% filter(group_all == "all") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_diet == "diet") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "aerial") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "gleaner") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "ground") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "bark") %>% pull(common_name)))
+    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "aquatic") %>% pull(common_name)))
+    # DEBUG
+    
+    rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+  }
+  rich_group_mean  = apply(rich_group, c(2,3), mean)
+  rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
+  rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
+  msom_richness_estimates = lapply(1:G, function(g) {
+    group = group_names[g]
+    tibble(
+      site_id = sites
+    ) %>%
+      dplyr::mutate(
+        !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
+        !!paste0(group, "_rich_lower") := rich_group_lower[, g],
+        !!paste0(group, "_rich_upper") := rich_group_upper[, g]
+      )
+  })
+  names(msom_richness_estimates) = group_names
+  
+  site_group_richness = left_join(site_group_richness, msom_richness_estimates[[1]], by = "site_id")
+  
+  # TODO: Loop over all groups and store
 }
 
-# TODO: Do all exploratory analyses below with mean richness estimates
+# ## Indicator species analysis
+# library(indicspecies)
+# spmat = presence_absence %>% pivot_wider(names_from = common_name, values_from = presence)
+# d = left_join(spmat, site_data_reach, by = "site_id")
+# spmat = spmat %>% select(-site_id) %>% as.data.frame()
+# bibi_excellent = ifelse(d$bibi >= 80, 1, 0)
+# indval = multipatt(spmat, bibi_excellent, control = how(nperm=999)) 
+# summary(indval)
 
-## Indicator species analysis
-library(indicspecies)
-spmat = presence_absence %>% pivot_wider(names_from = common_name, values_from = presence)
-d = left_join(spmat, site_data_reach, by = "site_id")
-spmat = spmat %>% select(-site_id) %>% as.data.frame()
-bibi_excellent = ifelse(d$bibi >= 80, 1, 0)
-indval = multipatt(spmat, bibi_excellent, control = how(nperm=999)) 
-summary(indval)
-
-# Richness across AVONET guilds per site
-richness_by_trophic_niche = presence_absence %>% left_join(species_traits, by = "common_name") %>%
-  group_by(site_id, trophic_niche) %>% summarise(count = sum(presence), .groups = "drop")
-richness_by_primary_lifestyle = presence_absence %>% left_join(species_traits, by = "common_name") %>%
-  group_by(site_id, primary_lifestyle) %>% summarise(count = sum(presence), .groups = "drop")
-richness_by_ripasso = presence_absence %>% mutate(ripasso = common_name %in% c(sp_ripasso)) %>% group_by(site_id, ripasso) %>% summarize(count = sum(presence))
-richness_by_predator = presence_absence %>% mutate(predator = common_name %in% c(sp_predator)) %>% group_by(site_id, predator) %>% summarize(count = sum(presence))
-
-ggplot(richness_by_trophic_niche, aes(x = count, y = reorder(site_id, count), fill = trophic_niche)) + geom_col()
-ggplot(richness_by_primary_lifestyle, aes(x = count, y = reorder(site_id, count), fill = primary_lifestyle)) + geom_col()
-ggplot(richness_by_ripasso, aes(x = count, y = reorder(site_id, count), fill = ripasso)) + geom_col()
-ggplot(richness_by_predator, aes(x = count, y = reorder(site_id, count), fill = predator)) + geom_col()
-
-# Join with site data
-site_data_reach = full_join(site_data_reach, site_group_richness, by = "site_id")
-site_data_basin = full_join(site_data_basin, site_group_richness, by = "site_id")
-
-# Richness as a function of different predictors
-ggplot(site_data_reach, aes(x = rast_usfs_canopycover_sum_proportion, y = rich_inv)) + geom_point() + geom_smooth() +
-  labs(title = "Canopy cover") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data_reach, aes(x = rast_nlcd_impervious_sum_proportion, y = rich_inv)) + geom_point() + geom_smooth() +
-  labs(title = "Reach imperviousness") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data_basin, aes(x = rast_nlcd_impervious_sum_proportion, y = rich_inv)) + geom_point() + geom_smooth() +
-  labs(title = "Basin imperviousness") + geom_text_repel(aes(label = site_id))
-
-ggplot(site_data_reach, aes(x = bibi, y = rich_inv)) + geom_point() + geom_smooth(method = "lm") +
-  labs(title = "BIBI") + geom_text_repel(aes(label = site_id)) 
-
-ggplot(site_data_reach, aes(x = bibi, y = rich_aerial_inv)) + geom_point() + geom_smooth(method = "lm") +
-  labs(title = "BIBI") + geom_text_repel(aes(label = site_id))
-
-ggplot(site_data_reach, aes(x = (density_roads_paved), y = rich_inv)) + geom_point() + geom_smooth() +
-  labs(title = "Density paved roads") + geom_text_repel(aes(label = site_id)) 
-
-mapview(site_data_reach %>% select(site_id, rich_inv), zcol = "rich_inv")
-
-# Richness of guilds as a function of...
-ggplot(left_join(richness_by_trophic_niche, site_data_reach, by = "site_id"),
-       aes(x = bibi, y = count, color = trophic_niche, fill = trophic_niche)) +
-  geom_point() + geom_smooth(aes(group = trophic_niche), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_primary_lifestyle, site_data_reach, by = "site_id"),
-       aes(x = bibi, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
-  geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_primary_lifestyle, site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = primary_lifestyle, fill = primary_lifestyle)) +
-  geom_point() + geom_smooth(aes(group = primary_lifestyle), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_ripasso, site_data_reach, by = "site_id"),
-       aes(x = bibi, y = count, color = ripasso, fill = ripasso)) +
-  geom_point() + geom_smooth(aes(group = ripasso), method = "lm", se = FALSE)
-ggplot(left_join(richness_by_ripasso, site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = ripasso, fill = ripasso)) +
-  geom_point() + geom_smooth(aes(group = ripasso), method = "lm", se = FALSE)
-
-ggplot(left_join(richness_by_predator, site_data_reach, by = "site_id"),
-       aes(x = bibi, y = count, color = predator, fill = predator)) +
-  geom_point() + geom_smooth(aes(group = predator), method = "lm", se = FALSE)
-ggplot(left_join(richness_by_predator, site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = count, color = predator, fill = predator)) +
-  geom_point() + geom_smooth(aes(group = predator), method = "lm", se = FALSE)
-
-site_group_richness_long = site_group_richness %>% left_join(site_data_reach) %>% pivot_longer(
-  cols = starts_with("rich_"),   # select all richness columns
-  names_to = "richness_type",
-  values_to = "richness_value"
-)
-ggplot(site_group_richness_long, aes(x = bibi, y = richness_value, color = richness_type)) +
-  geom_point() +
-  facet_wrap(~richness_type) +
-  geom_smooth(aes(group = richness_type), method = "lm", se = FALSE)
+# Arrange richness to match site data
+stopifnot(site_data_reach$site_id == site_data_basin$site_id)
+site_group_richness = site_group_richness %>% arrange(match(site_id, site_data_reach$site_id))
 
 # Species-specific presence/absence as a function of BIBI
 ggplot(left_join(presence_absence %>% filter(common_name == "wilson's warbler"), site_data_reach, by = "site_id"),
        aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
 
-ggplot(left_join(presence_absence %>% filter(common_name == "black-throated gray warbler"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "western wood-pewee"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
-
-ggplot(left_join(presence_absence %>% filter(common_name == "violet-green swallow"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "pacific wren"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "swainson's thrush"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "black-headed grosbeak"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "golden-crowned kinglet"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "common yellowthroat"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
-
-ggplot(left_join(presence_absence %>% filter(common_name == "black-capped chickadee"), site_data_reach, by = "site_id"),
-       aes(x = bibi, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
-
-# Urban adapted species
-ggplot(left_join(presence_absence %>% filter(common_name == "bewick's wren"), site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id))
-
-ggplot(left_join(presence_absence %>% filter(common_name == "song sparrow"), site_data_reach, by = "site_id"),
-       aes(x = rast_nlcd_impervious_sum_proportion, y = presence)) + geom_point() + geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) + geom_text_repel(aes(label = site_id), max.overlaps = 100)
-
 # Structural equation modeling -----------------------------------------------------------------------------
 
 # Calculate pairwise collinearity among predictors
-pairwise_collinearity = function(vars, threshold = 0.7) {
-  cor_matrix = cor(vars, use = "pairwise.complete.obs", method = "pearson")
-  cor_matrix[lower.tri(cor_matrix, diag = TRUE)] = NA
-  return(collinearity_candidates = subset(as.data.frame(as.table(cor_matrix)), !is.na(Freq) & abs(Freq) >= threshold))
-}
+
+# Urbanization variables
+pairwise_collinearity(site_data_reach %>% st_drop_geometry() %>% select(
+  rast_nlcd_impervious_sum_proportion, density_roads_paved))
+pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
+  rast_nlcd_impervious_sum_proportion, density_roads_paved))
+
+# Cover configuration variables
+pairwise_collinearity(site_data_reach %>% st_drop_geometry() %>% select(
+  pd_riphab, ed_riphab))
+pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
+  pd_riphab, ed_riphab))
+
+# Riparian vegetation variables
+pairwise_collinearity(site_data_reach %>% st_drop_geometry() %>% select(
+  rast_usfs_canopycover_sum_proportion, nlcd_forest, nlcd_forest_and_wetlands, rast_gedi_height_mean, rast_gedi_fhd_mean))
+pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
+  rast_usfs_canopycover_sum_proportion, nlcd_forest, nlcd_forest_and_wetlands, rast_gedi_height_mean, rast_gedi_fhd_mean))
+
+# Combinations
+pairwise_collinearity(site_data_reach %>% st_drop_geometry() %>% select(
+  rast_nlcd_impervious_sum_proportion, pd_riphab, rast_usfs_canopycover_sum_proportion))
+pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
+  rast_nlcd_impervious_sum_proportion, pd_riphab, rast_usfs_canopycover_sum_proportion))
+
+# At this point, we should have a set of candidate variables
 
 {
   # 550 m represents riparian zone within the local reach, and the 90% dispersal distance
-  data_reach   = site_data_reach
   # 5 km represents the catchment landscape (roughly basin)
-  data_basin = site_data_basin
   d = data.frame(
-    # "rich_all"         = data_reach$rich_all,
-    # "rich_inv"         = data_reach$rich_inv,
-    # "rich_inv_primary" = data_reach$rich_inv_primary,
-    # "rich_aerial_inv"  = data_reach$rich_aerial_inv,
-    # "rich_foliage_inv" = data_reach$rich_foliage_inv,
-    # "rich_ground_inv"  = data_reach$rich_ground_inv,
-    # "rich_bark_inv"    = data_reach$rich_bark_inv,
-    # "rich_aerial_inv_primary"  = data_reach$rich_aerial_inv_primary,
-    # "rich_foliage_inv_primary"  = data_reach$rich_foliage_inv_primary,
-    # "rich_ground_inv_primary"  = data_reach$rich_ground_inv_primary,
-    # "rich_bark_inv_primary"  = data_reach$rich_bark_inv_primary,
-    # "rich_predator"        = data_reach$rich_predator,
-    # "rich_ripasso"     = data_reach$rich_ripasso,
-    # "rich_ripobl"      = data_reach$rich_ripobl,
-    # "rich_ripasso_inv"     = data_reach$rich_ripasso_inv,
-    # "rich_ripobl_inv"      = data_reach$rich_ripobl_inv,
-    "bibi"          = data_reach$bibi,
+    invert_predator_rich_mean = site_group_richness$invert_predator_rich_mean,
+    # B-IBI
+    "bibi"            = site_data_reach$bibi,
     # Environmental variables
-    "imp_reach"     = data_reach$rast_nlcd_impervious_sum_proportion,
-    "imp_basin"     = data_basin$rast_nlcd_impervious_sum_proportion,
-    "ed_reach"      = data_reach$edge_density,
-    "ed_basin"      = data_basin$edge_density,
-    "agg_reach"      = data_reach$aggregation,
-    "agg_basin"      = data_basin$aggregation,
+    "imp_reach"       = site_data_reach$rast_nlcd_impervious_sum_proportion,
+    "imp_basin"       = site_data_basin$rast_nlcd_impervious_sum_proportion,
+
+    "ed_reach"        = site_data_reach$ed,
+    "ed_basin"        = site_data_basin$ed,
+    "ed_riphab_reach" = site_data_reach$ed_riphab,
+    "ed_riphab_basin" = site_data_basin$ed_riphab,
+    "ed_dev_reach"    = site_data_reach$ed_dev,
+    "ed_dev_basin"    = site_data_basin$ed_dev,
+    "agg_reach"       = site_data_reach$agg,
+    "agg_basin"       = site_data_basin$agg,
+    "pd_reach"        = site_data_reach$pd,
+    "pd_basin"        = site_data_basin$pd,
+    "pd_riphab_reach" = site_data_reach$pd_riphab,
+    "pd_riphab_basin" = site_data_basin$pd_riphab,
+    "pd_dev_reach"    = site_data_reach$pd_dev,
+    "pd_dev_basin"    = site_data_basin$pd_dev,
     
-    "roads_reach"      = data_reach$density_roads_paved,
-    "roads_basin"      = data_basin$density_roads_paved,
+    "roads_reach"      = site_data_reach$density_roads_paved,
+    "roads_basin"      = site_data_basin$density_roads_paved,
     
-    "forest_reach"  = data_reach$nlcd_forest,
-    "forest_basin"  = data_basin$nlcd_forest,
-    "riphab_reach"  = data_reach$nlcd_forest_and_wetlands,
-    "riphab_basin"  = data_basin$nlcd_forest_and_wetlands,
+    "dev_reach"     = site_data_reach$nlcd_developed_variable_intensity + site_data_reach$nlcd_developed_open_space,
+    "dev_basin"     = site_data_basin$nlcd_developed_variable_intensity + site_data_basin$nlcd_developed_open_space,
+    "devvi_reach"   = site_data_reach$nlcd_developed_variable_intensity,
+    "devvi_basin"   = site_data_basin$nlcd_developed_variable_intensity,
+    "forest_reach"  = site_data_reach$nlcd_forest,
+    "forest_basin"  = site_data_basin$nlcd_forest,
+    "riphab_reach"  = site_data_reach$nlcd_forest_and_wetlands,
+    "riphab_basin"  = site_data_basin$nlcd_forest_and_wetlands,
     
-    "canopy_reach"  = data_reach$rast_usfs_canopycover_sum_proportion,
-    "canopy_basin"  = data_basin$rast_usfs_canopycover_sum_proportion,
+    "canopy_reach"  = site_data_reach$rast_usfs_canopycover_sum_proportion,
+    "canopy_basin"  = site_data_basin$rast_usfs_canopycover_sum_proportion,
     
-    "height_reach"  = data_reach$rast_gedi_height_mean,
-    "height_basin"  = data_basin$rast_gedi_height_mean,
+    "height_reach"  = site_data_reach$rast_gedi_height_mean,
+    "height_basin"  = site_data_basin$rast_gedi_height_mean,
     
-    "fhd_reach"     = data_reach$rast_gedi_fhd_mean,
-    "fhd_basin"     = data_basin$rast_gedi_fhd_mean,
-    "site_id"       = data_reach$site_id
+    "fhd_reach"     = site_data_reach$rast_gedi_fhd_mean,
+    "fhd_basin"     = site_data_basin$rast_gedi_fhd_mean,
+    "site_id"       = site_data_reach$site_id
   )
   
-  # Print environmental variable summaries
-  num_cols <- names(d)[sapply(d, is.numeric)]
+  # Print summary stats for environmental variables
+  num_cols = names(d)[sapply(d, is.numeric)]
   for (col in num_cols) {
     cat("\n", col, "\n")
     cat("  Mean:", mean(d[[col]], na.rm = TRUE), "\n")
@@ -425,67 +239,9 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
     cat("  Min: ", min(d[[col]], na.rm = TRUE), "\n")
     cat("  Max: ", max(d[[col]], na.rm = TRUE), "\n")
   }
-  
-  
-  if (use_msom_richness_estimates) {
-    d = left_join(d, msom_richness_estimates$invert_predator, by = "site_id")
-    d = left_join(d, msom_richness_estimates$`NA`, by = "site_id")
-    d = left_join(d, msom_richness_estimates$total, by = "site_id")
-  }
   pairwise_collinearity(d %>% select(where(is.numeric)))
-
-  # Exploratory models
-  if (FALSE) {
-    
-    m_bibi = lm(bibi ~ canopy_reach + imp_basin, d)
-    
-    # All species
-    m_all = glm(rich_all ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_all); plot(sem); print(summary(sem))
-
-    # Riparian associates/obligates
-    m_ripasso_inv = glm(rich_ripasso_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_ripasso_inv); plot(sem); print(summary(sem))
-    
-    m_ripobl_inv = glm(rich_ripobl_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_ripobl_inv); plot(sem); print(summary(sem))
-    
-    # All invertivores (primary and >10% diet)
-    m_inv = glm(rich_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_inv); plot(sem); print(summary(sem))
-    
-    m_inv_primary = glm(rich_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_inv_primary); plot(sem); print(summary(sem))
-    
-    # Invertivorous foraging guilds (>= 10% invertivores)
-    m_aerial_inv = glm(rich_aerial_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_aerial_inv); plot(sem); print(summary(sem))
   
-    m_foliage_inv = glm(rich_foliage_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_foliage_inv); plot(sem); print(summary(sem))
-    
-    m_ground_inv = glm(rich_ground_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_ground_inv); plot(sem); print(summary(sem))
-    
-    m_bark_inv = glm(rich_bark_inv ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_bark_inv); plot(sem); print(summary(sem))
-    
-    # Primary invertivores
-    m_aerial_inv_primary = glm(rich_aerial_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_aerial_inv_primary); plot(sem); print(summary(sem))
-    
-    m_foliage_inv_primary = glm(rich_foliage_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_foliage_inv_primary); plot(sem); print(summary(sem))
-    
-    m_ground_inv_primary = glm(rich_ground_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_ground_inv_primary); plot(sem); print(summary(sem))
-    
-    m_bark_inv_primary = glm(rich_bark_inv_primary ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem = psem(m_bibi, m_bark_inv_primary); plot(sem); print(summary(sem))
-  }
-  
-  ## SEM for invertivore guild ==========================================================
-  # (species that are primarily insectivorous and are reported to predate on aquatic inverts)
+  ## SEM =====================================================================
   n = nrow(d)
   
   # Canopy reach (logit transformation for proportional bounds) as a function of reach-scale impervious %
@@ -498,41 +254,77 @@ pairwise_collinearity = function(vars, threshold = 0.7) {
   d$bibi = qlogis(d$bibi)
   m_bibi = lm(bibi ~ canopy_reach + imp_basin, data = d)
   
-  # Predator group richness as a function of bibi, reach canopy, and reach impervious
-  if (!use_msom_richness_estimates) {
-    message("Using naive observed richness as response variable")
-    m_predator = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    # Fit piecewise SEM with component models
-    sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
-    
-  } else {
-    message("Using msom richness mean as response variable")
-    d_msom = d
-    d_msom$rich_predator = d$invert_predator_rich_mean
-    # NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
-    m_predator = lm(rich_predator ~ bibi + canopy_reach + imp_reach, d_msom)
-    sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
-    coefs_predator = coefs(sem_predator) %>% clean_names() %>% rename(signif = x)
-    # Test to support assumption of normality
-    shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
-    
-    # "Other" group richness
-    d_msom$rich_NA = d$NA_rich_mean
-    m_NA = lm(rich_NA ~ bibi + canopy_reach + imp_reach, d_msom)
-    sem_NA = psem(m_canopy, m_bibi, m_NA); plot(sem_NA); print(summary(sem_NA))
-    coefs_NA = coefs(sem_NA) %>% clean_names() %>% rename(signif = x)
-    
-    # Total group richness
-    d_msom$rich_total = d$total_rich_mean
-    m_total = lm(rich_total ~ bibi + canopy_reach + imp_reach, d_msom)
-    sem_total = psem(m_canopy, m_bibi, m_total); plot(sem_total); print(summary(sem_total))
-    coefs_total = coefs(sem_total) %>% clean_names() %>% rename(signif = x)
-  }
+  # Compare a priori B-IBI component models that are already vetted for no multicollinearity
+  # B-IBI ~ basin urban amount + reach riparian amount + basin riparian/urban config
+  m1 = lm(bibi ~ imp_basin + canopy_reach + pd_riphab_basin, data = d)
+  m2 = lm(bibi ~ imp_basin + riphab_reach + pd_riphab_basin, data = d)
+  m3 = lm(bibi ~ dev_basin + canopy_reach + pd_riphab_basin, data = d)
+  m4 = lm(bibi ~ dev_basin + riphab_reach + pd_riphab_basin, data = d)
+  AIC(m1, m2, m3, m4) %>% arrange(AIC)
+  lapply(list(m1, m2, m3, m4), summary)
+  # VIF for optimal B-IBI component model
+  vif(lm(bibi ~ dev_basin + canopy_reach + pd_riphab_basin, data = d))
   
-  if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
-  out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
-  saveRDS(sem_predator, out_filepath)
-  message(crayon::green("Cached", out_filepath))
+  # Compare a priori riparian habitat component models that are already vetted for no multicollinearity
+  # reach riparian amount ~ reach urban amount
+ cor(d$canopy_reach, d$imp_reach)
+ cor(d$riphab_reach, d$dev_reach)
+ 
+ # Compare a priori guild richness component models
+ # richness ~ bibi + reach riparian amount + reach urban amount
+ m1 = lm(invert_predator_rich_mean ~ bibi + canopy_reach + imp_reach, data = d)
+ m2 = lm(invert_predator_rich_mean ~ canopy_reach + imp_reach, data = d)
+ m3 = lm(invert_predator_rich_mean ~ bibi + riphab_reach + dev_reach, data = d)
+ m4 = lm(invert_predator_rich_mean ~ riphab_reach + dev_reach, data = d)
+ m5 = lm(invert_predator_rich_mean ~ bibi + canopy_reach, data = d)
+ m6 = lm(invert_predator_rich_mean ~ canopy_reach, data = d)
+ m7 = lm(invert_predator_rich_mean ~ bibi + riphab_reach, data = d)
+ m8 = lm(invert_predator_rich_mean ~ riphab_reach, data = d)
+ m9 = lm(invert_predator_rich_mean ~ bibi + imp_reach, data = d)
+ m10 = lm(invert_predator_rich_mean ~ imp_reach, data = d)
+ m11 = lm(invert_predator_rich_mean ~ bibi + dev_reach, data = d)
+ m12 = lm(invert_predator_rich_mean ~ dev_reach, data = d)
+ AIC(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12) %>% arrange(AIC)
+  
+  # Group richness as a function of bibi, reach canopy, and reach impervious
+  message("Using msom richness mean as response variable")
+  # NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
+  m_canopy   = lm(canopy_reach ~ imp_reach, d)
+  m_bibi     = lm(bibi ~ canopy_reach + imp_basin, data = d)
+  m_predator = lm(invert_predator_rich_mean ~ bibi + canopy_reach + imp_reach, d)
+  sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
+  coefs_predator = coefs(sem_predator) %>% clean_names() %>% rename(signif = x)
+  
+  print(species[species_in_g])
+  stop("DEBUG ME")
+  
+  # Test to support assumption of normality
+  # shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
+  
+  ### DEBUG - best component models from AIC
+  # m_riphab_alt   = lm(forest_reach ~ dev_reach, d)
+  # m_bibi_alt     = lm(bibi ~ forest_reach + devvi_basin, data = d)
+  # m_predator_alt = lm(invert_predator_rich_mean ~ bibi + forest_reach + dev_reach, d)
+  # sem_predator_alt = psem(m_riphab_alt, m_bibi_alt, m_predator_alt); plot(sem_predator_alt); print(summary(sem_predator_alt))
+  ### DEBUG
+  
+  
+  # # "Other" group richness
+  # d_msom$rich_NA = d$NA_rich_mean
+  # m_NA = lm(rich_NA ~ bibi + canopy_reach + imp_reach, d_msom)
+  # sem_NA = psem(m_canopy, m_bibi, m_NA); plot(sem_NA); print(summary(sem_NA))
+  # coefs_NA = coefs(sem_NA) %>% clean_names() %>% rename(signif = x)
+  # 
+  # # Total group richness
+  # d_msom$rich_total = d$total_rich_mean
+  # m_total = lm(rich_total ~ bibi + canopy_reach + imp_reach, d_msom)
+  # sem_total = psem(m_canopy, m_bibi, m_total); plot(sem_total); print(summary(sem_total))
+  # coefs_total = coefs(sem_total) %>% clean_names() %>% rename(signif = x)
+
+  # if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+  # out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
+  # saveRDS(sem_predator, out_filepath)
+  # message(crayon::green("Cached", out_filepath))
   
   # TODO: Also do full community model
   

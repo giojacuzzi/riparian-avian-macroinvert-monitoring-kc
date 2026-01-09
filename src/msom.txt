@@ -9,38 +9,43 @@ model{
   ## Community (group) level hyperpriors
   for (g in 1:G) {
     # Occurrence
-    psi.mean[g] ~ dunif(0,1)                         # probability scale
-    mu.u[g] <- log(psi.mean[g]) - log(1-psi.mean[g]) # logit scale
-    sigma.u[g] ~ dunif(0,5)                          # standard deviation
-    tau.u[g] <- pow(sigma.u[g],-2)                   # precision
+    mu.u[g]    ~ dnorm(0, 1/2.25^2)
+    sigma.u[g] ~ dt(0, 1/2.25^2, 1) T(0,)  # standard deviation
+    tau.u[g] <- sigma.u[g]^-2         # precision
     
     # Covariate effects on occurrence
-    mu.alpha1[g] ~ dnorm(0,0.01)
-    sigma.alpha1[g] ~ dunif(0,5)
-    tau.alpha1[g] <- pow(sigma.alpha1[g],-2)
-    mu.alpha2[g] ~ dnorm(0,0.01)
-    sigma.alpha2[g] ~ dunif(0,5)
-    tau.alpha2[g] <- pow(sigma.alpha2[g],-2)
-    mu.alpha3[g] ~ dnorm(0,0.01)
-    sigma.alpha3[g] ~ dunif(0,5)
-    tau.alpha3[g] <- pow(sigma.alpha3[g],-2)
+    mu.alpha1[g]    ~ dnorm(0, 1/2.25^2) # dnorm(0, 1/2.25^2) per Broms et al. 2016
+    mu.alpha2[g]    ~ dnorm(0, 1/2.25^2)
+    mu.alpha3[g]    ~ dnorm(0, 1/2.25^2)
+    mu.alpha4[g]    ~ dnorm(0, 1/2.25^2)
+    mu.alpha5[g]    ~ dnorm(0, 1/2.25^2)
+    # dt(0, 1/2.25^2, 1) T(0,) Half-cauchy (truncated t distribution with 1 dof) per Broms et al. 2016
+    sigma.alpha1[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.alpha2[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.alpha3[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.alpha4[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.alpha5[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    tau.alpha1[g] <- sigma.alpha1[g]^-2
+    tau.alpha2[g] <- sigma.alpha2[g]^-2
+    tau.alpha3[g] <- sigma.alpha3[g]^-2
+    tau.alpha4[g] <- sigma.alpha4[g]^-2
+    tau.alpha5[g] <- sigma.alpha5[g]^-2
     
-    # Detection (unconfirmed true-positive)
-    v.mean[g]  ~ dunif(0,1)
-    mu.v[g]  <- log(v.mean[g]) - log(1-v.mean[g])
-    sigma.v[g] ~ dunif(0,5)
-    tau.v[g] <- pow(sigma.v[g],-2)
+    # Detection
+    mu.v[g]    ~ dnorm(0, 1/2.25^2)
+    sigma.v[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    tau.v[g] <- sigma.v[g]^-2
   
-    # Covariate effects on detection (unconfirmed true-positive)
-    mu.beta1[g]    ~ dnorm(0,0.01)
-    mu.beta2[g]    ~ dnorm(0,0.01)
-    mu.beta3[g]    ~ dnorm(0,0.01)
-    sigma.beta1[g] ~ dunif(0,5)
-    sigma.beta2[g] ~ dunif(0,5)
-    sigma.beta3[g] ~ dunif(0,5)
-    tau.beta1[g]  <- pow(sigma.beta1[g],-2)
-    tau.beta2[g]  <- pow(sigma.beta2[g],-2)
-    tau.beta3[g]  <- pow(sigma.beta3[g],-2)
+    # Covariate effects on detection
+    mu.beta1[g]    ~ dnorm(0, 1/2.25^2)
+    mu.beta2[g]    ~ dnorm(0, 1/2.25^2)
+    mu.beta3[g]    ~ dnorm(0, 1/2.25^2)
+    sigma.beta1[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.beta2[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    sigma.beta3[g] ~ dt(0, 1/2.25^2, 1) T(0,)
+    tau.beta1[g]  <- sigma.beta1[g]^-2
+    tau.beta2[g]  <- sigma.beta2[g]^-2
+    tau.beta3[g]  <- sigma.beta3[g]^-2
   
   } # G groups
 
@@ -52,7 +57,9 @@ model{
       alpha1[i] ~ dnorm(mu.alpha1[group[i]],tau.alpha1[group[i]])
       alpha2[i] ~ dnorm(mu.alpha2[group[i]],tau.alpha2[group[i]])
       alpha3[i] ~ dnorm(mu.alpha3[group[i]],tau.alpha3[group[i]])
-  
+      alpha4[i] ~ dnorm(mu.alpha4[group[i]],tau.alpha4[group[i]])
+      alpha5[i] ~ dnorm(mu.alpha5[group[i]],tau.alpha5[group[i]])
+
       # Unconfirmed true positive detection
       v[i]     ~ dnorm(mu.v[group[i]], tau.v[group[i]])
       beta1[i] ~ dnorm(mu.beta1[group[i]],tau.beta1[group[i]])
@@ -65,7 +72,13 @@ model{
       for (j in 1:J) { # for each site j
           
               # Ecological process model for latent occurrence z
-              logit(psi[j,i]) <- u[i] + alpha1[i]*x_alpha1[j] + alpha2[i]*x_alpha2[j] + alpha3[i]*x_alpha3[j]
+              logit(psi[j,i]) <- u[i] +
+                alpha1[i]*x_alpha1[j] +
+                alpha2[i]*x_alpha2[j] +
+                alpha3[i]*x_alpha3[j] +
+                alpha4[i]*x_alpha4[j] +
+                alpha5[i]*x_alpha5[j]
+
               z[j,i] ~ dbern(psi[j,i])
               
               for (k in 1:K[j]) { # for each survey k during season t at site j
@@ -73,7 +86,10 @@ model{
                   ## Observation model, assumming no false positives (e.g. Zipkin et al. 2009)
                   
                   # p11 is true-positive detection probability given z = 1
-                  logit(p11[j,k,i]) <- v[i] + beta1[i]*x_beta1[j,k] + beta2[i]*x_beta2[j,k] + beta3[i]*x_beta3[j,k]
+                  logit(p11[j,k,i]) <- v[i] +
+                    beta1[i]*x_beta1[j,k] +
+                    beta2[i]*x_beta2[j,k] +
+                    beta3[i]*x_beta3[j,k]
                 
                   p[j,k,i] <- z[j,i] * p11[j,k,i]
                   
@@ -84,8 +100,8 @@ model{
                   y_sim[j,k,i] ~ dbern(p[j,k,i])
 
                   # Deviance (Broms et al. 2016)
-                  d_obs[j,k,i] <- y[j,k,i] * log(p[j,k,i]) + (1 - y[j,k,i]) * log(1 - p[j,k,i])
-                  d_sim[j,k,i] <- y_sim[j,k,i] * log(p[j,k,i]) + (1 - y_sim[j,k,i]) * log(1 - p[j,k,i])
+                  d_obs[j,k,i] <- z[j,i] * (y[j,k,i] * log(p[j,k,i]) + (1 - y[j,k,i]) * log(1 - p[j,k,i]))
+                  d_sim[j,k,i] <- z[j,i] * (y_sim[j,k,i] * log(p[j,k,i]) + (1 - y_sim[j,k,i]) * log(1 - p[j,k,i]))
       
               } # K surveys
               
