@@ -4,15 +4,14 @@
 # Input
 model_file = "src/msom.txt"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
-grouping = "invert_predator" # species grouping (or "all")
+grouping = "migrant" # all, diet, forage, migrant...
 # Output
-path_out = paste0("data/cache/models/NEW_", grouping, ".rds")
+path_out = paste0("data/cache/models/msom_", grouping, ".rds")
 
 source("src/global.R")
 
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")  %>% filter(!site_id %in% sites_to_exclude)
 site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds") %>% filter(!site_id %in% sites_to_exclude)
-site_data = site_data_reach # spatial scale
 
 # Load species detection history data
 detections = readRDS(in_cache_detections)
@@ -34,14 +33,18 @@ y = xtabs(count ~ site + survey + species, data = detections_long)
 y = as.array(y)
 
 # Assign species group membership
-groups = species_traits %>% filter(common_name %in% species) %>%
+group_col = paste0("group_", grouping)
+st = species_traits %>% filter(common_name %in% species)
+groups = st %>%
   mutate(
-    group_raw   = if (grouping == "all") "all" else .[[grouping]],
-    group       = ifelse(is.na(group_raw), "NA", as.character(group_raw)),
-    group_idx   = if (grouping == "all") 1 else as.integer(factor(group)),
+    group       = st[[group_col]],
+    group_idx   = as.integer(factor(group)),
     grouping    = grouping
   ) %>%
   select(common_name, group, group_idx, grouping)
+
+# Order to match species
+groups = groups %>% arrange(match(common_name, species))
 
 # Model data constants
 J = dim(y)[1]
@@ -51,36 +54,34 @@ I = dim(y)[3]
 G = length(unique(groups$group_idx))
 
 # Model data covariates
+site_data = site_data_reach
+site_data$canopy_reach = site_data_reach$rast_usfs_canopycover_sum_proportion
+site_data$canopy_basin = site_data_basin$rast_usfs_canopycover_sum_proportion
+site_data$imp_reach    = site_data_reach$rast_nlcd_impervious_sum_proportion
+site_data$imp_basin    = site_data_basin$rast_nlcd_impervious_sum_proportion
 site_data = site_data %>% slice(match(sites, site_id)) # match site order in y
 
 ## DEBUG
 d = data.frame(
-  bibi = site_data_reach$bibi,
-  canopy_reach = site_data_reach$rast_usfs_canopycover_sum_proportion,
-  canopy_basin = site_data_basin$rast_usfs_canopycover_sum_proportion,
-  imp_reach = site_data_reach$rast_nlcd_impervious_sum_proportion,
-  imp_basin = site_data_basin$rast_nlcd_impervious_sum_proportion
+  bibi = site_data$bibi,
+  canopy_reach = site_data$canopy_reach,
+  canopy_basin = site_data$canopy_basin,
+  imp_reach = site_data$imp_reach,
+  imp_basin = site_data$imp_basin
 )
 pairwise_collinearity(d)
 d$site_id = site_data_reach$site_id
 
 vif(lm(site_id ~ bibi + rast_usfs_canopycover_sum_proportion + rast_nlcd_impervious_sum_proportion, data = site_data_reach))
 vif(lm(site_id ~ bibi + canopy_reach + canopy_basin + imp_reach + imp_basin, data = d))
-
-site_data$canopy_basin = site_data_basin$rast_usfs_canopycover_sum_proportion
-site_data$imp_basin = site_data_basin$rast_nlcd_impervious_sum_proportion
 ## DEBUG
 
 # Store alpha parameter ID, variable name, and standardize data to have mean 0, standard deviation 1
-site_data = site_data %>% rename(
-  canopy = rast_usfs_canopycover_sum_proportion,
-  imp = rast_nlcd_impervious_sum_proportion
-)
 param_alpha_names = c(
   "bibi",
-  "canopy",
-  "imp",
+  "canopy_reach",
   "canopy_basin",
+  "imp_reach",
   "imp_basin"
 )
 param_alpha_data = tibble(param = paste0("alpha", 1:length(param_alpha_names)), name  = param_alpha_names)
@@ -90,8 +91,8 @@ n_alpha_params = nrow(param_alpha_data)
 # NOTE: For now, just use survey number as a detection covariate (replace with yday eventually)
 detect_data = list(
   yday   = surveys,
-  canopy = site_data$canopy,
-  imp    = site_data$imp
+  canopy_reach = site_data$canopy_reach,
+  imp_reach    = site_data$imp_reach
 )
 # Store beta parameter ID, variable name, and standardize data to have mean 0, standard deviation 1
 param_beta_data = tibble(param = paste0("beta", seq_along(detect_data)), name = names(detect_data))

@@ -3,7 +3,7 @@
 #
 # Input
 use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
-msom_path = "data/cache/models/NEW_invert_predator.rds"
+msom_path = "data/cache/models/msom_all.rds"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
 # Output
 out_cache_dir = "data/cache/4_sem"
@@ -543,3 +543,4 @@ pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
   ## Plot all
   print(p_canopy_imp + p_bibi_imp + p_bird_bibi)
 }
+

@@ -2,7 +2,7 @@
 # Visualize multi-species occupancy modeling results and estimate site-specific richness
 #
 # Input
-msom_path = "data/cache/models/NEW_invert_predator.rds"
+msom_path = "data/cache/models/msom_migrant.rds"
 # Output
 path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
 
@@ -218,7 +218,7 @@ param_occ_data = param_alpha_data
 
 occ_effect_sizes = full_join(occ_coef_summary %>% filter(str_starts(param, "mu")), param_occ_data %>% mutate(param = paste0("mu.", param)), by='param')
 
-occ_effect_sizes = occ_effect_sizes %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
+# occ_effect_sizes = occ_effect_sizes %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
 
 # Compare species level effects of each covariate on occurrence
 ggplot(occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group))) +
@@ -237,45 +237,15 @@ species_effects = param_occ_data %>%
 species_effects = species_effects %>% left_join(species_traits, by ="common_name") %>%
   left_join(groups, by = "common_name")
 
-species_effects = species_effects %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
-
-ggplot() +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
-  geom_quasirandom(data = species_effects, aes(x = coef_mean, y = name, color = coef_overlap0),
-    size = 3, width = 0.3, alpha = 0.75
-  ) +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), shape = overlap0), size = 3.5) +
-  # xlim(c(-2.5, 2.5)) +
-  labs(title = "Effect sizes for occurrence covariates at community and species levels",
-       subtitle = tools::file_path_sans_ext(basename(msom_path)),
-       x = "Coefficient estimate", y = "Parameter") +
-  geom_text_repel(
-    data = species_effects,
-    aes(x = coef_mean, y = name, label = common_name),
-    size = 2, nudge_x = 0.02, direction = "y", hjust = 0.02, max.overlaps = 30
-  ) + theme(legend.position = "bottom")
-
-ggplot() +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgray") +
-  geom_beeswarm(data = species_effects, aes(x = coef_mean, y = name, color = group, shape = coef_overlap0), cex = 2, priority = "density") +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), xmin = `2.5%`, xmax = `97.5%`), width = 0) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group)), size = 3.5) +
-  scale_shape_manual(values = c(16, 1)) +
-  labs(color = "Predator", shape = "Significance") +
-  geom_text_repel(
-    data = species_effects,
-    aes(x = coef_mean, y = name, label = common_name, color = group),
-    size = 2, nudge_x = 0.02, direction = "y", hjust = 0.05, max.overlaps = 30
-  )
-  
-  
-label_species = c("black-headed grosbeak", "belted kingfisher", "swainson's thrush", "western wood-pewee", "wilson's warbler", "house sparrow", "bewick's wren", "pacific wren", "black-throated gray warbler", "pileated woodpecker")
+# species_effects = species_effects %>% mutate(group_label = ifelse(group == "invert_predator", "Invertivore", "Other species"))
+# species_effects = left_join(species_effects, groups, by = "common_name")
 
 mu_list = list(
   mu.alpha1 = model_data$msom$sims.list[["mu.alpha1"]],
   mu.alpha2 = model_data$msom$sims.list[["mu.alpha2"]],
-  mu.alpha3 = model_data$msom$sims.list[["mu.alpha3"]]
+  mu.alpha3 = model_data$msom$sims.list[["mu.alpha3"]],
+  mu.alpha4 = model_data$msom$sims.list[["mu.alpha4"]],
+  mu.alpha5 = model_data$msom$sims.list[["mu.alpha5"]]
 )
 
 # Convert each to long format and combine
@@ -289,33 +259,34 @@ mu_long = bind_rows(
     return(df_long)
   })
 )
-mu_long$species_group = factor(mu_long$species_group, labels = c("invert_predator", "NA"))
+# mu_long$species_group = factor(mu_long$species_group, labels = c("invert_predator", "NA"))
 
 # Plot posterior densities
 ggplot(mu_long, aes(x = value, fill = species_group)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~parameter, scales = "free", labeller = labeller(parameter = c(mu.alpha1 = "B-IBI", mu.alpha2 = "Canopy %", mu.alpha3 = "Impervious %"))) +
-  scale_fill_manual(values = c("dodgerblue2", "gray20")) +
+  # scale_fill_manual(values = c("dodgerblue2", "gray20")) +
   labs(x = "Posterior value", y = "Density", fill = "Group")
   
 # ===========================================================================================================
-ggplot(species_effects, aes(x = coef_mean, y = name, group = group_label, color = group_label)) +
+ggplot(species_effects, aes(x = coef_mean, y = name, group = group, color = group)) +
   geom_vline(xintercept = 0, color = "gray80") +
   geom_vline(xintercept = 0.5, color = "gray90", linetype = "dashed") +
   geom_vline(xintercept = -0.5, color = "gray90", linetype = "dashed") +
   geom_beeswarm(aes(shape = coef_overlap0), dodge.width = 0.5, cex = 1, priority = "density", size = 2, alpha = 0.6) +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), xmin = `2.5%`, xmax = `97.5%`), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), xmin = `25%`, xmax = `75%`), size = 1, width = 0, position = position_dodge(width = 0.5)) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), group = as.factor(group_label)), size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), xmin = `2.5%`, xmax = `97.5%`), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), xmin = `25%`, xmax = `75%`), size = 1, width = 0, position = position_dodge(width = 0.5)) +
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), group = as.factor(group)), size = 3, position = position_dodge(width = 0.5)) +
   scale_shape_manual(values = c(19, 1)) +
-  scale_color_manual(values = c("orange", "gray20")) +
+  # scale_color_manual(values = c("orange", "gray20")) +
   labs(x = "Occupancy coefficient mean", y = "", color = "Diet group") +
   theme_sleek() + guides(shape = "none")
 
-print(ggplot(species_effects %>% filter(name == "bibi"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group_label)) +
+p_bibi = ggplot(species_effects %>% filter(name == "bibi"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
   geom_vline(xintercept = 0, color = "gray80") +
   geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) +
-  geom_point())
+  # scale_color_manual(values = c("orange", "gray20")) +
+  geom_point(); print(p_bibi)
 
 stop()
 
@@ -332,15 +303,15 @@ stop()
 binwidth = 0.04
 species_effects$coef_bin = round(species_effects$coef_mean / binwidth) * binwidth
 
-p_occ = ggplot(species_effects, aes(x = coef_bin, y = name, group = group_label)) +
+p_occ = ggplot(species_effects, aes(x = coef_bin, y = name, group = group)) +
   geom_vline(xintercept = 0, color = "gray80") +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`, color = as.factor(group_label)), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
-  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `25%`, xmax = `75%`, color = as.factor(group_label)), size = 1.0, width = 0, position = position_dodge(width = 0.5)) +
-  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group_label), group = as.factor(group_label)), size = 3, position = position_dodge(width = 0.5)) +
-  geom_beeswarm(aes(color = group_label, alpha = coef_f),
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `2.5%`, xmax = `97.5%`, color = as.factor(group)), size = 0.5, width = 0, position = position_dodge(width = 0.5)) +
+  geom_errorbar(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), xmin = `25%`, xmax = `75%`, color = as.factor(group)), size = 1.0, width = 0, position = position_dodge(width = 0.5)) +
+  geom_point(data = occ_effect_sizes, aes(x = mean, y = as.factor(name), color = as.factor(group), group = as.factor(group)), size = 3, position = position_dodge(width = 0.5)) +
+  geom_beeswarm(aes(color = group, alpha = coef_f),
     dodge.width = 0.5, shape = 16, cex = 1, priority = "density", size = 1.1, side=1L) +
-  # geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group_label), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
-  scale_color_manual(values = c("orange", "gray20")) +
+  # geom_text_repel(data = species_effects, aes(x = coef_mean, y = name, label = common_name, color = group), size = 1, direction = "y", hjust = 0.05, max.overlaps = 20, position = position_dodge(0.5)) +
+  # scale_color_manual(values = c("orange", "gray20")) +
   scale_alpha_continuous(range = c(0.1, 1)) +
   labs(x = "Occupancy coefficient mean", y = "", color = "Diet group", alpha = "coef_f") +
   theme_sleek() + guides(shape = "none") + theme(
