@@ -2,7 +2,7 @@
 # Visualize multi-species occupancy modeling results and estimate site-specific richness
 #
 # Input
-msom_path = "data/cache/models/msom_migrant.rds"
+msom_path = "data/cache/models/msom_all.rds"
 # Output
 path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
 

@@ -15,6 +15,9 @@ source("src/global.R")
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
 site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
 
+site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
+site_data_basin = site_data_basin %>% filter(!site_id %in% sites_to_exclude)
+
 # Urbanization x B-IBI gradient
 ggplot(site_data_reach, aes(x = rast_nlcd_impervious_sum_proportion, y = bibi)) +
   geom_rect(aes(ymin = 0, ymax = 20, xmin = -Inf, xmax = Inf), fill = "red", alpha = 0.01) +
@@ -88,50 +91,64 @@ if (use_msom_richness_estimates) {
   species = msom_data$species
   
   z = msom$sims.list$z
-  group_idx = groups$group_idx
-  group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
+  # group_idx = groups$group_idx
+  # group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
   samples = dim(z)[1]
   J = dim(z)[2]
   I = dim(z)[3]
-  G = max(group_idx)
+  # G = max(group_idx)
   
-  rich_group = array(NA, c(samples, J, G))
-  for (g in 1:G) {
+  # species_groupings = list(
+  #   species %in% (species_traits %>% filter(group_all == "all")         %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_diet == "diet")       %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_forage == "aerial")   %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_forage == "gleaner")  %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_forage == "ground")   %>% pull(common_name)),
+  #   species %in% (species_traits %>% filter(group_forage == "bark")     %>% pull(common_name))
+  # )
+  
+  message("Calculating richness for each grouping")
+  pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = 4, clear = FALSE)
+  for (grouping in c("group_all", "group_migrant", "group_diet", "group_forage")) {
+  
+    species_group = tibble(
+      common_name = species_traits$common_name,
+      group = species_traits[[grouping]],
+      group_idx = as.integer(as.factor(group))
+    )
     
-    species_in_g = which(group_idx == g)
+    G = length(unique(species_group$group))
     
-    # DEBUG: Alternate groupings
-    # species_in_g = which(species %in% (species_traits %>% filter(group_all == "all") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_diet == "diet") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "aerial") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "gleaner") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "ground") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "bark") %>% pull(common_name)))
-    # species_in_g = which(species %in% (species_traits %>% filter(group_forage == "aquatic") %>% pull(common_name)))
-    # DEBUG
+    rich_group = array(NA, c(samples, J, G))
+    for (g in unique(species_group$group)) {
+      species_in_g = which(species %in% (species_group %>% filter(group == g) %>% pull(common_name)))
+      g = (species_group %>% filter(group == g) %>% pull(group_idx))[1]
+      rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+    }
+    rich_group_mean  = apply(rich_group, c(2,3), mean)
+    rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
+    rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
+    msom_richness_estimates = lapply(1:G, function(g) {
+      g_name = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
+      gn = paste0(grouping, "_", g_name)
+      tibble(
+        site_id = sites
+      ) %>%
+        dplyr::mutate(
+          !!paste0(gn, "_rich_mean")  := rich_group_mean[, g],
+          !!paste0(gn, "_rich_lower") := rich_group_lower[, g],
+          !!paste0(gn, "_rich_upper") := rich_group_upper[, g]
+        )
+    })
+    msom_richness_estimates = Reduce(
+      function(x, y) left_join(x, y, by = "site_id"),
+      msom_richness_estimates
+    )
     
-    rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+    site_group_richness = left_join(site_group_richness, msom_richness_estimates, by = "site_id")
+    pb$tick()
   }
-  rich_group_mean  = apply(rich_group, c(2,3), mean)
-  rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
-  rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
-  msom_richness_estimates = lapply(1:G, function(g) {
-    group = group_names[g]
-    tibble(
-      site_id = sites
-    ) %>%
-      dplyr::mutate(
-        !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
-        !!paste0(group, "_rich_lower") := rich_group_lower[, g],
-        !!paste0(group, "_rich_upper") := rich_group_upper[, g]
-      )
-  })
-  names(msom_richness_estimates) = group_names
-  
-  site_group_richness = left_join(site_group_richness, msom_richness_estimates[[1]], by = "site_id")
-  
-  # TODO: Loop over all groups and store
 }
 
 # ## Indicator species analysis
@@ -179,253 +196,266 @@ pairwise_collinearity(site_data_reach %>% st_drop_geometry() %>% select(
 pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
   rast_nlcd_impervious_sum_proportion, pd_riphab, rast_usfs_canopycover_sum_proportion))
 
-# At this point, we should have a set of candidate variables
+# 550 m represents riparian zone within the local reach, and the 90% dispersal distance
+# 5 km represents the catchment landscape (roughly basin)
+d_raw = data.frame(
+  rich_mean_all            = site_group_richness$group_all_all_rich_mean,
+  rich_mean_migrant        = site_group_richness$group_migrant_migrant_rich_mean,
+  rich_mean_diet           = site_group_richness$group_diet_diet_rich_mean,
+  rich_mean_forage_aerial  = site_group_richness$group_forage_aerial_rich_mean,
+  rich_mean_forage_gleaner = site_group_richness$group_forage_gleaner_rich_mean,
+  rich_mean_forage_ground  = site_group_richness$group_forage_ground_rich_mean,
+  rich_mean_forage_bark    = site_group_richness$group_forage_bark_rich_mean,
+  # B-IBI
+  "bibi"            = site_data_reach$bibi,
+  # Environmental variables
+  "imp_reach"       = site_data_reach$rast_nlcd_impervious_sum_proportion,
+  "imp_basin"       = site_data_basin$rast_nlcd_impervious_sum_proportion,
 
-{
-  # 550 m represents riparian zone within the local reach, and the 90% dispersal distance
-  # 5 km represents the catchment landscape (roughly basin)
-  d = data.frame(
-    invert_predator_rich_mean = site_group_richness$invert_predator_rich_mean,
-    # B-IBI
-    "bibi"            = site_data_reach$bibi,
-    # Environmental variables
-    "imp_reach"       = site_data_reach$rast_nlcd_impervious_sum_proportion,
-    "imp_basin"       = site_data_basin$rast_nlcd_impervious_sum_proportion,
+  "ed_reach"        = site_data_reach$ed,
+  "ed_basin"        = site_data_basin$ed,
+  "ed_riphab_reach" = site_data_reach$ed_riphab,
+  "ed_riphab_basin" = site_data_basin$ed_riphab,
+  "ed_dev_reach"    = site_data_reach$ed_dev,
+  "ed_dev_basin"    = site_data_basin$ed_dev,
+  "agg_reach"       = site_data_reach$agg,
+  "agg_basin"       = site_data_basin$agg,
+  "pd_reach"        = site_data_reach$pd,
+  "pd_basin"        = site_data_basin$pd,
+  "pd_riphab_reach" = site_data_reach$pd_riphab,
+  "pd_riphab_basin" = site_data_basin$pd_riphab,
+  "pd_dev_reach"    = site_data_reach$pd_dev,
+  "pd_dev_basin"    = site_data_basin$pd_dev,
+  
+  "roads_reach"      = site_data_reach$density_roads_paved,
+  "roads_basin"      = site_data_basin$density_roads_paved,
+  
+  "dev_reach"     = site_data_reach$nlcd_developed_variable_intensity + site_data_reach$nlcd_developed_open_space,
+  "dev_basin"     = site_data_basin$nlcd_developed_variable_intensity + site_data_basin$nlcd_developed_open_space,
+  "devvi_reach"   = site_data_reach$nlcd_developed_variable_intensity,
+  "devvi_basin"   = site_data_basin$nlcd_developed_variable_intensity,
+  "forest_reach"  = site_data_reach$nlcd_forest,
+  "forest_basin"  = site_data_basin$nlcd_forest,
+  "riphab_reach"  = site_data_reach$nlcd_forest_and_wetlands,
+  "riphab_basin"  = site_data_basin$nlcd_forest_and_wetlands,
+  
+  "tcc_reach"  = site_data_reach$rast_usfs_canopycover_sum_proportion,
+  "tcc_basin"  = site_data_basin$rast_usfs_canopycover_sum_proportion,
+  
+  "height_reach"  = site_data_reach$rast_gedi_height_mean,
+  "height_basin"  = site_data_basin$rast_gedi_height_mean,
+  
+  "fhd_reach"     = site_data_reach$rast_gedi_fhd_mean,
+  "fhd_basin"     = site_data_basin$rast_gedi_fhd_mean,
+  "site_id"       = site_data_reach$site_id
+)
 
-    "ed_reach"        = site_data_reach$ed,
-    "ed_basin"        = site_data_basin$ed,
-    "ed_riphab_reach" = site_data_reach$ed_riphab,
-    "ed_riphab_basin" = site_data_basin$ed_riphab,
-    "ed_dev_reach"    = site_data_reach$ed_dev,
-    "ed_dev_basin"    = site_data_basin$ed_dev,
-    "agg_reach"       = site_data_reach$agg,
-    "agg_basin"       = site_data_basin$agg,
-    "pd_reach"        = site_data_reach$pd,
-    "pd_basin"        = site_data_basin$pd,
-    "pd_riphab_reach" = site_data_reach$pd_riphab,
-    "pd_riphab_basin" = site_data_basin$pd_riphab,
-    "pd_dev_reach"    = site_data_reach$pd_dev,
-    "pd_dev_basin"    = site_data_basin$pd_dev,
-    
-    "roads_reach"      = site_data_reach$density_roads_paved,
-    "roads_basin"      = site_data_basin$density_roads_paved,
-    
-    "dev_reach"     = site_data_reach$nlcd_developed_variable_intensity + site_data_reach$nlcd_developed_open_space,
-    "dev_basin"     = site_data_basin$nlcd_developed_variable_intensity + site_data_basin$nlcd_developed_open_space,
-    "devvi_reach"   = site_data_reach$nlcd_developed_variable_intensity,
-    "devvi_basin"   = site_data_basin$nlcd_developed_variable_intensity,
-    "forest_reach"  = site_data_reach$nlcd_forest,
-    "forest_basin"  = site_data_basin$nlcd_forest,
-    "riphab_reach"  = site_data_reach$nlcd_forest_and_wetlands,
-    "riphab_basin"  = site_data_basin$nlcd_forest_and_wetlands,
-    
-    "canopy_reach"  = site_data_reach$rast_usfs_canopycover_sum_proportion,
-    "canopy_basin"  = site_data_basin$rast_usfs_canopycover_sum_proportion,
-    
-    "height_reach"  = site_data_reach$rast_gedi_height_mean,
-    "height_basin"  = site_data_basin$rast_gedi_height_mean,
-    
-    "fhd_reach"     = site_data_reach$rast_gedi_fhd_mean,
-    "fhd_basin"     = site_data_basin$rast_gedi_fhd_mean,
-    "site_id"       = site_data_reach$site_id
-  )
-  
-  # Print summary stats for environmental variables
-  num_cols = names(d)[sapply(d, is.numeric)]
-  for (col in num_cols) {
-    cat("\n", col, "\n")
-    cat("  Mean:", mean(d[[col]], na.rm = TRUE), "\n")
-    cat("  SD:  ", sd(d[[col]], na.rm = TRUE), "\n")
-    cat("  Min: ", min(d[[col]], na.rm = TRUE), "\n")
-    cat("  Max: ", max(d[[col]], na.rm = TRUE), "\n")
-  }
-  pairwise_collinearity(d %>% select(where(is.numeric)))
-  
-  ## SEM =====================================================================
-  n = nrow(d)
-  
-  # Canopy reach (logit transformation for proportional bounds) as a function of reach-scale impervious %
-  d$canopy_reach = qlogis(d$canopy_reach)
-  m_canopy = lm(canopy_reach ~ imp_reach, d)
-  
-  # B-IBI (logit transformation for proportional bounds) as a function of watershed-scale impervious % and reach-scale canopy %
-  d$bibi = d$bibi / 100
-  d$bibi = (d$bibi * (n - 1) + 0.5) / n # Smithson & Verkuilen (2006) squeeze
-  d$bibi = qlogis(d$bibi)
-  m_bibi = lm(bibi ~ canopy_reach + imp_basin, data = d)
-  
-  # Compare a priori B-IBI component models that are already vetted for no multicollinearity
-  # B-IBI ~ basin urban amount + reach riparian amount + basin riparian/urban config
-  m1 = lm(bibi ~ imp_basin + canopy_reach + pd_riphab_basin, data = d)
-  m2 = lm(bibi ~ imp_basin + riphab_reach + pd_riphab_basin, data = d)
-  m3 = lm(bibi ~ dev_basin + canopy_reach + pd_riphab_basin, data = d)
-  m4 = lm(bibi ~ dev_basin + riphab_reach + pd_riphab_basin, data = d)
-  AIC(m1, m2, m3, m4) %>% arrange(AIC)
-  lapply(list(m1, m2, m3, m4), summary)
-  # VIF for optimal B-IBI component model
-  vif(lm(bibi ~ dev_basin + canopy_reach + pd_riphab_basin, data = d))
-  
-  # Compare a priori riparian habitat component models that are already vetted for no multicollinearity
-  # reach riparian amount ~ reach urban amount
- cor(d$canopy_reach, d$imp_reach)
- cor(d$riphab_reach, d$dev_reach)
- 
- # Compare a priori guild richness component models
- # richness ~ bibi + reach riparian amount + reach urban amount
- m1 = lm(invert_predator_rich_mean ~ bibi + canopy_reach + imp_reach, data = d)
- m2 = lm(invert_predator_rich_mean ~ canopy_reach + imp_reach, data = d)
- m3 = lm(invert_predator_rich_mean ~ bibi + riphab_reach + dev_reach, data = d)
- m4 = lm(invert_predator_rich_mean ~ riphab_reach + dev_reach, data = d)
- m5 = lm(invert_predator_rich_mean ~ bibi + canopy_reach, data = d)
- m6 = lm(invert_predator_rich_mean ~ canopy_reach, data = d)
- m7 = lm(invert_predator_rich_mean ~ bibi + riphab_reach, data = d)
- m8 = lm(invert_predator_rich_mean ~ riphab_reach, data = d)
- m9 = lm(invert_predator_rich_mean ~ bibi + imp_reach, data = d)
- m10 = lm(invert_predator_rich_mean ~ imp_reach, data = d)
- m11 = lm(invert_predator_rich_mean ~ bibi + dev_reach, data = d)
- m12 = lm(invert_predator_rich_mean ~ dev_reach, data = d)
- AIC(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12) %>% arrange(AIC)
-  
-  # Group richness as a function of bibi, reach canopy, and reach impervious
-  message("Using msom richness mean as response variable")
-  # NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
-  m_canopy   = lm(canopy_reach ~ imp_reach, d)
-  m_bibi     = lm(bibi ~ canopy_reach + imp_basin, data = d)
-  m_predator = lm(invert_predator_rich_mean ~ bibi + canopy_reach + imp_reach, d)
-  sem_predator = psem(m_canopy, m_bibi, m_predator); plot(sem_predator); print(summary(sem_predator))
-  coefs_predator = coefs(sem_predator) %>% clean_names() %>% rename(signif = x)
-  
-  print(species[species_in_g])
-  stop("DEBUG ME")
-  
-  # Test to support assumption of normality
-  # shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
-  
-  ### DEBUG - best component models from AIC
-  # m_riphab_alt   = lm(forest_reach ~ dev_reach, d)
-  # m_bibi_alt     = lm(bibi ~ forest_reach + devvi_basin, data = d)
-  # m_predator_alt = lm(invert_predator_rich_mean ~ bibi + forest_reach + dev_reach, d)
-  # sem_predator_alt = psem(m_riphab_alt, m_bibi_alt, m_predator_alt); plot(sem_predator_alt); print(summary(sem_predator_alt))
-  ### DEBUG
-  
-  
-  # # "Other" group richness
-  # d_msom$rich_NA = d$NA_rich_mean
-  # m_NA = lm(rich_NA ~ bibi + canopy_reach + imp_reach, d_msom)
-  # sem_NA = psem(m_canopy, m_bibi, m_NA); plot(sem_NA); print(summary(sem_NA))
-  # coefs_NA = coefs(sem_NA) %>% clean_names() %>% rename(signif = x)
-  # 
-  # # Total group richness
-  # d_msom$rich_total = d$total_rich_mean
-  # m_total = lm(rich_total ~ bibi + canopy_reach + imp_reach, d_msom)
-  # sem_total = psem(m_canopy, m_bibi, m_total); plot(sem_total); print(summary(sem_total))
-  # coefs_total = coefs(sem_total) %>% clean_names() %>% rename(signif = x)
-
-  # if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
-  # out_filepath = file.path(out_cache_dir, paste0("sem_predator.rds"))
-  # saveRDS(sem_predator, out_filepath)
-  # message(crayon::green("Cached", out_filepath))
-  
-  # TODO: Also do full community model
-  
-  # Propagate uncertainty from MSOM --------------------------------------------------------
-  if (use_msom_richness_estimates) {
-    # Fit sem over all posterior draws to propagate uncertainty
-    for (g in 1:(G+1)) {
-      if (g > G) {
-        group_name = "total"
-      } else {
-        group_name = group_names[g]
-      }
-      message("Propagating MSOM uncertainty for '", group_name, "' group richness response")
-      z = msom$sims.list$z
-      draws = dim(z)[1]
-      stopifnot(all(groups$common_name == msom_data$species))
-      coeffs_draws = tibble()
-      pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
-      for (draw in 1:draws) {
-        # Calculate estimated group richness at each site
-        if (group_name == "total") {
-          rich_group_draw = data.frame(
-            site_id = msom_data$sites,
-            rich_group_draw = rich_group[draw, , 1] + rich_group[draw, , 2]
-          )
-        } else {
-          rich_group_draw = data.frame(
-            site_id = msom_data$sites,
-            rich_group_draw = rich_group[draw, , g]
-          )
-        }
-        d_msom = d %>% left_join(rich_group_draw, by = "site_id")
-        
-        # Fit the component model and SEM
-        m_rich_draw = lm(rich_group_draw ~ bibi + canopy_reach + imp_reach, d_msom)
-        sem_draw = psem(m_canopy, m_bibi, m_rich_draw)
-        
-        # Extract SEM coefficients and store
-        coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
-          filter(response == "rich_group_draw") %>%
-          mutate(draw = draw) %>% rename(signif = x)
-        coeffs_draws = rbind(coeffs_draws, coeffs_draw)
-        pb$tick()
-      }
-      rich_group_coefs = coeffs_draws %>%
-        group_by(predictor) %>%
-        summarise(
-          mean  = mean(std_estimate),
-          lower = quantile(std_estimate, 0.025),
-          upper = quantile(std_estimate, 0.975),
-          response = "rich_group_draw",
-          .groups = "drop"
-        ) %>% rename(std_estimate = mean)
-      if (group_name == "invert_predator") {
-        coefs_to_compare = coefs_predator
-      } else if (group_name == "NA") {
-        coefs_to_compare = coefs_NA
-      } else if (group_name == "total") {
-        coefs_to_compare = coefs_total
-      }
-      all_coefs = bind_rows(rich_group_coefs, coefs_to_compare)
-      all_coefs$group = group_name
-      p = ggplot(all_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
-        geom_vline(xintercept = 0, color = "gray") +
-        geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
-        geom_point() + labs(title = group_name); print(p)
-      
-      message("SEM coefficients including propagated uncertainty:")
-      print(all_coefs)
-    }
-  }
-  
-  if (FALSE) { # TODO: Alternative scale hypotheses validations (compare AIC and R.squared)
-    m_reach_canopy = lm(canopy_reach ~ imp_reach, d)
-    m_reach_bibi   = lm(bibi ~ canopy_reach + imp_reach, d)
-    m_reach_rich   = glm(rich_predator ~ bibi + canopy_reach + imp_reach, d, family = poisson)
-    sem_reach = psem(m_reach_canopy, m_reach_bibi, m_reach_rich); plot(sem_reach); print(summary(sem_reach))
-    
-    d$canopy_basin = qlogis(d$canopy_basin)
-    m_basin_canopy = lm(canopy_basin ~ imp_basin, d)
-    m_basin_bibi   = lm(bibi ~ canopy_basin + imp_basin, d)
-    m_basin_rich   = glm(rich_predator ~ bibi + canopy_basin + imp_basin, d, family = poisson)
-    sem_basin = psem(m_basin_canopy, m_basin_bibi, m_basin_rich); plot(sem_basin); print(summary(sem_basin)) 
-  }
-  
-  # Check over/underdispersion -- if overdispersed, fit negative binomial
-  # simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
-  
-  # TODO: Moran's I test for spatial autocorrelation
-  # library(spdep)
-  # # site coords
-  # coords <- cbind(stream_data$longitude, stream_data$latitude)
-  # # spatial weights matrix (inverse distance)
-  # dists <- as.matrix(dist(coords))
-  # inv_dists <- 1/dists
-  # diag(inv_dists) <- 0  # no self-weight
-  # listw <- mat2listw(inv_dists)
-  # # Moran's I for residuals
-  # resids <- residuals(your_model, type="response")  # e.g., BIBI residuals
-  # moran.test(resids, listw)
+# Print summary stats for environmental variables
+num_cols = names(d_raw)[sapply(d_raw, is.numeric)]
+for (col in num_cols) {
+  cat("\n", col, "\n")
+  cat("  Mean:", mean(d_raw[[col]], na.rm = TRUE), "\n")
+  cat("  SD:  ", sd(d_raw[[col]], na.rm = TRUE), "\n")
+  cat("  Min: ", min(d_raw[[col]], na.rm = TRUE), "\n")
+  cat("  Max: ", max(d_raw[[col]], na.rm = TRUE), "\n")
 }
+pairwise_collinearity(d_raw %>% select(where(is.numeric)))
+
+## SEM =====================================================================
+d = d_raw
+n = nrow(d)
+
+# Canopy reach (logit transformation for proportional bounds)
+d$tcc_reach = qlogis(d_raw$tcc_reach)
+
+# Canopy basin (logit transformation for proportional bounds)
+d$tcc_basin = qlogis(d_raw$tcc_basin)
+
+# B-IBI (logit transformation for proportional bounds)
+d$bibi = d_raw$bibi / 100
+d$bibi = (d$bibi * (n - 1) + 0.5) / n # Smithson & Verkuilen (2006) squeeze
+d$bibi = qlogis(d$bibi)
+
+# NOTE: piecewiseSEM does not support glm Gamma distribution; must use normal distribution
+
+## Model selection
+options(na.action = "na.fail")
+
+# Confirm the spatial scale by comparing candidate sets of predictors within each component model
+
+# Model selection for bibi; optimal: bibi ~ imp_basin + tcc_reach OR imp_reach
+# "Model selection indicated strong support for basin-scale impervious cover as a predictor of aquatic biotic integrity. Several competitive models (ΔAICc ≤ 2) included an additional local-scale predictor, but support was divided between reach-scale imperviousness and reach-scale canopy cover. We retained reach-scale canopy cover based on a priori hypotheses regarding local habitat mediation and to avoid redundant representation of urbanization at multiple scales."
+m_bibi_global = lm(bibi ~ tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_bibi = dredge(m_bibi_global)
+
+# Model selection for diet; optimal: diet ~ bibi + tcc_reach OR imp_reach
+# “For the diet guild, AICc-based model selection indicated strong support for aquatic biotic integrity (BIBI) as a predictor of species richness, with all top-ranked models (ΔAICc ≤ 1) including BIBI. Support for additional local predictors was divided between reach-scale canopy cover and reach-scale imperviousness, indicating that these variables represent alternative expressions of the same local urbanization gradient. Because reach-scale canopy is largely determined by impervious cover, we retained imperviousness as the direct predictor and treated canopy as a mediating variable elsewhere in the SEM.”
+m_diet_global   = lm(rich_mean_diet ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_diet = dredge(m_diet_global)
+
+# Model selection for migrant; optimal: migrant ~ bibi + tcc_reach OR imp_reach
+# “For neotropical migrant richness, AICc-based model selection also indicated strong and consistent support for aquatic biotic integrity (BIBI), with all top-ranked models (ΔAICc ≤ 1) including BIBI. Support for additional local predictors was divided between reach-scale canopy cover and reach-scale imperviousness, indicating that these variables represent alternative expressions of the same local urbanization gradient. We therefore retained imperviousness as the direct predictor and treated canopy as a mediating variable elsewhere in the SEM.”
+m_migrant_global   = lm(rich_mean_migrant ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_migrant = dredge(m_migrant_global)
+
+# Model selection for forage aerial
+# “For aerial foragers, AICc-based model selection indicated substantial model uncertainty, with no one terrestrial or aquatic predictor clearly dominating at either spatial scale. The top-ranked model included BIBI alone, and additional predictors provided only marginal improvements (ΔAICc > 1). We therefore retained a single, theory-consistent path from aquatic condition to aerial forager richness, reflecting a weak but plausible trophic linkage.”
+m_aerial_global   = lm(rich_mean_forage_aerial ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_aerial = dredge(m_aerial_global)
+
+# Model selection for forage gleaner
+# “For foliage gleaners, terrestrial predictors at multiple spatial scales (local imperviousness and basin-scale canopy) were among the top-supported variables, whereas aquatic condition (BIBI) received little support.”
+m_gleaner_global   = lm(rich_mean_forage_gleaner ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_gleaner = dredge(m_gleaner_global)
+
+# Model selection for forage ground
+# “For ground-foraging birds, AICc-based model selection indicated that aquatic condition (BIBI) was the strongest predictor of richness, whereas terrestrial variables at either spatial scale had weak and inconsistent support across competitive models.”
+m_ground_global   = lm(rich_mean_forage_ground ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_ground = dredge(m_ground_global)
+
+# Model selection for forage bark
+# “For bark-foraging birds, AICc-based model selection indicated substantial model uncertainty, with terrestrial habitat predictors at multiple spatial scales appearing among the top models, whereas aquatic condition (BIBI) had little support.”
+m_bark_global   = lm(rich_mean_forage_bark ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_bark = dredge(m_bark_global)
+
+# Model selection for all
+# “For total bird richness, AICc-based model selection indicated substantial model uncertainty, with no single terrestrial or aquatic predictor clearly dominating at either spatial scale, and the top model containing no predictors besides the intercept. This suggests that overall richness may be less sensitive to landscape or aquatic variation than guild-specific richness patterns.”
+m_all_global   = lm(rich_mean_all ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
+candidates_all = dredge(m_all_global)
+
+## SEMs
+
+# Diet group richness
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_diet      = lm(rich_mean_diet ~ bibi + tcc_reach, d)
+sem_diet    = psem(m_tcc_reach, m_bibi, m_diet); plot(sem_diet); print(summary(sem_diet))
+
+# Migrant group richness
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_migrant      = lm(rich_mean_migrant ~ bibi + tcc_reach, d)
+sem_migrant    = psem(m_tcc_reach, m_bibi, m_migrant); plot(sem_migrant); print(summary(sem_migrant))
+
+# Aerial
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_aerial    = lm(rich_mean_forage_aerial ~ bibi + tcc_reach, d)
+sem_aerial  = psem(m_tcc_reach, m_bibi, m_aerial); plot(sem_aerial); print(summary(sem_aerial))
+
+# Gleaner
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_gleaner   = lm(rich_mean_forage_gleaner ~ bibi + tcc_reach, d)
+sem_gleaner = psem(m_tcc_reach, m_bibi, m_gleaner); plot(sem_gleaner); print(summary(sem_gleaner))
+
+# Ground
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_ground    = lm(rich_mean_forage_ground ~ bibi + tcc_reach, d)
+sem_ground  = psem(m_tcc_reach, m_bibi, m_ground); plot(sem_ground); print(summary(sem_ground))
+
+# Bark
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bark      = lm(rich_mean_forage_bark ~ bibi + tcc_reach, d)
+sem_bark    = psem(m_tcc_reach, m_bibi, m_bark); plot(sem_bark); print(summary(sem_bark))
+
+# All (no group) richness
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_all       = lm(rich_mean_all ~ bibi + tcc_reach, d)
+sem_all     = psem(m_tcc_reach, m_bibi, m_all); plot(sem_all); print(summary(sem_all))
+
+stop("DEBUG ME")
+
+# Test to support assumption of normality
+# shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
+
+# Propagate uncertainty from MSOM --------------------------------------------------------
+if (use_msom_richness_estimates) {
+  # Fit sem over all posterior draws to propagate uncertainty
+  for (g in 1:(G+1)) {
+    if (g > G) {
+      group_name = "total"
+    } else {
+      group_name = group_names[g]
+    }
+    message("Propagating MSOM uncertainty for '", group_name, "' group richness response")
+    z = msom$sims.list$z
+    draws = dim(z)[1]
+    stopifnot(all(groups$common_name == msom_data$species))
+    coeffs_draws = tibble()
+    pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
+    for (draw in 1:draws) {
+      # Calculate estimated group richness at each site
+      if (group_name == "total") {
+        rich_group_draw = data.frame(
+          site_id = msom_data$sites,
+          rich_group_draw = rich_group[draw, , 1] + rich_group[draw, , 2]
+        )
+      } else {
+        rich_group_draw = data.frame(
+          site_id = msom_data$sites,
+          rich_group_draw = rich_group[draw, , g]
+        )
+      }
+      d_msom = d %>% left_join(rich_group_draw, by = "site_id")
+      
+      # Fit the component model and SEM
+      m_rich_draw = lm(rich_group_draw ~ bibi + canopy_reach + imp_reach, d_msom)
+      sem_draw = psem(m_canopy, m_bibi, m_rich_draw)
+      
+      # Extract SEM coefficients and store
+      coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
+        filter(response == "rich_group_draw") %>%
+        mutate(draw = draw) %>% rename(signif = x)
+      coeffs_draws = rbind(coeffs_draws, coeffs_draw)
+      pb$tick()
+    }
+    rich_group_coefs = coeffs_draws %>%
+      group_by(predictor) %>%
+      summarise(
+        mean  = mean(std_estimate),
+        lower = quantile(std_estimate, 0.025),
+        upper = quantile(std_estimate, 0.975),
+        response = "rich_group_draw",
+        .groups = "drop"
+      ) %>% rename(std_estimate = mean)
+    if (group_name == "invert_predator") {
+      coefs_to_compare = coefs_predator
+    } else if (group_name == "NA") {
+      coefs_to_compare = coefs_NA
+    } else if (group_name == "total") {
+      coefs_to_compare = coefs_total
+    }
+    all_coefs = bind_rows(rich_group_coefs, coefs_to_compare)
+    all_coefs$group = group_name
+    p = ggplot(all_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
+      geom_vline(xintercept = 0, color = "gray") +
+      geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
+      geom_point() + labs(title = group_name); print(p)
+    
+    message("SEM coefficients including propagated uncertainty:")
+    print(all_coefs)
+  }
+}
+
+# Check over/underdispersion -- if overdispersed, fit negative binomial
+# simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
+
+# TODO: Moran's I test for spatial autocorrelation
+# library(spdep)
+# # site coords
+# coords <- cbind(stream_data$longitude, stream_data$latitude)
+# # spatial weights matrix (inverse distance)
+# dists <- as.matrix(dist(coords))
+# inv_dists <- 1/dists
+# diag(inv_dists) <- 0  # no self-weight
+# listw <- mat2listw(inv_dists)
+# # Moran's I for residuals
+# resids <- residuals(your_model, type="response")  # e.g., BIBI residuals
+# moran.test(resids, listw)
 
 # print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_invert), n = 100)
 # 

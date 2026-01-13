@@ -4,7 +4,7 @@
 # Input
 model_file = "src/msom.txt"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
-grouping = "migrant" # all, diet, forage, migrant...
+grouping = "all" # all, diet, forage, migrant...
 # Output
 path_out = paste0("data/cache/models/msom_", grouping, ".rds")
 
@@ -148,8 +148,8 @@ msom = jags(data = msom_data,
               "D_obs", "D_sim", "z"
             ),
             model.file = model_file,
-            n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
-            # n.chains = 3, n.adapt = 2000, n.iter = 40000, n.burnin = 20000, n.thin = 5, parallel = TRUE, # TODO: 49 hr
+            # n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
+            n.chains = 3, n.adapt = 5000, n.iter = 30000, n.burnin = 10000, n.thin = 3, parallel = TRUE, # TODO: 40 hr
             DIC = FALSE, verbose=TRUE)
 
 message("Finished running JAGS (", round(msom$mcmc.info$elapsed.mins / 60, 2), " hr)")
@@ -164,7 +164,7 @@ print(data.frame(
   samples  = msom$mcmc.info$n.samples
 ))
 
-message("Model size: ", format(utils::object.size(msom), units = "MB"))
+message("Raw model size: ", format(utils::object.size(msom), units = "auto"))
 
 # Retrieve summary data and investigate goodness-of-fit ----------------------------------------------------
 
@@ -218,4 +218,4 @@ msom_results = list(
 )
 if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
 saveRDS(msom_results, file = path_out)
-message(crayon::green("Cached model and results to", path_out))
+message(crayon::green("Cached model and results to", path_out, "-", format(structure(file.info(path_out)$size, class = "object_size"), units = "auto")))

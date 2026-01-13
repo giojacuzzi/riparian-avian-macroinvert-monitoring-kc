@@ -31,6 +31,7 @@ if (!exists("pkgs", envir = .GlobalEnv)) {
     # statistics
     "car",              # variance inflation factors
     "DHARMa",           # modeling diagnostics
+    "MuMIn",            # model selection
     "jagsUI",           # hierarchical bayesian MSOM
     "landscapemetrics", # landscape metrics
     "piecewiseSEM",     # structural equation modeling
