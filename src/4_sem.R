@@ -324,122 +324,152 @@ m_all_global   = lm(rich_mean_all ~ bibi + tcc_reach + imp_reach + tcc_basin + i
 candidates_all = dredge(m_all_global)
 
 ## SEMs
+coefs_sems = tibble()
 
 # Diet group richness
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_diet      = lm(rich_mean_diet ~ bibi + tcc_reach, d)
 sem_diet    = psem(m_tcc_reach, m_bibi, m_diet); plot(sem_diet); print(summary(sem_diet))
+coefs_sems  = rbind(coefs_sems, coefs(sem_diet) %>% clean_names() %>% mutate(model = "sem_diet"))
 
 # Migrant group richness
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
-m_migrant      = lm(rich_mean_migrant ~ bibi + tcc_reach, d)
-sem_migrant    = psem(m_tcc_reach, m_bibi, m_migrant); plot(sem_migrant); print(summary(sem_migrant))
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
+m_migrant   = lm(rich_mean_migrant ~ bibi + tcc_reach, d)
+sem_migrant = psem(m_tcc_reach, m_bibi, m_migrant); plot(sem_migrant); print(summary(sem_migrant))
+coefs_sems  = rbind(coefs_sems, coefs(sem_migrant) %>% clean_names() %>% mutate(model = "sem_migrant"))
 
 # Aerial
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_aerial    = lm(rich_mean_forage_aerial ~ bibi + tcc_reach, d)
 sem_aerial  = psem(m_tcc_reach, m_bibi, m_aerial); plot(sem_aerial); print(summary(sem_aerial))
+coefs_sems  = rbind(coefs_sems, coefs(sem_aerial) %>% clean_names() %>% mutate(model = "sem_aerial"))
 
 # Gleaner
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_gleaner   = lm(rich_mean_forage_gleaner ~ bibi + tcc_reach, d)
 sem_gleaner = psem(m_tcc_reach, m_bibi, m_gleaner); plot(sem_gleaner); print(summary(sem_gleaner))
+coefs_sems  = rbind(coefs_sems, coefs(sem_gleaner) %>% clean_names() %>% mutate(model = "sem_gleaner"))
 
 # Ground
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_ground    = lm(rich_mean_forage_ground ~ bibi + tcc_reach, d)
 sem_ground  = psem(m_tcc_reach, m_bibi, m_ground); plot(sem_ground); print(summary(sem_ground))
+coefs_sems  = rbind(coefs_sems, coefs(sem_ground) %>% clean_names() %>% mutate(model = "sem_ground"))
 
 # Bark
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_bark      = lm(rich_mean_forage_bark ~ bibi + tcc_reach, d)
 sem_bark    = psem(m_tcc_reach, m_bibi, m_bark); plot(sem_bark); print(summary(sem_bark))
+coefs_sems  = rbind(coefs_sems, coefs(sem_bark) %>% clean_names() %>% mutate(model = "sem_bark"))
 
 # All (no group) richness
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, data = d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_all       = lm(rich_mean_all ~ bibi + tcc_reach, d)
 sem_all     = psem(m_tcc_reach, m_bibi, m_all); plot(sem_all); print(summary(sem_all))
+coefs_sems  = rbind(coefs_sems, coefs(sem_all) %>% clean_names() %>% mutate(model = "sem_all"))
 
-stop("DEBUG ME")
+# Save sem coefs to file
+sem_coefs = coefs_sems %>%
+  group_by(
+    response, predictor, estimate, std_error, df,
+    crit_value, p_value, std_estimate, x
+  ) %>%
+  summarise(model = paste(sort(unique(model)), collapse = ", "), .groups = "drop") %>% arrange(predictor) %>% rename(signif = x)
+if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+out_filepath = file.path(out_cache_dir, paste0("sem_coefs.csv"))
+write_csv(sem_coefs, out_filepath)
+message(crayon::green("Cached", out_filepath))
 
-# Test to support assumption of normality
+# TODO: Test to support assumption of normality
 # shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
+
+# Save SEMs for prediction
+out_filepath = file.path(out_cache_dir, paste0("sem_migrant.rds"))
+saveRDS(sem_migrant, out_filepath)
+message(crayon::green("Cached", out_filepath))
+out_filepath = file.path(out_cache_dir, paste0("sem_diet.rds"))
+saveRDS(sem_diet, out_filepath)
+message(crayon::green("Cached", out_filepath))
 
 # Propagate uncertainty from MSOM --------------------------------------------------------
 if (use_msom_richness_estimates) {
-  # Fit sem over all posterior draws to propagate uncertainty
-  for (g in 1:(G+1)) {
-    if (g > G) {
-      group_name = "total"
-    } else {
-      group_name = group_names[g]
-    }
-    message("Propagating MSOM uncertainty for '", group_name, "' group richness response")
-    z = msom$sims.list$z
-    draws = dim(z)[1]
-    stopifnot(all(groups$common_name == msom_data$species))
-    coeffs_draws = tibble()
-    pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
-    for (draw in 1:draws) {
-      # Calculate estimated group richness at each site
-      if (group_name == "total") {
-        rich_group_draw = data.frame(
-          site_id = msom_data$sites,
-          rich_group_draw = rich_group[draw, , 1] + rich_group[draw, , 2]
-        )
-      } else {
+  
+  coefs_final_stats = tibble()
+  for (grouping in c("group_all", "group_migrant", "group_diet", "group_forage")) {
+    
+    species_group = tibble(
+      common_name = species_traits$common_name,
+      group = species_traits[[grouping]],
+      group_idx = as.integer(as.factor(group))
+    )
+    
+    G = length(unique(species_group$group))
+    
+    # Fit sem over all posterior draws to propagate uncertainty
+    for (g in 1:(G+1)) {
+      g_name = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
+      message("Propagating MSOM uncertainty for grouping '", grouping, "' group '", g_name, "' group richness response")
+      z = msom$sims.list$z
+      draws = dim(z)[1]
+      stopifnot(all(groups$common_name == msom_data$species))
+      coeffs_draws = tibble()
+      pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
+      for (draw in 1:draws) {
+        # Calculate estimated group richness at each site
         rich_group_draw = data.frame(
           site_id = msom_data$sites,
           rich_group_draw = rich_group[draw, , g]
         )
+        d_msom = d %>% left_join(rich_group_draw, by = "site_id")
+        
+        # Fit the component models and SEM
+        m_tcc_reach = lm(tcc_reach ~ imp_reach, d_msom)
+        m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d_msom)
+        m_rich_draw = lm(rich_group_draw ~ bibi + tcc_reach, d_msom)
+        sem_draw    = psem(m_tcc_reach, m_bibi, m_rich_draw) #; plot(sem_draw); print(summary(sem_draw))
+        
+        # Extract SEM coefficients and store
+        coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
+          # filter(response == "rich_group_draw") %>%
+          mutate(draw = draw) %>% rename(signif = x)
+        coeffs_draws = rbind(coeffs_draws, coeffs_draw)
+        pb$tick()
       }
-      d_msom = d %>% left_join(rich_group_draw, by = "site_id")
       
-      # Fit the component model and SEM
-      m_rich_draw = lm(rich_group_draw ~ bibi + canopy_reach + imp_reach, d_msom)
-      sem_draw = psem(m_canopy, m_bibi, m_rich_draw)
+      rich_group_coefs = coeffs_draws %>%
+        group_by(response, predictor) %>%
+        summarise(
+          mean  = mean(std_estimate),
+          lower = quantile(std_estimate, 0.025),
+          upper = quantile(std_estimate, 0.975),
+          .groups = "drop"
+        ) %>% rename(std_estimate = mean)
       
-      # Extract SEM coefficients and store
-      coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
-        filter(response == "rich_group_draw") %>%
-        mutate(draw = draw) %>% rename(signif = x)
-      coeffs_draws = rbind(coeffs_draws, coeffs_draw)
-      pb$tick()
+      rich_group_coefs$grouping = grouping
+      rich_group_coefs$g_name = g_name
+
+      p = ggplot(rich_group_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
+        geom_vline(xintercept = 0, color = "gray") +
+        geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
+        geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", g_name, "'")); print(p)
+      
+      message("SEM coefficients including propagated uncertainty:")
+      print(rich_group_coefs)
+      
+      coefs_final_stats = rbind(coefs_final_stats, rich_group_coefs)
     }
-    rich_group_coefs = coeffs_draws %>%
-      group_by(predictor) %>%
-      summarise(
-        mean  = mean(std_estimate),
-        lower = quantile(std_estimate, 0.025),
-        upper = quantile(std_estimate, 0.975),
-        response = "rich_group_draw",
-        .groups = "drop"
-      ) %>% rename(std_estimate = mean)
-    if (group_name == "invert_predator") {
-      coefs_to_compare = coefs_predator
-    } else if (group_name == "NA") {
-      coefs_to_compare = coefs_NA
-    } else if (group_name == "total") {
-      coefs_to_compare = coefs_total
-    }
-    all_coefs = bind_rows(rich_group_coefs, coefs_to_compare)
-    all_coefs$group = group_name
-    p = ggplot(all_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
-      geom_vline(xintercept = 0, color = "gray") +
-      geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
-      geom_point() + labs(title = group_name); print(p)
-    
-    message("SEM coefficients including propagated uncertainty:")
-    print(all_coefs)
   }
 }
+
+# TODO: print and save coefs_final_stats
+stop("DEBUG")
 
 # Check over/underdispersion -- if overdispersed, fit negative binomial
 # simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
