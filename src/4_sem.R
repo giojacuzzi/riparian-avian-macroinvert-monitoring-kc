@@ -71,11 +71,52 @@ message("Visualizing joint data")
 presence_absence = detections$long %>% group_by(site_id, common_name) %>%
   summarise(presence = if_else(sum(n_detections, na.rm = TRUE) > 0, 1, 0), .groups = "drop")
 
+# Observed avian communities
+obs_species = sort(unique(presence_absence %>% filter(presence == 1) %>% pull(common_name)))
+message("Total number of species detected: ", length(obs_species))
+print(obs_species)
+
+species_diet = species_traits %>% filter(group_diet == "diet") %>% pull(common_name)
+obs_species_diet = intersect(species_diet, obs_species)
+message("Predators (diet group): ", length(obs_species_diet))
+print(obs_species_diet)
+
+species_migrant = species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name)
+obs_species_migrant = intersect(species_migrant, obs_species)
+message("Migrants (migration group): ", length(obs_species_migrant))
+print(obs_species_migrant)
+
+species_shared_diet_migrant = intersect(obs_species_diet, obs_species_migrant)
+jaccard = length(species_shared_diet_migrant) / length(union(obs_species_diet, obs_species_migrant))
+message("Jaccard similarity ", round(jaccard, 2))
+
+species_invert = species_traits %>% filter(trophic_niche == "Invertivore") %>% pull(common_name)
+obs_species_invert = intersect(species_invert, obs_species)
+
+species_traits %>% filter(common_name %in% obs_species_invert) %>% select(migration) %>%
+  count(migration) %>% mutate(percent = round(n / sum(n) * 100))
+
+species_traits %>% filter(common_name %in% obs_species_invert) %>% select(group_forage) %>%
+  count(group_forage) %>% mutate(percent = round(n / sum(n) * 100))
+
+species_traits %>% filter(common_name %in% obs_species_invert) %>% select(family) %>%
+  count(family) %>% mutate(percent = round(n / sum(n) * 100)) %>% arrange(desc(n))
+
+presence_absence %>% group_by(common_name) %>% summarise(total = sum(presence)) %>% arrange(desc(total)) %>% filter(common_name %in% obs_species_invert)
+
+presence_absence %>% group_by(common_name) %>% summarise(total = sum(presence)) %>% arrange(desc(total)) %>% filter(common_name %in% obs_species_diet) %>% mutate(naive_occ = total / length(unique(presence_absence$site_id)))
+
 # Summarize richness of different groups by site
 site_group_richness = presence_absence %>%
   group_by(site_id) %>%
   summarise(
-    obs_all = sum(presence) # observed richness of all species
+    obs_all = sum(presence), # observed richness of all species
+    obs_diet = sum(presence[common_name %in% (species_traits %>% filter(group_diet == "diet") %>% pull(common_name))]),
+    obs_aerial = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "aerial") %>% pull(common_name))]),
+    obs_gleaner = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "gleaner") %>% pull(common_name))]),
+    obs_bark = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "bark") %>% pull(common_name))]),
+    obs_ground = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "ground") %>% pull(common_name))]),
+    obs_migrant = sum(presence[common_name %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name))]), 
   )
 
 # Incorporate mean msom richness estimates
@@ -123,8 +164,8 @@ if (use_msom_richness_estimates) {
     rich_group = array(NA, c(samples, J, G))
     for (g in unique(species_group$group)) {
       species_in_g = which(species %in% (species_group %>% filter(group == g) %>% pull(common_name)))
-      g = (species_group %>% filter(group == g) %>% pull(group_idx))[1]
-      rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+      gi = (species_group %>% filter(group == g) %>% pull(group_idx))[1]
+      rich_group[ , , gi] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
     }
     rich_group_mean  = apply(rich_group, c(2,3), mean)
     rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
@@ -201,7 +242,9 @@ pairwise_collinearity(site_data_basin %>% st_drop_geometry() %>% select(
 d_raw = data.frame(
   rich_mean_all            = site_group_richness$group_all_all_rich_mean,
   rich_mean_migrant        = site_group_richness$group_migrant_migrant_rich_mean,
+  rich_mean_migrant_other  = site_group_richness$group_migrant_other_rich_mean,
   rich_mean_diet           = site_group_richness$group_diet_diet_rich_mean,
+  rich_mean_diet_other     = site_group_richness$group_diet_other_rich_mean,
   rich_mean_forage_aerial  = site_group_richness$group_forage_aerial_rich_mean,
   rich_mean_forage_gleaner = site_group_richness$group_forage_gleaner_rich_mean,
   rich_mean_forage_ground  = site_group_richness$group_forage_ground_rich_mean,
@@ -333,12 +376,24 @@ m_diet      = lm(rich_mean_diet ~ bibi + tcc_reach, d)
 sem_diet    = psem(m_tcc_reach, m_bibi, m_diet); plot(sem_diet); print(summary(sem_diet))
 coefs_sems  = rbind(coefs_sems, coefs(sem_diet) %>% clean_names() %>% mutate(model = "sem_diet"))
 
+# Diet other group richness
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
+m_diet_other   = lm(rich_mean_diet_other ~ bibi + tcc_reach, d)
+sem_diet_other = psem(m_tcc_reach, m_bibi, m_diet_other); plot(sem_diet_other); print(summary(sem_diet_other))
+
 # Migrant group richness
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
 m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_migrant   = lm(rich_mean_migrant ~ bibi + tcc_reach, d)
 sem_migrant = psem(m_tcc_reach, m_bibi, m_migrant); plot(sem_migrant); print(summary(sem_migrant))
 coefs_sems  = rbind(coefs_sems, coefs(sem_migrant) %>% clean_names() %>% mutate(model = "sem_migrant"))
+
+# Resident / local migrant group richness
+m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
+m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
+m_migrant_other   = lm(rich_mean_migrant_other ~ bibi + tcc_reach, d)
+sem_migrant_other = psem(m_tcc_reach, m_bibi, m_migrant_other); plot(sem_migrant_other); print(summary(sem_migrant_other))
 
 # Aerial
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
@@ -399,9 +454,12 @@ saveRDS(sem_diet, out_filepath)
 message(crayon::green("Cached", out_filepath))
 
 # Propagate uncertainty from MSOM --------------------------------------------------------
+
 if (use_msom_richness_estimates) {
   
   coefs_final_stats = tibble()
+  rsquared_final_stats = tibble()
+  cstat_final_stats = tibble()
   for (grouping in c("group_all", "group_migrant", "group_diet", "group_forage")) {
     
     species_group = tibble(
@@ -409,19 +467,28 @@ if (use_msom_richness_estimates) {
       group = species_traits[[grouping]],
       group_idx = as.integer(as.factor(group))
     )
+    species_group = species_group %>% filter(common_name %in% msom_data$species) %>% arrange(match(common_name, msom_data$species))
     
+    z = msom$sims.list$z
+    draws = dim(z)[1]
+    stopifnot(all(species_group$common_name == msom_data$species))
     G = length(unique(species_group$group))
+    rich_group = array(NA, c(samples, J, G))
     
     # Fit sem over all posterior draws to propagate uncertainty
-    for (g in 1:(G+1)) {
+    for (g in 1:G) {
       g_name = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
       message("Propagating MSOM uncertainty for grouping '", grouping, "' group '", g_name, "' group richness response")
-      z = msom$sims.list$z
-      draws = dim(z)[1]
-      stopifnot(all(groups$common_name == msom_data$species))
-      coeffs_draws = tibble()
+      
+      species_in_g = which(species %in% (species_group %>% filter(group_idx == g) %>% pull(common_name)))
+      rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
+      
+      coeffs_draws   = vector("list", draws)
+      rsquared_draws = vector("list", draws)
+      cstat_draws    = vector("list", draws)
       pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = draws, clear = FALSE)
       for (draw in 1:draws) {
+        # message(draw/draws)
         # Calculate estimated group richness at each site
         rich_group_draw = data.frame(
           site_id = msom_data$sites,
@@ -435,41 +502,109 @@ if (use_msom_richness_estimates) {
         m_rich_draw = lm(rich_group_draw ~ bibi + tcc_reach, d_msom)
         sem_draw    = psem(m_tcc_reach, m_bibi, m_rich_draw) #; plot(sem_draw); print(summary(sem_draw))
         
-        # Extract SEM coefficients and store
+        # SEM coefficients
         coeffs_draw = coefs(sem_draw) %>% clean_names() %>%
-          # filter(response == "rich_group_draw") %>%
           mutate(draw = draw) %>% rename(signif = x)
-        coeffs_draws = rbind(coeffs_draws, coeffs_draw)
+        coeffs_draws[[draw]] = coeffs_draw
+        
+        # SEM rsquared
+        rsquared_draw = rsquared(sem_draw) %>% clean_names() %>%
+          mutate(draw = draw)
+        rsquared_draws[[draw]] = rsquared_draw
+        
+        # SEM Fisher's C
+        cstat_draw = fisherC(sem_draw) %>% clean_names() %>%
+          mutate(draw = draw)
+        cstat_draws[[draw]] = cstat_draw
+        
+        # TODO: Tests of direct separation?
+        
         pb$tick()
       }
+      
+      message("SEM coefficients including propagated uncertainty:")
+      coeffs_draws = bind_rows(coeffs_draws)
       
       rich_group_coefs = coeffs_draws %>%
         group_by(response, predictor) %>%
         summarise(
+          # Posterior mean
           mean  = mean(std_estimate),
+          # 95% BCI
           lower = quantile(std_estimate, 0.025),
           upper = quantile(std_estimate, 0.975),
+          overlap0 = (sign(lower) != sign(upper)),
+          # Proportion of the posterior with same sign as the mean
+          f = mean(sign(std_estimate) == sign(mean(std_estimate))),
           .groups = "drop"
-        ) %>% rename(std_estimate = mean)
-      
+        )
       rich_group_coefs$grouping = grouping
       rich_group_coefs$g_name = g_name
 
-      p = ggplot(rich_group_coefs, aes(x = std_estimate, y = interaction(predictor, response))) +
-        geom_vline(xintercept = 0, color = "gray") +
-        geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
-        geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", g_name, "'")); print(p)
+      # p = ggplot(rich_group_coefs, aes(x = mean, y = interaction(predictor, response))) +
+      #   geom_vline(xintercept = 0, color = "gray") +
+      #   geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
+      #   geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", g_name, "'")); print(p)
       
-      message("SEM coefficients including propagated uncertainty:")
       print(rich_group_coefs)
-      
       coefs_final_stats = rbind(coefs_final_stats, rich_group_coefs)
+      
+      message("SEM R squared including propagated uncertainty:")
+      rsquared_draws = bind_rows(rsquared_draws)
+      rich_group_rsquared = rsquared_draws %>%
+        group_by(response) %>%
+        summarise(
+          mean  = mean(r_squared),
+          lower = quantile(r_squared, 0.025),
+          upper = quantile(r_squared, 0.975),
+          .groups = "drop"
+        )
+      rich_group_rsquared$grouping = grouping
+      rich_group_rsquared$g_name = g_name
+      
+      print(rich_group_rsquared)
+      rsquared_final_stats = rbind(rsquared_final_stats, rich_group_rsquared)
+      
+      message("SEM Fisher's C statistic including propagated uncertainty:")
+      cstat_draws = bind_rows(cstat_draws)
+      rich_group_cstat = cstat_draws %>%
+        summarise(
+          mean_fisher_c  = mean(fisher_c),
+          lower_fisher_c = quantile(fisher_c, 0.025),
+          upper_fisher_c = quantile(fisher_c, 0.975),
+          mean_df = mean(df),
+          mean_p_value  = mean(p_value),
+          lower_p_value = quantile(p_value, 0.025),
+          upper_p_value = quantile(p_value, 0.975),
+          prop_p_value  = mean(p_value > 0.05),
+          .groups = "drop"
+        )
+      rich_group_cstat$grouping = grouping
+      rich_group_cstat$g_name = g_name
+      
+      print(rich_group_cstat)
+      cstat_final_stats = rbind(cstat_final_stats, rich_group_cstat)
     }
   }
 }
 
-# TODO: print and save coefs_final_stats
-stop("DEBUG")
+# Save coefs_final_stats
+sem_coefs_msom_uncertainty = coefs_final_stats
+out_filepath = file.path(out_cache_dir, paste0("sem_coefs_msom_uncertainty.csv"))
+write_csv(sem_coefs_msom_uncertainty, out_filepath)
+message(crayon::green("Cached", out_filepath))
+
+# Save rsquared_final_stats
+sem_rsquared_msom_uncertainty = rsquared_final_stats
+out_filepath = file.path(out_cache_dir, paste0("sem_rsquared_msom_uncertainty.csv"))
+write_csv(sem_rsquared_msom_uncertainty, out_filepath)
+message(crayon::green("Cached", out_filepath))
+
+# Save cstat_final_stats
+sem_cstat_msom_uncertainty = cstat_final_stats
+out_filepath = file.path(out_cache_dir, paste0("sem_cstat_msom_uncertainty.csv"))
+write_csv(sem_cstat_msom_uncertainty, out_filepath)
+message(crayon::green("Cached", out_filepath))
 
 # Check over/underdispersion -- if overdispersed, fit negative binomial
 # simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
@@ -491,7 +626,12 @@ stop("DEBUG")
 # 
 # species_traits %>% filter(common_name %in% c(
 #   "green-winged teal", "mallard", "gadwall", "wood duck", "common merganser", "blue-winged teal", "cackling goose", "caspian tern", "great blue heron", "red-winged blackbird", "american bittern", "green heron"
-# )) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)
+# )) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)'
+
+# TODO: Combine coefs and coefs uncertainty
+
+
+stop("DEBUG ME")
 
 # Marginal effect plots =======================================================================
 {
