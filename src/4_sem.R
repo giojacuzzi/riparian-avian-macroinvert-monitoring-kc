@@ -114,8 +114,7 @@ site_group_richness = presence_absence %>%
     obs_diet = sum(presence[common_name %in% (species_traits %>% filter(group_diet == "diet") %>% pull(common_name))]),
     obs_aerial = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "aerial") %>% pull(common_name))]),
     obs_gleaner = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "gleaner") %>% pull(common_name))]),
-    obs_bark = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "bark") %>% pull(common_name))]),
-    obs_ground = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "ground") %>% pull(common_name))]),
+    obs_forage_other = sum(presence[common_name %in% (species_traits %>% filter(group_forage == "other") %>% pull(common_name))]),
     obs_migrant = sum(presence[common_name %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name))]), 
   )
 
@@ -171,8 +170,8 @@ if (use_msom_richness_estimates) {
     rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
     rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
     msom_richness_estimates = lapply(1:G, function(g) {
-      g_name = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
-      gn = paste0(grouping, "_", g_name)
+      guild = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
+      gn = paste0(grouping, "_", guild)
       tibble(
         site_id = sites
       ) %>%
@@ -247,8 +246,7 @@ d_raw = data.frame(
   rich_mean_diet_other     = site_group_richness$group_diet_other_rich_mean,
   rich_mean_forage_aerial  = site_group_richness$group_forage_aerial_rich_mean,
   rich_mean_forage_gleaner = site_group_richness$group_forage_gleaner_rich_mean,
-  rich_mean_forage_ground  = site_group_richness$group_forage_ground_rich_mean,
-  rich_mean_forage_bark    = site_group_richness$group_forage_bark_rich_mean,
+  rich_mean_forage_other    = site_group_richness$group_forage_other_rich_mean,
   # B-IBI
   "bibi"            = site_data_reach$bibi,
   # Environmental variables
@@ -292,6 +290,14 @@ d_raw = data.frame(
   "fhd_basin"     = site_data_basin$rast_gedi_fhd_mean,
   "site_id"       = site_data_reach$site_id
 )
+
+ggplot(d_raw, aes(x = imp_reach, y = rich_mean_all)) +
+  geom_point() + lims(y = c(0, 40))
+
+ggplot(d_raw, aes(x = tcc_basin, y = rich_mean_diet)) +
+  geom_point() + lims(y = c(0, 40))
+ggplot(d_raw, aes(x = imp_basin, y = rich_mean_diet)) +
+  geom_point() + lims(y = c(0, 40))
 
 # Print summary stats for environmental variables
 num_cols = names(d_raw)[sapply(d_raw, is.numeric)]
@@ -351,20 +357,20 @@ candidates_aerial = dredge(m_aerial_global)
 m_gleaner_global   = lm(rich_mean_forage_gleaner ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
 candidates_gleaner = dredge(m_gleaner_global)
 
-# Model selection for forage ground
-# “For ground-foraging birds, AICc-based model selection indicated that aquatic condition (BIBI) was the strongest predictor of richness, whereas terrestrial variables at either spatial scale had weak and inconsistent support across competitive models.”
-m_ground_global   = lm(rich_mean_forage_ground ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
-candidates_ground = dredge(m_ground_global)
-
-# Model selection for forage bark
-# “For bark-foraging birds, AICc-based model selection indicated substantial model uncertainty, with terrestrial habitat predictors at multiple spatial scales appearing among the top models, whereas aquatic condition (BIBI) had little support.”
-m_bark_global   = lm(rich_mean_forage_bark ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
-candidates_bark = dredge(m_bark_global)
-
 # Model selection for all
 # “For total bird richness, AICc-based model selection indicated substantial model uncertainty, with no single terrestrial or aquatic predictor clearly dominating at either spatial scale, and the top model containing no predictors besides the intercept. This suggests that overall richness may be less sensitive to landscape or aquatic variation than guild-specific richness patterns.”
 m_all_global   = lm(rich_mean_all ~ bibi + tcc_reach + imp_reach + tcc_basin + imp_basin, d)
 candidates_all = dredge(m_all_global)
+
+aicc_guild_results = bind_rows(
+  candidates_diet %>% mutate(guild = "Predator") %>% filter(delta < 2),
+  candidates_aerial %>% mutate(guild = "Aerial forager") %>% filter(delta < 2),
+  candidates_gleaner %>% mutate(guild = "Foliage Gleaner") %>% filter(delta < 2),
+  candidates_migrant %>% mutate(guild = "Migrant") %>% filter(delta < 2),
+  candidates_all  %>% mutate(guild = "All species") %>% filter(delta < 2)
+) %>% tibble()
+out_filepath = file.path(out_cache_dir, paste0("aicc_guild_results.csv"))
+write_csv(aicc_guild_results, out_filepath)
 
 ## SEMs
 coefs_sems = tibble()
@@ -400,28 +406,21 @@ m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
 m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_aerial    = lm(rich_mean_forage_aerial ~ bibi + tcc_reach, d)
 sem_aerial  = psem(m_tcc_reach, m_bibi, m_aerial); plot(sem_aerial); print(summary(sem_aerial))
-coefs_sems  = rbind(coefs_sems, coefs(sem_aerial) %>% clean_names() %>% mutate(model = "sem_aerial"))
+coefs_sems  = rbind(coefs_sems, coefs(sem_aerial) %>% clean_names() %>% mutate(model = "sem_forage_aerial"))
 
 # Gleaner
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
 m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
 m_gleaner   = lm(rich_mean_forage_gleaner ~ bibi + tcc_reach, d)
 sem_gleaner = psem(m_tcc_reach, m_bibi, m_gleaner); plot(sem_gleaner); print(summary(sem_gleaner))
-coefs_sems  = rbind(coefs_sems, coefs(sem_gleaner) %>% clean_names() %>% mutate(model = "sem_gleaner"))
+coefs_sems  = rbind(coefs_sems, coefs(sem_gleaner) %>% clean_names() %>% mutate(model = "sem_forage_gleaner"))
 
-# Ground
+# Forage other
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
 m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
-m_ground    = lm(rich_mean_forage_ground ~ bibi + tcc_reach, d)
-sem_ground  = psem(m_tcc_reach, m_bibi, m_ground); plot(sem_ground); print(summary(sem_ground))
-coefs_sems  = rbind(coefs_sems, coefs(sem_ground) %>% clean_names() %>% mutate(model = "sem_ground"))
-
-# Bark
-m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
-m_bibi      = lm(bibi ~ tcc_reach + imp_basin, d)
-m_bark      = lm(rich_mean_forage_bark ~ bibi + tcc_reach, d)
-sem_bark    = psem(m_tcc_reach, m_bibi, m_bark); plot(sem_bark); print(summary(sem_bark))
-coefs_sems  = rbind(coefs_sems, coefs(sem_bark) %>% clean_names() %>% mutate(model = "sem_bark"))
+m_forage_other    = lm(rich_mean_forage_other ~ bibi + tcc_reach, d)
+sem_forage_other  = psem(m_tcc_reach, m_bibi, m_forage_other); plot(sem_forage_other); print(summary(sem_forage_other))
+coefs_sems  = rbind(coefs_sems, coefs(sem_forage_other) %>% clean_names() %>% mutate(model = "sem_forage_other"))
 
 # All (no group) richness
 m_tcc_reach = lm(tcc_reach ~ imp_reach, d)
@@ -442,8 +441,8 @@ out_filepath = file.path(out_cache_dir, paste0("sem_coefs.csv"))
 write_csv(sem_coefs, out_filepath)
 message(crayon::green("Cached", out_filepath))
 
-# TODO: Test to support assumption of normality
-# shapiro.test(residuals(m_predator)) # p > 0.05 => approximately normally distributed residuals
+# Test to support assumption of normality
+shapiro.test(residuals(m_diet)) # p > 0.05 => approximately normally distributed residuals
 
 # Save SEMs for prediction
 out_filepath = file.path(out_cache_dir, paste0("sem_migrant.rds"))
@@ -460,6 +459,7 @@ if (use_msom_richness_estimates) {
   coefs_final_stats = tibble()
   rsquared_final_stats = tibble()
   cstat_final_stats = tibble()
+  sem_diet_draws = list()
   for (grouping in c("group_all", "group_migrant", "group_diet", "group_forage")) {
     
     species_group = tibble(
@@ -477,8 +477,8 @@ if (use_msom_richness_estimates) {
     
     # Fit sem over all posterior draws to propagate uncertainty
     for (g in 1:G) {
-      g_name = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
-      message("Propagating MSOM uncertainty for grouping '", grouping, "' group '", g_name, "' group richness response")
+      guild = (species_group %>% filter(group_idx == g) %>% pull(group))[1]
+      message("Propagating MSOM uncertainty for grouping '", grouping, "' guild '", guild, "' richness response")
       
       species_in_g = which(species %in% (species_group %>% filter(group_idx == g) %>% pull(common_name)))
       rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
@@ -519,8 +519,21 @@ if (use_msom_richness_estimates) {
         
         # TODO: Tests of direct separation?
         
+        # Save diet sem draws
+        if (grouping == "group_diet" & guild == "diet") {
+          sem_diet_draws[[draw]] = sem_draw
+        }
+        
         pb$tick()
       }
+      
+      if (grouping == "group_diet" & guild == "diet") {
+        # Save SEM diet draws for prediction
+        out_filepath = file.path(out_cache_dir, paste0("sem_diet_draws.rds"))
+        saveRDS(sem_diet_draws, out_filepath)
+        message(crayon::green("Cached", out_filepath))
+      }
+      
       
       message("SEM coefficients including propagated uncertainty:")
       coeffs_draws = bind_rows(coeffs_draws)
@@ -539,12 +552,13 @@ if (use_msom_richness_estimates) {
           .groups = "drop"
         )
       rich_group_coefs$grouping = grouping
-      rich_group_coefs$g_name = g_name
+      rich_group_coefs$guild = guild
+      rich_group_coefs = rich_group_coefs %>% mutate(across(where(is.numeric), function(x) round(x, 2)))
 
       # p = ggplot(rich_group_coefs, aes(x = mean, y = interaction(predictor, response))) +
       #   geom_vline(xintercept = 0, color = "gray") +
       #   geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
-      #   geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", g_name, "'")); print(p)
+      #   geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", guild, "'")); print(p)
       
       print(rich_group_coefs)
       coefs_final_stats = rbind(coefs_final_stats, rich_group_coefs)
@@ -560,7 +574,8 @@ if (use_msom_richness_estimates) {
           .groups = "drop"
         )
       rich_group_rsquared$grouping = grouping
-      rich_group_rsquared$g_name = g_name
+      rich_group_rsquared$guild = guild
+      rich_group_rsquared = rich_group_rsquared %>% mutate(across(where(is.numeric), function(x) round(x, 2)))
       
       print(rich_group_rsquared)
       rsquared_final_stats = rbind(rsquared_final_stats, rich_group_rsquared)
@@ -573,14 +588,15 @@ if (use_msom_richness_estimates) {
           lower_fisher_c = quantile(fisher_c, 0.025),
           upper_fisher_c = quantile(fisher_c, 0.975),
           mean_df = mean(df),
-          mean_p_value  = mean(p_value),
-          lower_p_value = quantile(p_value, 0.025),
-          upper_p_value = quantile(p_value, 0.975),
+          median_p_value = median(p_value),
+          min_p_value = min(p_value),
+          max_p_value = max(p_value),
           prop_p_value  = mean(p_value > 0.05),
           .groups = "drop"
         )
       rich_group_cstat$grouping = grouping
-      rich_group_cstat$g_name = g_name
+      rich_group_cstat$guild = guild
+      rich_group_cstat = rich_group_cstat %>% mutate(across(where(is.numeric), function(x) round(x, 2)))
       
       print(rich_group_cstat)
       cstat_final_stats = rbind(cstat_final_stats, rich_group_cstat)

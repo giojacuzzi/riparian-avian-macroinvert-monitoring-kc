@@ -288,7 +288,17 @@ p_bibi = ggplot(species_effects %>% filter(name == "bibi"), aes(x = coef_mean, y
   # scale_color_manual(values = c("orange", "gray20")) +
   geom_point(); print(p_bibi)
 
-stop()
+p_canopy_reach = ggplot(species_effects %>% filter(name == "canopy_reach"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
+  geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_canopy_reach)
+
+p_canopy_basin = ggplot(species_effects %>% filter(name == "canopy_basin"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
+  geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_canopy_basin)
+
+p_imp_reach = ggplot(species_effects %>% filter(name == "imp_reach"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
+  geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_imp_reach)
+
+p_imp_basin = ggplot(species_effects %>% filter(name == "imp_basin"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
+  geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_imp_basin)
 
 # Some species without documented diets containing target taxa nevertheless exhibited positive trends in occupancy in response to B-IBI
 # EX: Spiders are preferred prey of Chestnut-backed chickadee, Black-headed Grosbeak, which may benefit from B-IBI
@@ -346,6 +356,9 @@ p_detect = ggplot(detect_species_effects, aes(x = coef_bin, y = name, group = gr
   theme_sleek() + guides(shape = "none") + theme(
     legend.position = "none"
   ); print(p_detect)
+
+p_yday = ggplot(detect_species_effects %>% filter(name == "yday"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
+  geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_yday)
 
 # Marginal responses --------------------------------------------------------------------
 

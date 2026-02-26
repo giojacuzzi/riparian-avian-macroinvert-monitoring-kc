@@ -4,7 +4,7 @@
 # Input
 model_file = "src/msom.txt"
 in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
-grouping = "all" # all, diet, forage, migrant...
+grouping = "migrant" # all, diet, forage, migrant...
 # Output
 path_out = paste0("data/cache/models/msom_", grouping, ".rds")
 
@@ -148,7 +148,7 @@ msom = jags(data = msom_data,
               "D_obs", "D_sim", "z"
             ),
             model.file = model_file,
-            # n.chains = 3, n.adapt = 100, n.iter = 1000, n.burnin = 100, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
+            # n.chains = 3, n.adapt = 200, n.iter = 2000, n.burnin = 200, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
             n.chains = 3, n.adapt = 5000, n.iter = 30000, n.burnin = 10000, n.thin = 3, parallel = TRUE, # TODO: 40 hr
             DIC = FALSE, verbose=TRUE)
 

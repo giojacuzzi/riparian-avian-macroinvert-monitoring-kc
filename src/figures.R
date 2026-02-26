@@ -6,6 +6,9 @@ site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
 in_path_nlcd_metadata   = "data/raw/nlcd_metadata.csv"
 in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"
 
+out_dir = "data/cache/figures"
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
 # Retrieve study area
 study_area = st_read(paste0(in_cache_geospatial_dir, "/sf_studyarea.gpkg"), quiet = TRUE)
 
@@ -93,18 +96,23 @@ pt_cities <- st_as_sf(data.frame(
   lat  = c(47.619934, 47.627918, 47.785999, 47.479029, 47.356098, 47.216641, 47.528785, 47.737381, 47.537253)
 ), coords = c("lon", "lat"), crs = 4326) %>% st_transform(st_crs(washington))
 
-ggplot() +
+fig_2A = ggplot() +
   geom_sf(data = counties %>% st_transform(st_crs(washington)), fill = "white", color = "transparent") +
   geom_sf(data = sf_flowline_sub, color = "lightskyblue2", linewidth = 0.2) +
   geom_sf(data = sf_waterbody, color = "transparent", fill = "lightskyblue2", linewidth = 0) +
-  geom_sf(data = sf_basins12d, color = "grey60", fill = "transparent", linewidth = 0.35) +
-  geom_sf(data = counties %>% st_union() %>% st_transform(st_crs(washington)), fill = "transparent", color = "grey30") +
-  geom_sf(data = large_waterbodies, color = "grey30", fill = "lightskyblue2") +
-  geom_sf(data = site_data_reach %>% st_transform(st_crs(washington)), aes(fill = bibi), color = "grey10", shape = 21, size = 3) +
-  coord_sf(expand = FALSE, xlim = c(-122.44068, -121.56035), ylim = c(47.19100, 47.79312)) +
-  scale_fill_viridis_c(option = "viridis") +
+  geom_sf(data = sf_basins12d, color = "grey70", fill = "transparent", linewidth = 0.35) +
+  geom_sf(data = counties %>% st_union() %>% st_transform(st_crs(washington)), fill = "transparent", color = "grey60") +
+  geom_sf(data = large_waterbodies, color = "grey60", fill = "lightskyblue2") +
+  geom_sf(data = site_data_basin %>% filter(!site_id %in% c(sites_to_exclude)) %>%
+            st_transform(st_crs(washington)), aes(size = bibi, fill = rast_nlcd_impervious_mean), color = "grey10", shape = 21, alpha = 0.75) +
+  scale_fill_gradientn(
+    colors = c("forestgreen", "lightcoral", "red", "darkred"),
+    values = scales::rescale(c(0, 35, 65, 90)),
+    na.value = "white"
+  ) +
+  coord_sf(expand = FALSE, xlim = c(-122.45, -121.6), ylim = c(47.25, 47.78)) +
   geom_sf_text(data = pt_cities, aes(label = name), size = 1.5) +
-  labs(x = "", y = "", fill = "B-IBI") +
+  labs(x = "", y = "", fill = "ISC", size = "B-IBI") +
   annotation_scale(location = "bl", width_hint = 0.25) +
   annotation_north_arrow(location = "br", which_north = "true", style = north_arrow_minimal,
     height = unit(0.75, "cm"), width = unit(0.75, "cm")
@@ -115,12 +123,22 @@ ggplot() +
     left = 0.65, right = 1.0,
     bottom = 0.75, top = 1.0,
     align_to = "panel"
-  )
+  ) + theme(legend.position = "none"); print(fig_2A)
 
+ggsave(paste0(out_dir, "/fig_2A.pdf"), fig_2A, width = 6, height = 6)
 
+# Inset
+world = ne_countries(scale = "medium", returnclass = "sf")
+usa = rnaturalearth::ne_states(country = "United States of America", returnclass = "sf")
+wa = usa[usa$name == "Washington", ]
+outline = st_sfc(st_point(c(0,0)), crs = "+proj=ortho +lat_0=47 +lon_0=-120") |> st_buffer(dist = 6378137)
+fig_2A_inset = ggplot() +
+  geom_sf(data = world, fill = "gray90", color = "gray40", linewidth = 0.2) +
+  geom_sf(data = wa, fill = "red", color = "gray20") +
+  geom_sf(data = outline, fill = NA, color = "gray20", linewidth = 0.2) +
+  coord_sf(crs = "+proj=ortho +lat_0=47 +lon_0=-120"); print(fig_2A_inset)
 
-
-
+ggsave(paste0(out_dir, "/fig_2A_inset.pdf"), fig_2A_inset, width = 2, height = 2)
 
 # site_id_focal = "262"
 # site_focal = site_data_reach %>% filter(site_id == site_id_focal)

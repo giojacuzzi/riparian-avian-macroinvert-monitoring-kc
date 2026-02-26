@@ -35,7 +35,7 @@ mapview(sites_aru) +
   mapview(st_buffer(sites_aru, 5000), alpha.regions = 0, lwd = 3, color = "red", col.regions = "red", layer.name = "5 km")
 
 # Calculate distance between paired ARU and PSSB sites
-summary(site_metadata %>% rowwise() %>%
+summary(site_metadata %>% filter(!site_id %in% sites_to_exclude) %>% rowwise() %>%
           mutate(dist_m = geosphere::distHaversine(c(long_aru,  lat_aru), c(long_pssb, lat_pssb))) %>% pull(dist_m))
 
 # Load Puget Sound Stream Benthos monitoring data ------------------------------------
@@ -65,7 +65,7 @@ pssb_data_scores_all = read_tsv("data/raw/pssb/Scores.txt") %>% clean_names() %>
 message("Pearson's R (all): ", round(cor(pssb_data_scores_all$ept_richness_quantity, pssb_data_scores_all$overall_score), 3))
 ggplot(pssb_data_scores_all, aes(x = ept_richness_quantity, y = overall_score)) +
   geom_point()
-pssb_data_scores_sites = pssb_data_scores_all %>% filter(site_id %in% sites_aru$site_id)
+pssb_data_scores_sites = pssb_data_scores_all %>% filter(site_id %in% sites_aru$site_id) %>% filter(!site_id %in% sites_to_exclude)
 message("Pearson's R (sites): ", round(cor(pssb_data_scores_sites$ept_richness_quantity, pssb_data_scores_sites$overall_score), 3))
 ggplot(pssb_data_scores_sites, aes(x = ept_richness_quantity, y = overall_score)) +
   geom_point()
@@ -399,6 +399,9 @@ if (TRUE) {
   
   message("Difference in observed NLCD imperviousness (2023) and ICLUS projections after removing outliers")
   print(tapply(imp_diff$diff_from_nlcd, imp_diff$scenario, summary))
+  
+  print(round(tapply(imp_diff$diff_from_nlcd, imp_diff$scenario, mean), 3))
+  print(round(tapply(imp_diff$diff_from_nlcd, imp_diff$scenario, sd), 3))
   
   # NOTE: Sites with extremely high imp projections are also those that have underestimated imp
   # coverage in 2020/30 projections compared to NLCD baseline, all along Renton WA 515 corridor
@@ -845,13 +848,13 @@ nlcd_long = site_data %>% st_drop_geometry() %>% select(site_id, all_of(nlcd_col
     site_id = factor(site_id, levels = site_order)
   )
 
-ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
+p_comp = ggplot(nlcd_long %>% filter(!site_id %in% sites_to_exclude), aes(y = site_id, x = percent, fill = landcover)) +
   geom_bar(stat = "identity") +
   labs(
     x = "Percent cover",
     y = "Site ID",
     fill = "Summary class",
-    title = paste0("NLCD land cover composition (", buffer_radius, " m buffer)")
+    title = paste("Land cover composition", buffer_radius, "m")
   ) +
   scale_fill_manual(values = c(
     "developed_variable_intensity" = "#eb0000",
@@ -865,7 +868,10 @@ ggplot(nlcd_long, aes(y = site_id, x = percent, fill = landcover)) +
     "perennial_ice_snow"           = "#d1defa",
     "shrub_scrub"                  = "#af963c"
   )) +
-  theme_minimal()
+  theme_minimal(); print(p_comp)
+
+if (!dir.exists(out_cache_dir)) dir.create(out_cache_dir, recursive = TRUE)
+ggsave(paste0(out_cache_dir, "/fig_S1_", buffer_radius, ".pdf"), plot = p_comp, width = 8, height = 7)
 
 # Visualize land cover for all sites
 
@@ -908,7 +914,26 @@ p_sites = ggplot(sites_lc_df, aes(x = x, y = y, fill = factor(class))) + geom_ra
     plot.margin = margin(0, 0, 0, 0)
   ); print(p_sites)
 
-ggsave(paste0("site_landcover_", buffer_radius, "m.png"), p_sites, dpi = 300, width = 10, height = 5.3)
+fig_2B = ggplot(sites_lc_df %>% filter(site %in% c(2371, 121, 216)), aes(x = x, y = y, fill = factor(class))) + geom_raster() +
+  scale_fill_manual(values = setNames(present_levels$color, present_levels$class), name = "Class") +
+  facet_wrap(~site, scales = "free", ncol = 10, strip.position = "bottom") +
+  theme_minimal() + theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    aspect.ratio = 1
+  ) +
+  labs(title = paste0("NLCD land cover configuration (", buffer_radius, " m buffer)"), x = "", y = "") +
+  theme(
+    strip.text = element_text(size = 6),
+    panel.spacing = unit(0, "mm"),
+    plot.margin = margin(0, 0, 0, 0),
+    legend.position = "none"
+  ); print(fig_2B)
+
+ggsave(paste0(out_cache_dir, "/fig_2B_", buffer_radius, ".pdf"), fig_2B, dpi = 300, width = 10, height = 10)
+
+stop("done!")
 
 raster_to_df = function(r, site_name) {
   df = as.data.frame(r, xy = TRUE)

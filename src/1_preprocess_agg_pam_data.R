@@ -341,6 +341,7 @@ if (use_platt_scaling) {
   # Clean results
   calibration_results = calibration_results %>%
     mutate(across(everything(), ~ ifelse(is.nan(.) | . == "NaN", NA, .)))
+  calibration_results = calibration_results %>% select(-n_pos, -n_neg, -warning, -tp_min_prob) %>% mutate(across(where(is.numeric), function(x) round(x, 2)))
   message("Calibration results:")
   print(calibration_results)
 }
@@ -540,7 +541,16 @@ detect_hist_data = list(
   wide = species_site_survey_wide
 )
 
-stop()
+species_pool = read_lines(path_species_list) %>% as_tibble() %>%
+  separate(value, into = c("scientific_name", "common_name"), sep = "_") %>%
+  mutate(scientific_name = tolower(scientific_name), common_name = tolower(common_name))
+table_s2 = full_join(species_pool, species_summary, by = "common_name")
+table_s2 = full_join(table_s2, calibration_results, by = "common_name")
+table_s2 = table_s2 %>% arrange(desc(n_sites)) %>% mutate(scientific_name = str_to_title(scientific_name), common_name = str_to_title(common_name))
+print(table_s2, n = Inf)
+
 if (!dir.exists(dirname(out_detect_hist_data))) dir.create(dirname(out_detect_hist_data), recursive = TRUE)
+
+write_csv(table_s2, "data/cache/1_preprocess_agg_pam_data/table_s2.csv")
 saveRDS(detect_hist_data, out_detect_hist_data)
 message(crayon::green("Cached", out_detect_hist_data))

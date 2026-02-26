@@ -8,6 +8,8 @@ msom_paths = list(
   "forage"  = "data/cache/models/msom_forage.rds",
   "migrant" = "data/cache/models/msom_migrant.rds"
 )
+# Output
+dir_out = paste0("data/cache/5_msom_results_multimodel")
 
 source("src/global.R")
 
@@ -56,33 +58,49 @@ occ_effect_sizes = bind_rows(occ_effect_sizes)
 occ_effect_sizes$group = str_to_title(addNA(occ_effect_sizes$group))
 occ_effect_sizes$model = str_to_title(occ_effect_sizes$model)
 
-ggplot(occ_effect_sizes %>% filter(name == "bibi"),
-       aes(x = mean, y = fct_rev(model), group = fct_rev(group), color = as.factor(overlap0) == 0)) +
-  geom_vline(xintercept = 0, color = "gray") +
+occ_effect_sizes = occ_effect_sizes %>% mutate(group = if_else(is.na(group), "All", group))
+
+fig_3A = ggplot(occ_effect_sizes %>% filter(name == "bibi"),
+       aes(x = mean, y = fct_rev(model), group = fct_rev(group), color = group)) +
+  geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
   geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
+  # geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
-  scale_color_manual(values = c("gray20", "orange")) +
-  labs(x = "B-IBI coefficient estimate", y = "Functional group") +
-  theme(legend.position = "none")
+  # scale_color_manual(values = c("gray20", "orange")) +
+  scale_color_manual(values = c("skyblue2", "gray20", "orange", "aquamarine3", "orchid3", "gray60")) +
+  theme(legend.position = "right") +
+  labs(x = "B-IBI effect on guild-level occurrence", y = "Functional grouping", color = "Guild"); print(fig_3A)
 
 plots_occ = list()
 for (param_name in unique(occ_effect_sizes$name)) {
-  plots_occ[[param_name]] = ggplot(occ_effect_sizes %>% filter(name == param_name, group != "other"),
-             aes(x = mean, y = as.factor(model), group = as.factor(group), shape = as.factor(group), color = as.factor(overlap0) == 0)) +
-    geom_vline(xintercept = 0, color = "gray") +
+  plots_occ[[param_name]] = ggplot(occ_effect_sizes %>% filter(name == param_name),
+             aes(x = mean, y = fct_rev(model), group = fct_rev(group), color = group)) +
+    geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
     geom_point(position = position_dodge(width = 0.5)) +
-    geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
+    # geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
     geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
-    scale_color_manual(values = c("gray20", "orange")) +
+    # scale_color_manual(values = c("gray20", "orange")) +
+    scale_color_manual(values = c("skyblue2", "gray20", "orange", "aquamarine3", "orchid3", "gray60")) +
     labs(subtitle = param_name, x = "", y = "")
 }
 
-(plots_occ[["bibi"]] + labs(y = "Group") + theme(legend.position = "none")) +
+(plots_occ[["bibi"]] + labs(y = "Functional grouping") + theme(legend.position = "none") +
 (plots_occ[["canopy_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
 (plots_occ[["canopy_basin"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
 (plots_occ[["imp_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
-(plots_occ[["imp_basin"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank()))
+(plots_occ[["imp_basin"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) + theme(legend.position = "right"))
+
+results_occ_effect_sizes = occ_effect_sizes %>%
+  mutate(estimate = sprintf("%.2f (%.2f, %.2f)", mean, `2.5%`, `97.5%`)) %>%
+  select(model, group, param, name, estimate, sd) %>%
+  rename(parameter = param, variable = name) %>%
+  mutate(across(where(is.numeric), \(x) round(x, 2))) %>% arrange(parameter)
+print(results_occ_effect_sizes, n = Inf)
+
+if (!dir.exists(dir_out)) dir.create(dir_out, recursive = TRUE)
+path_out = paste0(dir_out, "/results_occ_effect_sizes.csv")
+write_csv(results_occ_effect_sizes, file = path_out)
+message(crayon::green("Cached community occupancy estimates to", path_out))
 
 # Compare detection parameters --------------------------------------------------
 
@@ -115,30 +133,71 @@ for (m in names(msom_paths)) {
 det_effect_sizes = bind_rows(det_effect_sizes)
 det_effect_sizes$group = addNA(det_effect_sizes$group)
 
+det_effect_sizes = det_effect_sizes %>% mutate(group = if_else(is.na(group), "All", group))
+
 ggplot(det_effect_sizes %>% filter(name == "yday"),
-       aes(x = mean, y = as.factor(model), color = as.factor(group))) +
-  geom_vline(xintercept = 0, color = "gray") +
+       aes(x = mean, y = fct_rev(str_to_title(model)), color = str_to_title(group))) +
+  geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
   geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
-  labs(title = "Community level effect sizes for detection covariates",
-       subtitle = m, x = "Coefficient estimate", y = "Parameter")
+  geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, position = position_dodge(width = 0.5)) +
+  # geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
+  scale_color_manual(values = c("skyblue2", "gray20", "orange", "aquamarine3", "orchid3", "gray60")) +
+  labs(title = "Community level effect size for yday",
+       subtitle = m, x = "Coefficient estimate", y = "Parameter", color = "Guild")
 
 plots_det = list()
 for (param_name in unique(det_effect_sizes$name)) {
-  plots_det[[param_name]] = ggplot(det_effect_sizes %>% filter(name == param_name, group != "other"),
-                               aes(x = mean, y = as.factor(model), group = as.factor(group), shape = as.factor(group), color = as.factor(overlap0) == 0)) +
-    geom_vline(xintercept = 0, color = "gray") +
+  plots_det[[param_name]] = ggplot(det_effect_sizes %>% filter(name == param_name),
+                               aes(x = mean, y = fct_rev(model), group = fct_rev(group), color = group)) +
+    geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
     geom_point(position = position_dodge(width = 0.5)) +
     geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
     geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
-    scale_color_manual(values = c("gray20", "orange")) +
+    scale_color_manual(values = c("skyblue2", "gray20", "orange", "aquamarine3", "orchid3", "gray60")) +
     labs(subtitle = param_name, x = "", y = "")
 }
 
 (plots_det[["yday"]] + labs(y = "Parameter") + theme(legend.position = "none")) +
   (plots_det[["canopy_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
   (plots_det[["imp_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank()))
+
+# Combined plot for supplement
+fig_s2 = (
+  (plots_det[["yday"]] + labs(y = "") + theme(legend.position = "none")) +
+    (plots_det[["canopy_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
+    (plots_det[["imp_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank()))
+) / (
+  (plots_occ[["bibi"]] + labs(y = "") + theme(legend.position = "none") +
+     (plots_occ[["canopy_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
+     (plots_occ[["canopy_basin"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
+     (plots_occ[["imp_reach"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
+     (plots_occ[["imp_basin"]] + theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank())) +
+     theme(legend.position = "none"))
+) + plot_layout(heights = c(1, 2)) + plot_layout(guides = "collect") & theme(legend.position = "right")
+print(fig_s2)
+ggsave(paste0(dir_out, "/fig_s2.pdf"), fig_s2, width = 8, height = 8)
+
+ggplot(det_effect_sizes %>% filter(name == "yday"),
+       aes(x = mean, y = fct_rev(model), group = fct_rev(group), shape = group, color = as.factor(overlap0) == 0)) +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(xmin = `25%`,  xmax = `75%`), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), width = 0, position = position_dodge(width = 0.5)) +
+  scale_color_manual(values = c("gray20", "orange")) +
+  labs(x = "yday coefficient estimate", y = "Functional group") +
+  theme(legend.position = "left")
+
+results_det_effect_sizes = det_effect_sizes %>%
+  mutate(estimate = sprintf("%.2f (%.2f, %.2f)", mean, `2.5%`, `97.5%`)) %>%
+  select(model, group, param, name, estimate, sd) %>%
+  rename(parameter = param, variable = name) %>%
+  mutate(across(where(is.numeric), \(x) round(x, 2))) %>% arrange(parameter)
+print(results_det_effect_sizes, n = Inf)
+
+if (!dir.exists(dir_out)) dir.create(dir_out, recursive = TRUE)
+path_out = paste0(dir_out, "/results_det_effect_sizes.csv")
+write_csv(results_det_effect_sizes, file = path_out)
+message(crayon::green("Cached community detection estimates to", path_out))
 
 # Marginal responses --------------------------------------------------------------------
 
@@ -160,7 +219,7 @@ for (m in names(msom_paths)) {
   p_sd = attr(param_scaled_data[[1]], "scaled:scale")
   bound_low  = min(param_scaled_data[[1]]) * p_sd + p_mu
   bound_high = max(param_scaled_data[[1]]) * p_sd + p_mu
-  pred_range_original = seq(bound_low, bound_high, by = 0.01) # range of possible alpha values
+  pred_range_original = seq(bound_low, bound_high, by = 1) # range of possible alpha values
   pred_range_standardized = (pred_range_original - p_mu) / p_sd
   # species-specific occurrence intercepts u[i]
   intercepts = model_data[[m]]$msom_summary %>% filter(str_starts(param, "u")) %>%
@@ -210,29 +269,28 @@ for (m in names(msom_paths)) {
       by = "group_idx"
     )
   
-  # ggplot() +
-  #   geom_ribbon(data = meta_summary, aes(x = idx, ymin = psi_lower, ymax = psi_upper, fill = group, group = group), alpha = 0.2, inherit.aes = FALSE) +
-  #   geom_line(data = meta_summary, aes(x = idx, y = psi_mean, color = group, group = group), linewidth = 1.2, inherit.aes = FALSE) +
-  #   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.25, 0.5, 0.75, 1.0)) +
-  #   labs(x = param_data$name, y = "Occurrence probability") +
-  #   theme_sleek()
-  
-  plots_marg[[m]] = ggplot(predictions %>% filter(group != "other"), aes(x = idx, y = psi, group = common_name)) +
-    geom_line(aes(color = group), alpha = 0.3) +
+  p = ggplot(predictions %>% filter(group != "other"), aes(x = idx, y = psi, group = common_name)) +
+    geom_line(aes(color = group), alpha = 0.2) +
     geom_ribbon(data = meta_summary %>% filter(group != "other"), aes(x = idx, ymin = psi_lower, ymax = psi_upper, fill = group), alpha = 0.2, inherit.aes = FALSE) +
     geom_line(data = meta_summary %>% filter(group != "other"), aes(x = idx, y = psi_mean, color = group, group = group), linewidth = 1.2, inherit.aes = FALSE) +
     facet_wrap(~str_to_title(group)) +
     scale_x_continuous(limits = c(bound_low, bound_high)) +
-    scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)) + theme(
-      legend.position = "none"
-    )
+    scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)) +
+    labs(x = "B-IBI", y = "Marginal occurrence probability") +
+    theme(legend.position = "none")
+  plots_marg[[m]] = p
 }
 
-(plots_marg[["all"]] + labs(x = "B-IBI", y = "Occupancy probability") +
-  theme(legend.position = "none") + scale_color_manual(values = c("gray20")) + scale_fill_manual(values = c("gray20"))) +
+fig_3B = (plots_marg[["all"]] + labs(x = "B-IBI", y = "Marginal occurrence probability") +
+  theme(legend.position = "none") + scale_color_manual(values = c("gray30")) + scale_fill_manual(values = c("gray20"))) +
 (plots_marg[["diet"]] + labs(x = "B-IBI", y = "") +
   theme(legend.position = "none") + scale_color_manual(values = c("orange")) + scale_fill_manual(values = c("orange"))) +
-(plots_marg[["forage"]] + labs(x = "B-IBI", y = "") +
-  theme(legend.position = "none") + scale_color_manual(values = rep("gray20", 4)) + scale_fill_manual(values = rep("gray20", 4))) +
+(plots_marg[["forage"]] + labs(x = "B-IBI", y = "Marginal occurrence probability") +
+  theme(legend.position = "none") + scale_color_manual(values = c("skyblue2", "aquamarine3")) + scale_fill_manual(values = c("skyblue2", "aquamarine3"))) +
 (plots_marg[["migrant"]] + labs(x = "B-IBI", y = "") +
-  theme(legend.position = "none") + scale_color_manual(values = c("orange")) + scale_fill_manual(values = c("orange")))
+  theme(legend.position = "none") + scale_color_manual(values = c("orchid3")) + scale_fill_manual(values = c("orchid3")))
+print(fig_3B)
+
+fig_3 = fig_3A + fig_3B + plot_layout(widths = c(1, 2))
+print(fig_3)
+ggsave(paste0(dir_out, "/fig_3.pdf"), fig_3, width = 10, height = 6)

@@ -1,25 +1,18 @@
-######################################################################################
-# Following:
-# - https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.1365-2664.2009.01664.x
-# - https://esajournals.onlinelibrary.wiley.com/doi/10.1002/eap.2293
-# - https://www.sciencedirect.com/science/article/abs/pii/S0006320709004819
-
 model{
 
   ## Community (group) level hyperpriors
   for (g in 1:G) {
     # Occurrence
-    mu.u[g]    ~ dnorm(0, 1/2.25^2)
-    sigma.u[g] ~ dt(0, 1/2.25^2, 1) T(0,)  # standard deviation
-    tau.u[g] <- sigma.u[g]^-2         # precision
+    mu.u[g]    ~ dnorm(0, 1/2.25^2)       # dnorm(0, 1/2.25^2) per Broms et al. 2016
+    sigma.u[g] ~ dt(0, 1/2.25^2, 1) T(0,) # dt(0, 1/2.25^2, 1) T(0,) Half-cauchy (truncated t distribution with 1 dof) per Broms et al. 2016
+    tau.u[g] <- sigma.u[g]^-2             # precision
     
     # Covariate effects on occurrence
-    mu.alpha1[g]    ~ dnorm(0, 1/2.25^2) # dnorm(0, 1/2.25^2) per Broms et al. 2016
+    mu.alpha1[g]    ~ dnorm(0, 1/2.25^2)
     mu.alpha2[g]    ~ dnorm(0, 1/2.25^2)
     mu.alpha3[g]    ~ dnorm(0, 1/2.25^2)
     mu.alpha4[g]    ~ dnorm(0, 1/2.25^2)
     mu.alpha5[g]    ~ dnorm(0, 1/2.25^2)
-    # dt(0, 1/2.25^2, 1) T(0,) Half-cauchy (truncated t distribution with 1 dof) per Broms et al. 2016
     sigma.alpha1[g] ~ dt(0, 1/2.25^2, 1) T(0,)
     sigma.alpha2[g] ~ dt(0, 1/2.25^2, 1) T(0,)
     sigma.alpha3[g] ~ dt(0, 1/2.25^2, 1) T(0,)
@@ -83,7 +76,7 @@ model{
               
               for (k in 1:K[j]) { # for each survey k during season t at site j
     
-                  ## Observation model, assumming no false positives (e.g. Zipkin et al. 2009)
+                  ## Observation model, assuming no false positives (e.g. Zipkin et al. 2009)
                   
                   # p11 is true-positive detection probability given z = 1
                   logit(p11[j,k,i]) <- v[i] +

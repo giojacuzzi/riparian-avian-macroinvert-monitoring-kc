@@ -177,9 +177,6 @@ if (!exists("species_traits", envir = .GlobalEnv)) {
     group_forage = case_when(
       trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("aerial forager", "soaring", "flycatching", "hovering", "aerial dive")) ~ "aerial",
       trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("foliage gleaner"))                                                     ~ "gleaner",
-      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("ground forager"))                                                      ~ "ground",
-      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("bark forager"))                                                        ~ "bark",
-      trophic_niche == "Invertivore" & (foraging_guild_cornell %in% c("dabbler", "probing", "stalking", "surface dive"))                      ~ "aquatic",
       TRUE                                                                                                                                    ~ "other"
     )
   )
