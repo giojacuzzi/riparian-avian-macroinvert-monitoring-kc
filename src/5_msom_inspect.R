@@ -1,4 +1,4 @@
-# 5_msom_results.R ===================================================================
+# 5_msom_inspect.R ===================================================================
 # Visualize multi-species occupancy modeling results and estimate site-specific richness
 #
 # Input
@@ -7,12 +7,6 @@ msom_path = "data/cache/models/msom_all.rds"
 path_out = paste0("data/cache/5_msom_results/msom_richness_estimates.rds")
 
 source("src/global.R")
-
-# Naive occupancy -----------
-
-# in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
-# detections = readRDS(in_cache_detections)
-# detections$long$common_name = tolower(detections$long$common_name)
 
 # Load data for multi-species occupancy model --------------------------------------------------
 
@@ -24,48 +18,6 @@ msom = model_data$msom
 groups = model_data$groups %>% arrange(common_name)
 sites = model_data$sites
 species = model_data$species
-
-#  Calculate estimated group richness per site ---------------------------
-# z = msom$sims.list$z
-# group_idx = groups$group_idx
-# group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
-# samples = dim(z)[1]
-# J = dim(z)[2]
-# I = dim(z)[3]
-# G = max(group_idx)
-# 
-# rich_group = array(NA, c(samples, J, G))
-# for (g in 1:G) {
-#   species_in_g = which(group_idx == g)
-#   rich_group[ , , g] = apply(z[ , , species_in_g, drop = FALSE], c(1,2), sum)
-# }
-# rich_group_mean  = apply(rich_group, c(2,3), mean)
-# rich_group_lower = apply(rich_group, c(2,3), quantile, probs = 0.025)
-# rich_group_upper = apply(rich_group, c(2,3), quantile, probs = 0.975)
-# msom_richness_estimates = lapply(1:G, function(g) {
-#   group = group_names[g]
-#   tibble(
-#     site_id = sites
-#   ) %>%
-#     dplyr::mutate(
-#       !!paste0(group, "_rich_mean")  := rich_group_mean[, g],
-#       !!paste0(group, "_rich_lower") := rich_group_lower[, g],
-#       !!paste0(group, "_rich_upper") := rich_group_upper[, g]
-#     )
-# })
-# names(msom_richness_estimates) = group_names
-# 
-# rich_total = apply(z, c(1, 2), sum)
-# msom_richness_estimates$total = tibble(
-#   site_id    = sites,
-#   total_rich_mean  = apply(rich_total, 2, mean),
-#   total_rich_lower = apply(rich_total, 2, quantile, probs = 0.025),
-#   total_rich_upper = apply(rich_total, 2, quantile, probs = 0.975)
-# )
-
-# if (!dir.exists(dirname(path_out))) dir.create(dirname(path_out), recursive = TRUE)
-# saveRDS(msom_richness_estimates, file = path_out)
-# message(crayon::green("Cached site-specific richness estimates to", path_out))
 
 # Visualize results ---------------------
 
@@ -158,22 +110,6 @@ ggplot(species_baselines %>% filter(startsWith(param, "v")), aes(x = prob, y = r
   labs(x = "Posterior probability", y = "Species index",
        title = "Species-specific TP detection probability given presence `v` across models (mean and 95% BCI)"
   ) + theme(legend.position = "bottom")
-
-# TODO
-# Nsite_posterior = model_data$msom_summary %>% filter(stringr::str_starts(param, "Nsite")) %>% arrange(mean) %>% mutate(plot_order = 1:nrow(.)) %>%
-#   mutate(site_idx = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", param))) %>% mutate(site = sites[site_idx])
-# Nsite_mean = mean(Nsite_posterior$mean)
-# message("Mean estimated species richness across all sites: ", round(Nsite_mean,1), " (range ", round(min(Nsite_posterior$mean),1), "–", round(max(Nsite_posterior$mean),1), ")")
-# ggplot(Nsite_posterior, aes(x = as.factor(plot_order), y = mean)) +
-#   geom_hline(yintercept = Nsite_mean, linetype = "solid", color = "blue") +
-#   geom_point() + geom_errorbar(aes(ymin = `2.5%`, ymax = `97.5%`), width = 0) +
-#   scale_x_discrete(labels = Nsite_posterior$site) + 
-#   labs(title = "Estimated species richness per site", x = "Site", y = "Estimated species richness") +
-#   coord_flip()
-# ggplot(Nsite_posterior, aes(x = mean)) +
-#   geom_histogram(binwidth = 1) +
-#   geom_vline(xintercept = Nsite_mean, color = "blue") +
-#   labs(title = "Estimated species richness per site", x = "Number of species estimated", y = "Number of sites")
 
 # Compare coefficients on occupancy -------------------------------------------------------------------------
 
@@ -312,8 +248,6 @@ write_csv(species_effects_summary, paste0("data/cache/5_msom_results/species_eff
 # These (black-throated gray) species have shown trophic links to aquatic resources: https://doi.org/10.1002/ecs2.3148
 # EX: Belted Kingfisher, which feeds supplementally but is not an invertivore
 
-# TODO: Compare species rarity between groups -- do inverts have proportionally more rare species?
-
 # “The most widespread species (PSF, GCK, CY) show negative mean responses to B-IBI, while less common species tend to show weak or uncertain positive responses.”
 # The more common species provide more information, and disproportionately influence the hyperparameter
 
@@ -438,30 +372,6 @@ ggplot() +
   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.25, 0.5, 0.75, 1.0)) +
   labs(x = param_data$name, y = "Occurrence probability") +
   theme_sleek()
-
-# ggplot(predictions %>% filter(common_name == "belted kingfisher"), aes(x = idx, y = psi)) +
-#   geom_line() +
-#   scale_x_continuous(limits = c(bound_low, bound_high)) +
-#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
-# 
-# ggplot(predictions %>% filter(common_name == "wilson's warbler"), aes(x = idx, y = psi)) +
-#   geom_line() +
-#   scale_x_continuous(limits = c(bound_low, bound_high)) +
-#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
-# 
-# ggplot(predictions %>% filter(common_name == "bewick's wren"), aes(x = idx, y = psi)) +
-#   geom_line() +
-#   scale_x_continuous(limits = c(bound_low, bound_high)) +
-#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0))
-
-# ggplot(predictions, aes(x = idx, y = psi, group = common_name)) +
-#   geom_line(aes(color = group)) +
-#   # gghighlight::gghighlight(use_direct_label = FALSE, unhighlighted_params = list(color = alpha("black", 0.1))) +
-#   facet_wrap(~reorder(common_name, psi)) +
-#   scale_x_continuous(limits = c(bound_low, bound_high)) +
-#   scale_y_continuous(limits = c(0.0, 1.0), breaks = c(0, 0.5, 1.0)) +
-#   labs(title = "", x = param_data$name, y = "Occurrence probability") +
-#   theme(legend.position = "none")
 
 p_bibi = ggplot(predictions, aes(x = idx, y = psi, group = common_name)) +
   geom_line(aes(color = group), alpha = 0.2) +

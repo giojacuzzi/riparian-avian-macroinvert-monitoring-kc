@@ -7,7 +7,6 @@ path_sem = "data/cache/4_sem/sem_diet.rds"
 path_projections_reach = "data/cache/3_calculate_vars/imp_projections_550m.rds"
 path_projections_watershed = "data/cache/3_calculate_vars/imp_projections_5000m.rds"
 use_2023_observed_as_baseline = FALSE
-# NOTE: 2023 values in plots are currently model predictions, not ground-truth
 # Deltas between 2023 observed response variables (canopy, bibi, richness) and 2100 predictions
 # may be positive OR negative because it includes residual error from component model fit
 # Canopy increasing reflects the presence of negative residuals in the 2023 data, not that the model actually predicts a gain in cover.
@@ -44,7 +43,7 @@ for (s in c("a1", "a2", "b1", "b2")) {
 
   message("Projecting conditions for scenario ", s)
   
-  # Get projected imp_reach and imp_basin
+  # Get projected imp_reach (local) and imp_basin (landscape)
   
   data_pred = projections_reach %>% filter(scenario == s) %>% mutate(imp_reach = sum_proportion)
   if (use_2023_observed_as_baseline) {
@@ -236,15 +235,6 @@ for (s in c("a1", "a2", "b1", "b2")) {
       mutate(site_id = factor(site_id, levels = delta_vars$site_id[order(delta_vars$bibi_2023, decreasing = TRUE)])) %>%
       pivot_longer(c(bibi_2023, bibi_2100), names_to = "year", values_to = "bibi"),
     aes(x = site_id, y = plogis(bibi) * 100, group = site_id)) +
-    # geom_rect(aes(ymin = 0, ymax = 20, xmin = -Inf, xmax = Inf), fill = "#FFCCCC", alpha = 0.1) +
-    # geom_rect(aes(ymin = 20, ymax = 40, xmin = -Inf, xmax = Inf), fill = "#FFE5CC", alpha = 0.1) +
-    # geom_rect(aes(ymin = 40, ymax = 60, xmin = -Inf, xmax = Inf), fill = "#FFFFCC", alpha = 0.1) +
-    # geom_rect(aes(ymin = 60, ymax = 80, xmin = -Inf, xmax = Inf), fill = "#CCFFCC", alpha = 0.1) +
-    # geom_rect(aes(ymin = 80, ymax = 100, xmin = -Inf, xmax = Inf), fill = "#CCE5FF", alpha = 0.1) +
-    # geom_hline(yintercept = 80, color = "#CCFFCC", alpha = 1) +
-    # geom_hline(yintercept = 60, color = "#FFFFCC", alpha = 1) +
-    # geom_hline(yintercept = 40, color = "#FFE5CC", alpha = 1) +
-    # geom_hline(yintercept = 20, color = "#FFCCCC", alpha = 1) +
     geom_line(color = "gray10") +
     geom_point(aes(color = year)) +
     scale_color_manual(values = c("bibi_2023" = "gray10", "bibi_2100" = "royalblue")) +
@@ -349,7 +339,7 @@ fig_S3B = (
 
 ggsave(paste0(out_dir, "/fig_S3B.pdf"), fig_S3B, width = 7, height = 6)
 
-# Watershed-only restoration (e.g. integrated watershed management plans) -----------------------------
+# Landscape watershed-only restoration (e.g. integrated watershed management plans) -----------------------------
 # Assuming imp_reach and canopy_reach values cannot be changed (e.g. local-scale restoration is
 # not feasible due to private land ownership), estimate per site what value of imp_basin
 # is needed to maintain the same amount of richness as in 2023
@@ -418,17 +408,6 @@ sites_2100_basin_long = sites_2100_basin %>%
     labels = c("Current (2023)", "Restoration to maintain richness", "No action (2100)")
   ))
 
-# site_order = levels(sites_2100_long$site_id)
-# sites_2100_basin_long$site_id <- factor(
-#   sites_2100_basin_long$site_id,
-#   levels = site_order
-# )
-# 
-# sites_2100$site_id <- factor(
-#   sites_2100$site_id,
-#   levels = site_order
-# )
-
 p_restore_basin_imp = ggplot(sites_2100_basin_long, aes(y = site_id)) +
   geom_segment(data = sites_2100_basin, aes(x = imp_basin_2023, xend = imp_basin_2100, y = site_id, yend = site_id, color = restoration_possible)) +
   scale_color_manual(values = c("Yes" = "grey40", "No" = "firebrick")) +
@@ -440,7 +419,7 @@ p_restore_basin_imp = ggplot(sites_2100_basin_long, aes(y = site_id)) +
   labs(x = "Watershed impervious %", y = "", color = "", shape = "") +
   theme(legend.position = "none")
 
-# Reach-only restoration (e.g. public lands, private land easements, land trusts) ---------------------
+# Local reach-only restoration (e.g. public lands, private land easements, land trusts) ---------------------
 # Assuming imp_basin values are inevitable in 2100, estimate per site what value of imp_reach
 # is needed to maintain the same amount of richness as in 2023
 
@@ -471,8 +450,7 @@ richness_for_site_reach = function(imp_reach_try, imp_basin_2100, m_canopy, m_bi
 # Solve for required imp_reach target
 sites_2100_reach = sites_2100_reach %>% rowwise() %>%
   mutate(
-    imp_reach_target = tryCatch({ # TODO: Some sites returning NA for imp_reach_target
-      # Is this because, given unimpeded basin urbanization, no possible reach-scale imperviousness reduction can restore 2023 richness levels?
+    imp_reach_target = tryCatch({ 
       uniroot(
         function(x) richness_for_site_reach(x, imp_basin_2100, m_canopy, m_bibi, m_rich) - rich_predator_2023,
         lower = 0, upper = 1
@@ -626,20 +604,10 @@ p_restore_reach_tcc = ggplot(sites_2100_long, aes(y = site_id)) +
   theme(legend.position = "bottom")
 
 # Plot both
-#
-# Interesting points / findings:
-# - Reach-scale restoration includes illustrated reductions in impervious % as well as commensurate increases in canopy %.
-# - The magnitude of restoration required is not necessarily contingent on the magnitude of future impairment.
-# - For many sites, even dramatic restoration efforts at the watershed scale cannot
-# mitigate the overwhelming impacts of local-scale degradation within the reach.
 p_restore_imp = p_restore_reach_imp + p_restore_basin_imp
 print(p_restore_imp + plot_annotation(tag_levels = "A"))
 
-# p_total = (p_proj_responses | p_restore_imp) + plot_annotation(tag_levels = "A")
-# print(p_total)
-# ggsave("p_total.pdf", p_total, width = 13, height = 7)
-
-# Both reach and watershed restoration -----------------------------------------------------------------
+# Both reach (local) and watershed (landscape) restoration -----------------------------------------------------------------
 
 site_restorations = data.frame(
   site_id = data$site_id,
@@ -699,21 +667,6 @@ pred_grid = pred_grid %>%
                             ), type = "response")
   )
 
-# Richness responds to imperviousness at both the reach and basin scales.
-# Tradeoff: As imp_basin increases, imp_reach must decrease to maintain the same richness, and vice-versa.
-# Responses are not symmetric between scales: The slope of contour lines is < -1 (to maintain the same amount of richness, you can have more
-# imp_basin than imp_reach), indicating that richness is more sensitive to imp_reach than imp_basin.
-# A larger change in imp_basin is needed to compensate for a smaller change in imp_reach.
-# Also, the slope gets steeper as impervious levels get smaller (bottom left corner), suggesting that
-# this sensitivity is more pronounced at lower levels of imperviousness (relatively pristine sites).
-# Therefore, management interventions reducing imp_reach have the largest potential benefit in less disturbed sites.
-# The distance between contours increases as imperviousness increases across both scales --> 1) declines in richness slow as a stream becomes
-# heavily degraded, and 2) greater amounts of restoration are needed to conserve richness at more imperiled sites (conversely, pristine or
-# moderately impacted streams benefit from relatively small interventions).
-# Streams that require multi-scale restoration are 1) projected to experience dramatic changes in
-# imperviousness along at one or both scales (their lines are very long), and/or 2) already have relatively
-# low levels of imperviousness at one or both scales, and so are limited in their "wiggle room / floor" for restoration adjustment along
-# one or both scales (axes)
 fig_6C = ggplot(pred_grid, aes(x = imp_reach, y = imp_basin, z = rich_predator)) +
   # geom_raster(aes(fill = rich_predator), interpolate = TRUE) +
   # scale_fill_gradient(low = alpha("red", 0.7), high = alpha("forestgreen", 0.7)) +
@@ -744,78 +697,3 @@ fig_6AB = (fig_6A | fig_6B) + plot_annotation(tag_levels = "A")
 ggsave(paste0(out_dir, "/fig_6AB.pdf"), fig_6AB, width = 6, height = 6)
 ggsave(paste0(out_dir, "/fig_6C.pdf"), fig_6C +
          theme(plot.margin = margin(0, 0, 0, 0, unit = "pt")), width = 6, height = 6)
-
-#######
-
-# lollipop_df <- site_restorations %>%
-#   mutate(
-#     delta_reach = imp_reach_2100 - imp_reach_2023,
-#     delta_basin = imp_basin_2100 - imp_basin_2023,
-#     
-#     y_reach = imp_reach_2023 + delta_reach,
-#     y_basin = imp_basin_2023 + delta_basin
-#   )
-# 
-# df_reach <- lollipop_df %>%
-#   arrange(y_reach) %>%
-#   mutate(site_order = factor(rev(row_number())))
-# 
-# p_reach =
-#   ggplot(df_reach, aes(y = site_order)) +
-#   geom_segment(
-#     aes(
-#       x = imp_reach_2023,
-#       xend = y_reach,
-#       yend = site_order,
-#       color = restore_need
-#     ),
-#     alpha = 0.5,
-#     linewidth = 0.9
-#   ) +
-#   geom_point(
-#     aes(x = y_reach, color = restore_need, shape = restore_need),
-#     size = 2,
-#     alpha = 0.9
-#   ) +
-#   scale_color_manual(values = c("gray40", "firebrick", "firebrick")) +
-#   labs(
-#     x = "Sites (ordered by reach delta)",
-#     y = "Reach impervious %",
-#     color = "Restoration scale needed",
-#     shape = "Restoration scale needed"
-#   ) +
-#   scale_x_continuous(limits = c(0, 1)) +
-#   theme_void() + theme(legend.position = "none"); print(p_reach)
-# 
-# df_basin <- lollipop_df %>%
-#   arrange(y_basin) %>%
-#   mutate(site_order = factor(rev(row_number())))
-# 
-# p_basin =
-#   ggplot(df_basin, aes(x = site_order)) +
-#   geom_segment(
-#     aes(
-#       y = imp_basin_2023,
-#       yend = y_basin,
-#       xend = site_order,
-#       color = restore_need
-#     ),
-#     alpha = 0.5,
-#     linewidth = 0.9
-#   ) +
-#   geom_point(
-#     aes(y = y_basin, color = restore_need, shape = restore_need),
-#     size = 2,
-#     alpha = 0.9
-#   ) +
-#   scale_y_continuous(limits = c(0, 1)) +
-#   scale_color_manual(values = c("gray40", "firebrick", "firebrick")) +
-#   theme_void() + theme(legend.position = "none"); print(p_basin)
-# 
-#  (p_reach + plot_spacer()) / (p_imp_rich + p_basin) +
-#   plot_layout(
-#     widths = c(1, 1),
-#     heights = c(1, 1),
-#     guides = "collect"
-#   ) & theme(plot.margin = unit(c(5,5,5,5), "pt"))
-

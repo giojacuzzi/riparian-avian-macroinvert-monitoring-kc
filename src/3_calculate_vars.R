@@ -49,7 +49,7 @@ sites_aru = left_join(sites_aru, pssb_data_by_year, by = c("site_id"))
 sites_aru = sites_aru %>% mutate(year = year(date_start)) %>% rowwise() %>% mutate(bibi = NA) %>%
   mutate(bibi = case_when(
     year == 2024 ~ x2024,
-    year == 2025 ~ x2024, # TODO: 2025 data not yet available
+    year == 2025 ~ x2024,
     TRUE ~ bibi
   ))
 
@@ -121,7 +121,7 @@ sf_waterbody = st_read(paste0(in_cache_geospatial_dir, "/sf_waterbody.gpkg"), qu
 message("- HUC 12 basins")
 sf_basins12d = st_read(paste0(in_cache_geospatial_dir, "/sf_basins12d.gpkg"), quiet = TRUE) %>%
   clean_names() %>% select(huc12, name, area_sq_km) %>% mutate(basin_name = name, basin_area = area_sq_km)
-sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., st_transform(sites_aru, st_crs(sf_basins12d)))) > 0) # TODO: exclude lakes?
+sf_basins12d = sf_basins12d %>% filter(lengths(st_intersects(., st_transform(sites_aru, st_crs(sf_basins12d)))) > 0)
 
 # Load road sf data
 message("- Roads")
@@ -168,10 +168,6 @@ rast_stats = function(rast, na.rm = TRUE) {
   stats$sum_proportion = stats$sum / (global(!is.na(rast), "sum", na.rm=TRUE)[[1]] * 100)
   return(stats)
 }
-
-# TODO: SITE IDXs TO REVIEW
-# Questionable: 37, 38, 45, 47
-# Good: 39, 220, 50
 
 site_zones = list()
 ## Compute site buffer and interaction zones
@@ -442,6 +438,7 @@ if (TRUE) {
     select(-baseline_sum) %>% rbind(nlcd_baselines) %>% arrange(site_id, scenario, year)
   
   {
+    # # Manually inspect a site:
     # dbg_site_id = "216"
     # site_buffer = site_zones[[dbg_site_id]][["site_buffer"]]
     # interaction_zone = site_zones[[dbg_site_id]][["interaction_zone"]]

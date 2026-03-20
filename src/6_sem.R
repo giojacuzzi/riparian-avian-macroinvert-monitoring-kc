@@ -4,7 +4,7 @@
 # Input
 use_msom_richness_estimates = TRUE # use richness estimates from the msom instead of naive observed values
 msom_path = "data/cache/models/msom_all.rds"
-in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds" # detections_calibrated_0.75.rds
+in_cache_detections = "data/cache/1_preprocess_agg_pam_data/detections_calibrated_0.5.rds"
 # Output
 out_cache_dir = "data/cache/4_sem"
 
@@ -51,12 +51,6 @@ detections$long$common_name = tolower(detections$long$common_name)
 detections$wide$common_name = tolower(detections$wide$common_name)
 
 # Exclude certain sites from analysis ------------------------------------------------
-
-# Inspect total detections per site
-# total_detections_by_site = detections$long %>% group_by(site_id) %>%
-#   summarise(total_detections = sum(n_detections, na.rm = TRUE)) %>%
-#   arrange(desc(total_detections))
-# ggplot(total_detections_by_site, aes(x = reorder(site_id, total_detections), y = total_detections)) + geom_col()
 
 message("Excluding site(s) ", paste(sites_to_exclude, collapse = ", "), " from analysis")
 site_data_reach = site_data_reach %>% filter(!site_id %in% sites_to_exclude)
@@ -131,22 +125,9 @@ if (use_msom_richness_estimates) {
   species = msom_data$species
   
   z = msom$sims.list$z
-  # group_idx = groups$group_idx
-  # group_names = groups %>% distinct(group_idx, .keep_all = TRUE) %>% arrange(group_idx) %>% pull(group)
   samples = dim(z)[1]
   J = dim(z)[2]
   I = dim(z)[3]
-  # G = max(group_idx)
-  
-  # species_groupings = list(
-  #   species %in% (species_traits %>% filter(group_all == "all")         %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_migrant == "migrant") %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_diet == "diet")       %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_forage == "aerial")   %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_forage == "gleaner")  %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_forage == "ground")   %>% pull(common_name)),
-  #   species %in% (species_traits %>% filter(group_forage == "bark")     %>% pull(common_name))
-  # )
   
   message("Calculating richness for each grouping")
   pb = progress_bar$new(format = "[:bar] :percent :elapsedfull (ETA :eta)", total = 4, clear = FALSE)
@@ -190,15 +171,6 @@ if (use_msom_richness_estimates) {
     pb$tick()
   }
 }
-
-# ## Indicator species analysis
-# library(indicspecies)
-# spmat = presence_absence %>% pivot_wider(names_from = common_name, values_from = presence)
-# d = left_join(spmat, site_data_reach, by = "site_id")
-# spmat = spmat %>% select(-site_id) %>% as.data.frame()
-# bibi_excellent = ifelse(d$bibi >= 80, 1, 0)
-# indval = multipatt(spmat, bibi_excellent, control = how(nperm=999)) 
-# summary(indval)
 
 # Arrange richness to match site data
 stopifnot(site_data_reach$site_id == site_data_basin$site_id)
@@ -517,8 +489,6 @@ if (use_msom_richness_estimates) {
           mutate(draw = draw)
         cstat_draws[[draw]] = cstat_draw
         
-        # TODO: Tests of direct separation?
-        
         # Save diet sem draws
         if (grouping == "group_diet" & guild == "diet") {
           sem_diet_draws[[draw]] = sem_draw
@@ -555,11 +525,6 @@ if (use_msom_richness_estimates) {
       rich_group_coefs$guild = guild
       rich_group_coefs = rich_group_coefs %>% mutate(across(where(is.numeric), function(x) round(x, 2)))
 
-      # p = ggplot(rich_group_coefs, aes(x = mean, y = interaction(predictor, response))) +
-      #   geom_vline(xintercept = 0, color = "gray") +
-      #   geom_errorbar(aes(xmin = lower, xmax = upper), width = 0) +
-      #   geom_point() + labs(title = paste0("Grouping '", grouping, "' group '", guild, "'")); print(p)
-      
       print(rich_group_coefs)
       coefs_final_stats = rbind(coefs_final_stats, rich_group_coefs)
       
@@ -621,33 +586,6 @@ sem_cstat_msom_uncertainty = cstat_final_stats
 out_filepath = file.path(out_cache_dir, paste0("sem_cstat_msom_uncertainty.csv"))
 write_csv(sem_cstat_msom_uncertainty, out_filepath)
 message(crayon::green("Cached", out_filepath))
-
-# Check over/underdispersion -- if overdispersed, fit negative binomial
-# simres_pois = simulateResiduals(m_predator, n = 1000); plot(simres_pois); testDispersion(simres_pois)
-
-# TODO: Moran's I test for spatial autocorrelation
-# library(spdep)
-# # site coords
-# coords <- cbind(stream_data$longitude, stream_data$latitude)
-# # spatial weights matrix (inverse distance)
-# dists <- as.matrix(dist(coords))
-# inv_dists <- 1/dists
-# diag(inv_dists) <- 0  # no self-weight
-# listw <- mat2listw(inv_dists)
-# # Moran's I for residuals
-# resids <- residuals(your_model, type="response")  # e.g., BIBI residuals
-# moran.test(resids, listw)
-
-# print(presence_absence %>% group_by(common_name) %>% summarize(n_sites = sum(presence)) %>% arrange(n_sites) %>% filter(common_name %in% sp_invert), n = 100)
-# 
-# species_traits %>% filter(common_name %in% c(
-#   "green-winged teal", "mallard", "gadwall", "wood duck", "common merganser", "blue-winged teal", "cackling goose", "caspian tern", "great blue heron", "red-winged blackbird", "american bittern", "green heron"
-# )) %>% select(common_name, trophic_level, trophic_niche, diet_5cat)'
-
-# TODO: Combine coefs and coefs uncertainty
-
-
-stop("DEBUG ME")
 
 # Marginal effect plots =======================================================================
 {

@@ -503,35 +503,6 @@ survey_cols = setdiff(names(species_site_survey_wide), c("site_id", "common_name
 species_site_survey_wide = species_site_survey_wide %>%
   relocate(all_of(survey_cols[order(as.numeric(survey_cols))]), .after = common_name)
 
-# Visualize assemblage composition across sites ----------------------------------------
-
-# # Load species trait metadata
-# avonet = readxl::read_xlsx(path_avonet_traits, sheet = "AVONET2_eBird") %>%
-# janitor::clean_names() %>%
-#   rename(scientific_name = species2, family = family2, order = order2) %>%
-#   mutate(scientific_name = tolower(scientific_name)) %>%
-#   filter(scientific_name %in% species_names$scientific_name) %>%
-#   select(scientific_name, family, order, mass, habitat, habitat_density, migration, trophic_level, trophic_niche, primary_lifestyle)
-# species_metadata = left_join(species_names, avonet, by = "scientific_name")
-# 
-# # Summarize number of species per site and trophic niche
-# trophic_niche_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
-#   group_by(site_id, common_name, trophic_niche) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
-#   group_by(site_id, trophic_niche) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
-# print(ggplot(trophic_niche_per_site %>% left_join(site_summary, by = "site_id"),
-#        aes(x = species_count, y = reorder(site_id, n_species), fill = trophic_niche)) +
-#   geom_bar(stat = "identity") +
-#   theme_minimal())
-# 
-# # Summarize number of species per site and primary lifestyle
-# primary_lifestyle_per_site = left_join(species_site_survey_long, species_metadata, by = "common_name") %>% filter(n_detections > 0) %>%
-#   group_by(site_id, common_name, primary_lifestyle) %>% summarise(total_detections = sum(n_detections), .groups = "drop") %>%
-#   group_by(site_id, primary_lifestyle) %>% summarise(species_count = n_distinct(common_name), .groups = "drop")
-# print(ggplot(primary_lifestyle_per_site %>% left_join(site_summary, by = "site_id"),
-#        aes(x = species_count, y = reorder(site_id, n_species), fill = primary_lifestyle)) +
-#   geom_bar(stat = "identity") +
-#   theme_minimal())
-
 # Cache putative species detection history and diversity data ------------------------------
 
 detect_hist_data = list(

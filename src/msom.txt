@@ -3,9 +3,9 @@ model{
   ## Community (group) level hyperpriors
   for (g in 1:G) {
     # Occurrence
-    mu.u[g]    ~ dnorm(0, 1/2.25^2)       # dnorm(0, 1/2.25^2) per Broms et al. 2016
-    sigma.u[g] ~ dt(0, 1/2.25^2, 1) T(0,) # dt(0, 1/2.25^2, 1) T(0,) Half-cauchy (truncated t distribution with 1 dof) per Broms et al. 2016
-    tau.u[g] <- sigma.u[g]^-2             # precision
+    mu.u[g]    ~ dnorm(0, 1/2.25^2)       # per Broms et al. 2016
+    sigma.u[g] ~ dt(0, 1/2.25^2, 1) T(0,) # Half-cauchy (truncated t distribution with 1 dof) per Broms et al. 2016
+    tau.u[g] <- sigma.u[g]^-2
     
     # Covariate effects on occurrence
     mu.alpha1[g]    ~ dnorm(0, 1/2.25^2)

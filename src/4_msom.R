@@ -149,7 +149,7 @@ msom = jags(data = msom_data,
             ),
             model.file = model_file,
             # n.chains = 3, n.adapt = 200, n.iter = 2000, n.burnin = 200, n.thin = 1, parallel = TRUE, # ETA: ~3 hr
-            n.chains = 3, n.adapt = 5000, n.iter = 30000, n.burnin = 10000, n.thin = 3, parallel = TRUE, # TODO: 40 hr
+            n.chains = 3, n.adapt = 5000, n.iter = 30000, n.burnin = 10000, n.thin = 3, parallel = TRUE, # ETA: 40 hr on 8-core Intel MacBook Pro 2019
             DIC = FALSE, verbose=TRUE)
 
 message("Finished running JAGS (", round(msom$mcmc.info$elapsed.mins / 60, 2), " hr)")

@@ -51,11 +51,10 @@ sf_waterbody <- st_transform(sf_waterbody, st_crs(washington))
 
 counties = counties %>% filter(NAME %in% c("King", "Pierce", "Snohomish"))
 
-bbox_poly <- st_as_sfc(bbox)          # returns sfc_POLYGON
-bbox_poly <- st_sf(geometry = bbox_poly)  # convert to sf for ggplot
+bbox_poly = st_as_sfc(bbox)
+bbox_poly = st_sf(geometry = bbox_poly)
 
 large_waterbodies = sf_waterbody %>% filter(gnis_name %in% c("Puget Sound", "Lake Washington Ship Canal", "Lake Union", "Lake Washington", "Lake Sammamish"))
-
 
 # Load cached basin sf objects and retain only those sampled
 message("- HUC 12 basins")
@@ -140,62 +139,3 @@ fig_2A_inset = ggplot() +
 
 ggsave(paste0(out_dir, "/fig_2A_inset.pdf"), fig_2A_inset, width = 2, height = 2)
 
-# site_id_focal = "262"
-# site_focal = site_data_reach %>% filter(site_id == site_id_focal)
-# site_focal_buffer = st_buffer(site_focal, 550)
-# site_focal = site_focal %>% st_transform(st_crs(washington))
-# 
-# r_utm <- project(rast_data$rast_riparian, crs_standard)
-# df_riparian <- as.data.frame(r_utm, xy = TRUE)
-# df_riparian$rast_riparian = round(df_riparian$rast_riparian)
-# 
-# r = project(rast_data$rast_riparian, crs(sf_flowline_sub))
-# df_r = as.data.frame(r, xy = TRUE)
-# 
-# pnt_aru = sites_aru %>% filter(site_id == site_id_focal)
-# buffer_aru = st_buffer(pnt_aru %>% st_transform(crs_standard), 550)
-# pnt_pssb = sites_pssb %>% filter(site_id == site_id_focal)
-# bbox_buffer = st_bbox(buffer_aru %>% st_transform(st_crs(sf_flowline_sub)))
-# 
-# r <- rast_data$rast_riparian
-# buffer_rast_crs <- st_transform(buffer_aru, crs(r))
-# buffer_vect <- vect(buffer_rast_crs)
-# r_crop <- crop(r, buffer_vect)
-# r_mask <- mask(r_crop, buffer_vect)
-# r_df <- as.data.frame(r_mask %>% project(crs(sf_flowline_sub)), xy = TRUE)
-# 
-# sf_flowline_crop = st_intersection(sf_flowline_sub %>% st_transform(st_crs(buffer_aru)), buffer_aru)
-# 
-# sf_waterbody_crop = st_intersection(sf_waterbody %>% st_transform(st_crs(buffer_aru)), buffer_aru)
-# 
-# emergence_zone = st_make_valid(st_union(st_buffer(sf_flowline_crop, 100)))
-# emergence_zone = st_intersection(emergence_zone, buffer_aru %>% st_transform(st_crs(emergence_zone)))
-# 
-# ggplot() +
-#   geom_sf(data = buffer_aru %>% st_transform(st_crs(sf_flowline_sub)), color = "black", fill = "white", linewidth = 0.5) +
-#   geom_raster(data = r_df, aes(x = x, y = y), fill = "forestgreen") +
-#   geom_sf(data = emergence_zone %>% st_transform(st_crs(sf_flowline_sub)), color = "transparent", fill = "lightskyblue2", alpha = 0.5, linewidth = 0.5) +
-#   geom_sf(data = sf_flowline_crop %>% st_transform(st_crs(sf_flowline_sub)), color = "lightskyblue2", linewidth = 1) +
-#   geom_sf(data = sf_waterbody_crop %>% st_transform(st_crs(sf_flowline_sub)), color = "lightskyblue2", fill = "lightskyblue2", linewidth = 0) +
-#   geom_sf(data = pnt_aru, size = 3, color = "red") +
-#   geom_sf(data = pnt_pssb, size = 3, color = "blue") +
-#   coord_sf(xlim = c(bbox_buffer["xmin"], bbox_buffer["xmax"]),
-#            ylim = c(bbox_buffer["ymin"], bbox_buffer["ymax"]),
-#            datum = st_crs(buffer_aru),
-#            expand = FALSE)
-# 
-# ggplot() +
-#   geom_raster(data = df_riparian, aes(x = x, y = y), fill = "forestgreen") +
-#   coord_sf(datum = st_crs(washington), expand = FALSE)
-# 
-# ggplot() +
-#   geom_sf(data = test %>% st_transform(st_crs(washington)), fill = "white", color = "transparent") +
-#   # geom_sf(data = sf_flowline_sub, color = "lightskyblue2", linewidth = 0.2) +
-#   # geom_sf(data = sf_waterbody, color = "lightskyblue2", fill = "lightskyblue2") +
-#   geom_sf(data = sf_basins12d, color = "darkgray", fill = "transparent", linewidth = 0.35) +
-#   geom_sf(data = test %>% st_transform(st_crs(washington)), fill = "transparent", color = "black") +
-#   geom_sf(data = large_waterbodies, color = "black", fill = "lightskyblue2") +
-#   geom_sf(data = site_data_reach %>% st_transform(st_crs(washington)), 
-#           aes(color = bibi), size = 3) +
-#   coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]),
-#            ylim = c(bbox["ymin"], bbox["ymax"]))
