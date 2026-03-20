@@ -10,7 +10,7 @@ path_avonet_traits = "data/traits/AVONET Supplementary dataset 1.xlsx"
 threshold_min_classifier_score = 0.5 # Naive classifier minimum confidence score threshold to assume binary presence/absence. # "For most false-positive models in our study, using a mid-range threshold of 0.50 or above generally yielded stable estimates." (Katsis et al. 2025)
 threshold_min_detected_days = 2 # Minimum number of unique days detected to retain species detections at a site
 # Classifier calibration (Platt scaling)
-path_validation_data = "/Users/giojacuzzi/Library/CloudStorage/GoogleDrive-giojacuzzi@gmail.com/My Drive/Research/Projects/C5 - Riparian avian macroinvert monitoring/validations" # annotated Raven Pro selection tables organized by [common_name]/[file].selections.txt
+path_validation_data = "data/pam/validations" # annotated Raven Pro selection tables organized by [common_name]/[file].selections.txt
 use_platt_scaling = TRUE
 display_plots = TRUE
 tp_min_prob = 0.95 # Desired minimum probability of true positive

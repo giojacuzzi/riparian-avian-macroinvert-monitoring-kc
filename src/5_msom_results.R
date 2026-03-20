@@ -300,6 +300,13 @@ p_imp_reach = ggplot(species_effects %>% filter(name == "imp_reach"), aes(x = co
 p_imp_basin = ggplot(species_effects %>% filter(name == "imp_basin"), aes(x = coef_mean, y = reorder(common_name, coef_mean), color = group)) +
   geom_vline(xintercept = 0, color = "gray80") + geom_errorbar(aes(xmin = `coef_2.5%`, xmax = `coef_97.5%`)) + geom_point(); print(p_imp_basin)
 
+# Save supplementary table of species-specific effects
+species_effects_summary = species_effects %>%
+                                  mutate(coef_str = sprintf("%.2f (%.2f, %.2f)", coef_mean, `coef_2.5%`, `coef_97.5%`)) %>%
+                                  select(common_name, name, coef_str) %>% mutate(common_name = str_to_sentence(common_name)) %>%
+                                  pivot_wider(names_from = name, values_from = coef_str)
+write_csv(species_effects_summary, paste0("data/cache/5_msom_results/species_effects_summary_", basename(msom_path), ".csv"))
+
 # Some species without documented diets containing target taxa nevertheless exhibited positive trends in occupancy in response to B-IBI
 # EX: Spiders are preferred prey of Chestnut-backed chickadee, Black-headed Grosbeak, which may benefit from B-IBI
 # These (black-throated gray) species have shown trophic links to aquatic resources: https://doi.org/10.1002/ecs2.3148

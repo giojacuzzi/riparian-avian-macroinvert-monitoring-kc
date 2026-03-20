@@ -1,7 +1,7 @@
 source("src/global.R")
 
 # Select a scenario (a1, a2, b1, b2)
-s = "a2"
+s = "b1"
 
 # Load projections
 path_projections_reach = "data/cache/3_calculate_vars/imp_projections_550m.rds"

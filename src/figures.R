@@ -1,7 +1,7 @@
 source("src/global.R")
 
-site_data_reach = readRDS("data/cache/3_calculate_vars/NEW_site_data_550m.rds")
-site_data_basin = readRDS("data/cache/3_calculate_vars/NEW_site_data_5000m.rds")
+site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
+site_data_basin = readRDS("data/cache/3_calculate_vars/site_data_5000m.rds")
 
 in_path_nlcd_metadata   = "data/raw/nlcd_metadata.csv"
 in_cache_geospatial_dir = "data/cache/2_preprocess_geospatial_data"
