@@ -88,7 +88,6 @@ param_alpha_data = tibble(param = paste0("alpha", 1:length(param_alpha_names)), 
 param_alpha_data = param_alpha_data %>% rowwise() %>% mutate(scaled = list(scale(site_data[[name]]))) %>% ungroup()
 n_alpha_params = nrow(param_alpha_data)
 
-# NOTE: For now, just use survey number as a detection covariate (replace with yday eventually)
 detect_data = list(
   yday   = surveys,
   canopy_reach = site_data$canopy_reach,
