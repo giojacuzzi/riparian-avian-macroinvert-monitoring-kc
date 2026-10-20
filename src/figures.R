@@ -1,3 +1,7 @@
+# figures.R --------------------------------------------------------------------
+#
+# Routines to reproduce figures
+
 source("src/global.R")
 
 site_data_reach = readRDS("data/cache/3_calculate_vars/site_data_550m.rds")
@@ -16,20 +20,20 @@ counties = counties(state = "WA", cb = TRUE) %>% st_transform(crs = crs_standard
 county_king = counties %>% filter(NAME == "King")
 
 library(rnaturalearth)
-states <- ne_states(country = "United States of America", returnclass = "sf") %>% filter(!(name_en %in% c("Alaska", "Hawaii")))
+states = ne_states(country = "United States of America", returnclass = "sf") %>% filter(!(name_en %in% c("Alaska", "Hawaii")))
 states$washington = FALSE
 washington = states %>% filter(name == "Washington")
 
-countries <- ne_countries(scale = "large", returnclass = "sf") %>% filter(name_en %in% c("Canada", "Mexico", "United States of America"))
+countries = ne_countries(scale = "large", returnclass = "sf") %>% filter(name_en %in% c("Canada", "Mexico", "United States of America"))
 
-bbox <- st_bbox(st_transform(site_data_reach, st_crs(washington)))
+bbox = st_bbox(st_transform(site_data_reach, st_crs(washington)))
 
 ggplot() +
   geom_sf(data = washington, fill = "lightgray", color = "black") +
   geom_sf(data = site_data_reach %>% st_transform(st_crs(washington)), aes(color = bibi), size = 2) +
   coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), ylim = c(bbox["ymin"], bbox["ymax"]))
 
-states_sf <- states(cb = TRUE, resolution = "5m", year = 2024) %>% filter(NAME == "Washington")
+states_sf = states(cb = TRUE, resolution = "5m", year = 2024) %>% filter(NAME == "Washington")
 
 sf_flowline = st_read(paste0(in_cache_geospatial_dir, "/sf_flowline.gpkg"), quiet = TRUE) %>% clean_names() %>%
   filter(f_code %in% c(
@@ -39,10 +43,10 @@ sf_flowline = st_read(paste0(in_cache_geospatial_dir, "/sf_flowline.gpkg"), quie
 sf_flowline$f_code = factor(sf_flowline$f_code)
 
 # Transform flowlines to the CRS of your Washington polygon
-sf_flowline_trans <- st_transform(sf_flowline, st_crs(washington))
+sf_flowline_trans = st_transform(sf_flowline, st_crs(washington))
 
 # Optional: filter to just the study area to reduce plotting load
-sf_flowline_sub <- st_intersection(sf_flowline_trans, st_transform(study_area, st_crs(sf_flowline_trans)))
+sf_flowline_sub = st_intersection(sf_flowline_trans, st_transform(study_area, st_crs(sf_flowline_trans)))
 
 message("- NHD waterbodies")
 sf_waterbody = st_read(paste0(in_cache_geospatial_dir, "/sf_waterbody.gpkg"), quiet = TRUE) %>% clean_names()
@@ -70,7 +74,7 @@ names(rast_data) = gsub("\\.tif$", "", basename(rast_filepaths))
 
 library(ggspatial)
 
-pt_regions <- st_as_sf(data.frame(
+pt_regions = st_as_sf(data.frame(
   name = c("Washington"),
   lon  = c(-119.695328),
   lat  = c(47.497497)
@@ -89,7 +93,7 @@ p_region = ggplot() +
         plot.background  = element_blank(),
         panel.border = element_rect(fill = NA, colour = "grey50", linewidth = 1)); print(p_region)
 
-pt_cities <- st_as_sf(data.frame(
+pt_cities = st_as_sf(data.frame(
   name = c("Seattle", "Bellevue", "Bothell", "Renton", "Kent", "Enumclaw", "Snoqualmie", "Duvall", "Issaquah"),
   lon  = c(-122.316966, -122.210994, -122.197858, -122.186078, -122.244956, -121.998776, -121.874129, -121.969865, -122.062781),
   lat  = c(47.619934, 47.627918, 47.785999, 47.479029, 47.356098, 47.216641, 47.528785, 47.737381, 47.537253)

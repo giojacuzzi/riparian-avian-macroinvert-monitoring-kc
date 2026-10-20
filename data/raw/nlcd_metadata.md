@@ -1,0 +1,1 @@
+`nlcd_metadata.csv` contains the National Land Cover Database land cover classification legend, including class descriptions, ids, and associated colors.

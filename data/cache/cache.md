@@ -1,0 +1,1 @@
+The `cache` directory contains intermediate data produced by the scripts under the `src` directory for ease of access and rapid execution.

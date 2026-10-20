@@ -1,0 +1,1 @@
+`site_metadata.csv` contains metadata for the surveyed stream sites, including site id, stream name, basin name, autonomous recording unit location, benthic macroinvertebrate sampling location, and date and time of acoustic survey.

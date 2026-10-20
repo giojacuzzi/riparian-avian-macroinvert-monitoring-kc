@@ -1,0 +1,1 @@
+The `pam` directory contains metadatda for passive acoustic monitoring and bioacoustic classification using BirdNET. `AudioMoth.config` contains the recording schedule and configuration for monitoring with AudioMoth autonomous recording units, and `species_list.txt` contains the species for detection via BirdNET v2.4.
